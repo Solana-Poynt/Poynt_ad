@@ -7,10 +7,29 @@ const config: Config = {
     "./app/**/*.{js,ts,jsx,tsx,mdx}",
   ],
   theme: {
+    screens: {
+      sm: "480px",
+      md: "768px",
+      lg: "976px",
+      hsp: "1066px",
+      xl: "1440px",
+    },
     extend: {
       colors: {
-        background: "var(--background)",
-        foreground: "var(--foreground)",
+        secondary: "#B71C1C",
+        primary: "#EDEDED",
+        main: "#fdf6e6",
+        blacc: "#221911",
+        warmwhite: "#FAF8F0",
+        overlay: "rgba(0, 0, 0, 0.4)",
+      },
+      fontFamily: {
+        lato: ['"Lato"', "sans-serif"],
+        poppins: ['"Poppins"', "sans-serif"],
+      },
+      boxShadow: {
+        customhover: "0px 6px 8px 4px rgba(0, 0, 0, 0.05)",
+        custom: "0px 4px 4px 0px rgba(0, 0, 0, 0.05)",
       },
     },
   },
