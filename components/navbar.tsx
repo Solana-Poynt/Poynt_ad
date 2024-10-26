@@ -126,7 +126,7 @@ export default function Navigation({ role }: Navprops) {
           key={item.id}
           onClick={() => {
             switchMenuItem(item.id);
-            // router.push(item.link);
+            router.push(item.link);
           }}
           className={`w-full flex flex-col lg:flex-row items-center justify-start gap-4 p-2 lg:px-6 lg:py-4 cursor-pointer hover:bg-main ${
             item.isSelected && !isMobile ? "bg-main" : "bg-transparent"
