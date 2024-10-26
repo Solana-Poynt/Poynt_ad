@@ -37,3 +37,8 @@ section {
     padding: 15px 10px 20px;
   }
 }
+
+/* Smooth Scrolling */
+html {
+  scroll-behavior: smooth;
+}
