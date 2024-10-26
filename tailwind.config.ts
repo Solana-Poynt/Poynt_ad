@@ -21,7 +21,7 @@ const config: Config = {
         main: "#fdf6e6",
         blacc: "#221911",
         warmwhite: "#FAF8F0",
-        overlay: "rgba(0, 0, 0, 0.4)",
+        overlay: "rgba(0, 0, 0, 0.55)",
       },
       fontFamily: {
         lato: ['"Lato"', "sans-serif"],
@@ -30,6 +30,7 @@ const config: Config = {
       boxShadow: {
         customhover: "0px 6px 8px 4px rgba(0, 0, 0, 0.05)",
         custom: "0px 4px 4px 0px rgba(0, 0, 0, 0.05)",
+        nav: "5px 0px 8px 0px rgba(0, 0, 0, 0.05)",
       },
       animation: {
         blob: "blob 7s infinite",

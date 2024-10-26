@@ -1,9 +1,10 @@
 "use client";
 import { useRouter } from "next/navigation";
-import { useState } from "react";
+import { useRef, useState } from "react";
 
 export default function Page() {
   const router = useRouter();
+  const overlayRef = useRef<HTMLDivElement>(null);
   const [showDropDown, setShowDropDown] = useState(false);
   const [search, setSearch] = useState("");
 
@@ -56,7 +57,14 @@ export default function Page() {
               </div>
             )}
           </div>
-          <a className="h-9 md:h-11 flex items-center justify-between gap-1 px-2 py-1 rounded-full md:rounded-md md:border border-secondary font-poppins font-normal bg-secondary text-white text-xs md:text-sm  cursor-pointer hover:bg-blacc hover:border-blacc">
+          <a
+            onClick={() => {
+              if (overlayRef.current) {
+                overlayRef.current.style.display = "flex";
+              }
+            }}
+            className="h-9 md:h-11 flex items-center justify-between gap-1 px-2 py-1 rounded-full md:rounded-md md:border border-secondary font-poppins font-normal bg-secondary text-white text-xs md:text-sm  cursor-pointer hover:bg-blacc hover:border-blacc"
+          >
             <i className="bx bx-plus text-[20px] text-main"></i>
             <span className="hidden md:block">New Business</span>
           </a>
@@ -128,18 +136,18 @@ export default function Page() {
         </div>
 
         {/* CONTENT */}
-        <div className="w-full flex items-start justify-start border-gray-300">
-          <div className="min-w-20 min-h-14 flex justify-center items-center p-1 border-r border-b border-gray-300">
+        <div className="w-full flex items-start justify-start border-gray-300 hover:bg-main">
+          <div className="min-w-20 min-h-14 flex justify-center items-center p-1 bg-warmwhite border-r border-b border-gray-300">
             <input
               className="border-2 outline-none border-blue-500 w-[22px] h-[22px] rounded-md cursor-pointer hover:bg-blue-100 checked:bg-transparent checked:border-blue-500"
               type="checkbox"
             />
           </div>
-          <div className="min-w-20 min-h-14 flex justify-center items-center p-1 border-r border-b border-gray-300">
+          <div className="min-w-20 min-h-14 flex justify-center items-center p-1 bg-warmwhite border-r border-b border-gray-300">
             <label className="relative inline-flex items-center cursor-pointer">
               <input type="checkbox" className="sr-only peer" />
-              <div className="w-11 h-6 rounded-full peer-checked:bg-main peer-focus:ring-1 dark:bg-gray-300 dark:peer-focus:ring-secondary border-[1px] border-secondary"></div>
-              <div className="absolute left-1 top bg-white w-5 h-5 rounded-full transition-all border-[1px] border-secondary peer-checked:translate-x-[80%] peer-checked:bg-secondary peer-checked:w-6 peer-checked:h-6"></div>
+              <div className="w-11 h-6 rounded-full peer-checked:bg-blue-100 peer-focus:ring-1 dark:bg-white dark:peer-focus:ring-secondary border-[1px] border-gray-300"></div>
+              <div className="absolute left-1 top bg-blacc w-5 h-5 rounded-full transition-all border-[1px] border-gray-300 peer-checked:translate-x-[80%] peer-checked:bg-secondary peer-checked:w-6 peer-checked:h-6"></div>
             </label>
           </div>
           <div className="min-w-40 min-h-14 flex justify-start items-start p-1 border-r border-b border-gray-300 bg-warmwhite font-poppins font-normal text-blacc text-[14px]">
@@ -162,6 +170,39 @@ export default function Page() {
           </div>
           <div className="min-w-40 min-h-14 flex justify-start items-start p-1 border-r border-b border-gray-300 bg-warmwhite font-poppins font-normal text-blacc text-[14px]">
             13 000
+          </div>
+        </div>
+      </div>
+
+      {/* POP UP CREATE BUSINESS */}
+      <div
+        className="absolute top-0 right-0 w-full h-full hidden justify-center items-center bg-overlay"
+        id="overlay"
+        ref={overlayRef}
+      >
+        <div className="w-[95%] lg:w-[40%] flex flex-col gap-9 bg-white rounded-lg p-5">
+          <h1 className="font-poppins font-medium text-blacc text-[16px] lg:text-[20px]">
+            Create a New Business Ad Account
+          </h1>
+
+          <p className="font-poppins font-normal text-blacc text-[16px]">
+            You are about to create a new business ad account.
+          </p>
+
+          <div className="w-full flex justify-end items-center gap-3">
+            <button
+              onClick={() => {
+                if (overlayRef.current) {
+                  overlayRef.current.style.display = "none";
+                }
+              }}
+              className="h-9 md:h-11 flex items-center justify-between gap-1 px-3 py-1 rounded-md border border-secondary font-poppins font-normal bg-transparent text-blacc text-xs md:text-sm cursor-pointer "
+            >
+              Cancel
+            </button>
+            <button className="h-9 md:h-11 flex items-center justify-between gap-1 px-3 py-1 rounded-md border border-secondary font-poppins font-normal bg-secondary text-white text-xs md:text-sm cursor-pointer hover:bg-blacc hover:border-blacc">
+              Continue
+            </button>
           </div>
         </div>
       </div>
