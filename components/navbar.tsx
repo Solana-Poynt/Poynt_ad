@@ -134,7 +134,7 @@ export default function Navigation({ role }: Navprops) {
         >
           {item.isSelected ? (
             <Icon
-              className="text-blacc text-[35px]"
+              className="text-blacc text-[31px]"
               icon={item.iconfilled}
               width="1.2em"
               height="1.2em"
@@ -158,17 +158,17 @@ export default function Navigation({ role }: Navprops) {
 
   return (
     <>
-      <div className="fixed bottom-0 left-0 right-0 lg:static w-full h-fit lg:w-[300px] lg:h-screen flex flex-col bg-main justify-start items-center lg:gap-[80px] py-2 lg:py-10 rounded-t-xl lg:rounded-none">
+      <div className="fixed bottom-0 left-0 right-0 lg:static w-full h-fit lg:w-[300px] lg:h-screen flex flex-col bg-white justify-start items-center lg:gap-[50px] py-2 lg:py-10 rounded-t-xl lg:rounded-none shadow-nav">
         <Image
-          className="w-0 h-auto lg:w-[120px] lg:h-[120px] rounded"
+          className="w-0 h-auto lg:w-[170px] lg:h-[90px] rounded border border-gray-50"
           src="/trans.png"
-          width={10}
-          height={5}
+          width={100}
+          height={50}
           quality={100}
           alt="Poynt Logo"
         />
 
-        <div className="w-full h-fit flex flex-row lg:flex-col gap-2 lg:gap-5 justify-evenly lg:justify-start items-center lg:items-start">
+        <div className="w-full h-fit flex flex-row lg:flex-col gap-2 lg:gap-[1px] justify-evenly lg:justify-start items-center lg:items-start">
           {role === "business" ? businessMenuElement : adminMenuElement}
         </div>
       </div>
