@@ -1,97 +1,146 @@
 "use client";
+// #B71C1C #FDF6E6
+"use client";
+
+import { useState, useEffect } from "react";
 import Image from "next/image";
-import { useState } from "react";
+import Link from "next/link";
+import { IoMenu, IoClose } from "react-icons/io5";
 
 export default function Header() {
-  const [showMenu, setShowMenu] = useState(false);
-  const [navItems, setNavItems] = useState([
-    { id: 1, title: "Home", link: "/", isSelected: true },
-    { id: 2, title: "FAQ", link: "#", isSelected: false },
-  ]);
+  const [isMenuOpen, setIsMenuOpen] = useState(false);
+  const [hasScrolled, setHasScrolled] = useState(false);
 
-  const toggleMenu = () => {
-    setShowMenu(!showMenu);
-  };
+  const navItems = [
+    { id: 1, title: "FAQ", href: "/faq" },
+    { id: 2, title: "About", href: "/about" },
+  ];
 
-  const navElement = navItems.map((item) => {
-    return (
-      <a
-        key={item.id}
-        href={item.link}
-        className={`hover:text-secondary cursor-pointer font-poppins font-normal text-base ${
-          item.isSelected ? "text-secondary" : "text-blacc"
-        }`}
-      >
-        {item.title}
-      </a>
-    );
-  });
-  const navElementSmallScreen = navItems.map((item) => {
-    return (
-      <a
-        key={item.id}
-        href={item.link}
-        className={`hover:text-blacc cursor-pointer font-poppins font-medium text-base ${
-          item.isSelected ? "text-blacc" : "text-white"
-        }`}
-      >
-        {item.title}
-      </a>
-    );
-  });
+  useEffect(() => {
+    const handleScroll = () => {
+      // Get the scroll position relative to the viewport top
+      const scrolled = window.scrollY || document.documentElement.scrollTop;
+      setHasScrolled(scrolled > 0);
+    };
+
+    // Add scroll event listener with requestAnimationFrame for better performance
+    let ticking = false;
+    const onScroll = () => {
+      if (!ticking) {
+        window.requestAnimationFrame(() => {
+          handleScroll();
+          ticking = false;
+        });
+        ticking = true;
+      }
+    };
+
+    // Check initial scroll position
+    handleScroll();
+
+    // Add event listener
+    window.addEventListener("scroll", onScroll, { passive: true });
+
+    // Cleanup
+    return () => window.removeEventListener("scroll", onScroll);
+  }, []);
 
   return (
-    <>
-      <nav className="fixed top-0 left-0 right-0 flex flex-row items-center justify-between z-50 bg-white w-full h-fit px-8 py-4 md:px-20 md:py-4">
-        <a href="/">
-          <Image
-            className="w-[50px] h-auto md:w-[70px] md:h-[70px] rounded"
-            src="/logo.png"
-            width={100}
-            height={50}
-            quality={100}
-            alt="Poynt Logo"
-          />
-        </a>
+    <header className="fixed top-0 left-0 right-0 z-50">
+      <nav
+        className={`transition-all duration-300 ease-in-out backdrop-blur-sm
+          ${
+            hasScrolled
+              ? "bg-white border-b shadow-sm py-2"
+              : "bg-transparent py-4"
+          }
+        `}
+      >
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="flex justify-between items-center">
+            {/* Logo and Brand Name */}
+            <div className="flex items-center space-x-1">
+              <Link href="/" className="flex items-center">
+                <div className="relative w-12 h-12 sm:w-14 sm:h-14">
+                  <Image
+                    src="/trans.png"
+                    fill
+                    sizes="(max-width: 768px) 48px, 56px"
+                    priority
+                    alt="Poynt Adblock Logo"
+                    className="rounded object-contain"
+                  />
+                </div>
+              </Link>
+              <h2 className="text-lg sm:text-xl font-semibold text-gray-900 whitespace-nowrap">
+                Poynt
+              </h2>
+            </div>
 
-        {/* MENU ITEMS AT LARGE SCREEN */}
-        <div className="hidden items-center justify-between w-fit gap-8 lg:flex">
-          {navElement}
-        </div>
-        {/* CTAS AT LARGE SCREEN */}
-        <div className="hidden items-center justify-between gap-3 lg:flex">
-          <a
-            href="/auth"
-            className="flex items-center justify-center px-6 py-3 rounded-md border border-secondary font-poppins font-normal bg-secondary text-white text-base cursor-pointer hover:bg-blacc hover:border-blacc"
-          >
-            Create Account
-          </a>
-        </div>
+            {/* Desktop Navigation */}
+            <div className="hidden lg:flex lg:items-center lg:space-x-8">
+              {navItems.map((item) => (
+                <Link
+                  key={item.id}
+                  href={item.href}
+                  className="text-black hover:text-[#B71C1C] px-3 py-2 text-sm font-medium transition-colors duration-200"
+                >
+                  {item.title}
+                </Link>
+              ))}
 
-        {/* MENU ITEMS AT SMALL SCREEN */}
-        {showMenu && (
-          <div
-            className={`absolute flex flex-col items-start justify-start gap-3 w-full h-fit top-full left-0 py-4 px-8 md:px-20 bg-secondary z-50 lg:hidden`}
-          >
-            {navElementSmallScreen}
-            {/* CTAS AT SMALL SCREEN */}
-            <div className="flex flex-col items-start justify-between gap-3">
-              <a
+              <Link
                 href="/auth"
-                className="flex items-center justify-center px-6 py-3 rounded-md border border-blacc font-poppins font-normal bg-blacc text-white text-base cursor-pointer"
+                className="ml-8 inline-flex items-center px-6 py-2.5 border border-transparent text-sm font-medium rounded-lg text-white bg-[#B71C1C] hover:bg-[#805c02] focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-[#805c02] transition-all duration-200 transform hover:scale-105"
               >
                 Create Account
-              </a>
+              </Link>
+            </div>
+
+            {/* Mobile menu button */}
+            <div className="lg:hidden">
+              <button
+                onClick={() => setIsMenuOpen(!isMenuOpen)}
+                className="inline-flex items-center justify-center p-2 rounded-lg text-[#B71C1C] hover:text-gray-600 hover:bg-[#f8e8e8] focus:outline-none transition-colors duration-200"
+                aria-expanded={isMenuOpen}
+              >
+                {isMenuOpen ? (
+                  <IoClose className="block h-6 w-6" aria-hidden="true" />
+                ) : (
+                  <IoMenu className="block h-6 w-6" aria-hidden="true" />
+                )}
+              </button>
             </div>
           </div>
-        )}
+        </div>
 
-        {/* MENU BUTTONS */}
-        <div onClick={toggleMenu} className="lg:hidden">
-          {!showMenu && <i className="bx bx-menu text-3xl text-secondary"></i>}
-          {showMenu && <i className="bx bx-x text-3xl text-secondary"></i>}
+        {/* Mobile menu */}
+        <div
+          className={`lg:hidden transition-all duration-200 ease-in-out ${
+            isMenuOpen ? "max-h-64 opacity-100" : "max-h-0 opacity-0"
+          } overflow-hidden`}
+        >
+          <div className="px-4 pt-2 pb-3 space-y-1 bg-white sm:px-6">
+            {navItems.map((item) => (
+              <Link
+                key={item.id}
+                href={item.href}
+                className="block px-4 py-2.5 text-base font-medium text-black hover:text-[#B71C1C] hover:bg-[#f8e8e8] rounded-lg transition-colors duration-200"
+                onClick={() => setIsMenuOpen(false)}
+              >
+                {item.title}
+              </Link>
+            ))}
+            <Link
+              href="/auth"
+              className="block w-full text-center px-4 py-3 text-base font-medium text-white bg-[#B71C1C] hover:bg-[#805c02]/70 rounded-lg transition-all duration-200 transform hover:scale-105 mt-4"
+              onClick={() => setIsMenuOpen(false)}
+            >
+              Create Account
+            </Link>
+          </div>
         </div>
       </nav>
-    </>
+    </header>
   );
 }
