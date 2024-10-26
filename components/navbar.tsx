@@ -161,9 +161,9 @@ export default function Navigation({ role }: Navprops) {
       <div className="fixed bottom-0 left-0 right-0 lg:static w-full h-fit lg:w-[300px] lg:h-screen flex flex-col bg-main justify-start items-center lg:gap-[80px] py-2 lg:py-10 rounded-t-xl lg:rounded-none">
         <Image
           className="w-0 h-auto lg:w-[120px] lg:h-[120px] rounded"
-          src="/logo.png"
-          width={150}
-          height={50}
+          src="/trans.png"
+          width={10}
+          height={5}
           quality={100}
           alt="Poynt Logo"
         />
