@@ -11,9 +11,9 @@ export default function Layout({
   const router = useRouter();
 
   return (
-    <>
+    <div className="flex min-h-screen">
       <Navigation role="business" />
       <section className="">{children}</section>
-    </>
+    </div>
   );
 }

@@ -15,23 +15,23 @@ export default function Signup() {
   return (
     <>
       <div className="flex w-full h-screen">
-        <div className="hidden lg:block relative bg-[url('/frame.png')] bg-no-repeat bg-cover bg-center w-2/5 h-full">
+        <div className="hidden lg:block relative bg-[url('/pexel3.jpg')] bg-no-repeat bg-cover bg-center w-2/5 h-full">
           <div className="absolute inset-0 bg-gradient-to-l from-secondary to-main opacity-60"></div>
         </div>
         <div className="w-full lg:w-3/5 h-full bg-white flex flex-col items-center justify-center gap-10 py-10 overflow-y-scroll">
           <a href="/">
             <Image
-              className="w-24 h-auto md:w-[150px] md:h-[150px] rounded-lg"
-              src="/logo.png"
-              width={150}
-              height={50}
+              className="w-24 h-auto md:w-[120px] md:h-[120px] rounded-lg"
+              src="/trans.png"
+              width={250}
+              height={250}
               quality={100}
               alt="Poynt Logo"
             />
           </a>
 
           <h2 className="w-full font-poppins font-semibold text-center text-xl md:text-2xl text-blacc">
-            Create Account
+            Get Started
           </h2>
 
           <form className="w-3/4 flex flex-col gap-6">
