@@ -24,6 +24,7 @@ interface Campaign {
 
 export default function Page() {
   const router = useRouter();
+  const overlayRef = useRef<HTMLDivElement>(null);
   const [showDropDown, setShowDropDown] = useState(false);
   const [search, setSearch] = useState("");
   const [selectedCampaigns, setSelectedCampaigns] = useState<number[]>([]);
