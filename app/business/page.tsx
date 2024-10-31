@@ -3,7 +3,8 @@ import { useRouter } from "next/navigation";
 import Image from "next/image";
 import React, { useState } from "react";
 import { useMediaQuery } from "react-responsive";
-import Navigation from "@/components/navbar";
+import QuickStartButton from "@/components/quick_modal";
+import BusinessModal from "@/components/businessmodal";
 import {
   LineChart,
   Line,
@@ -20,6 +21,7 @@ import {
   Users,
   Calendar,
   ChevronDown,
+  Building2,
 } from "lucide-react";
 
 const mockData = [
@@ -31,12 +33,23 @@ const mockData = [
   { name: "Jun", value: 900 },
 ];
 
+interface BusinessFormData {
+  businessName: string;
+  businessIndustry: string;
+  selectedCategories: string[];
+}
+
 export default function Page() {
   const router = useRouter();
-  const [showDropDown, setShowDropDown] = useState(false);
-  const [search, setSearch] = useState("");
-  const [isSidebarOpen, setIsSidebarOpen] = useState(true);
   const isMobile = useMediaQuery({ query: "(max-width: 1000px)" });
+
+  const [isModalOpen, setIsModalOpen] = useState<boolean>(false);
+
+  const handleSubmit = (data: BusinessFormData) => {
+    // Handle form submission
+    console.log("Form submitted:", data);
+    // You can add API call here
+  };
 
   const stats = [
     {
@@ -70,36 +83,74 @@ export default function Page() {
       {/* Main Content */}
       <div className="flex-1 flex flex-col">
         {/* Header */}
-        <header className="  bg-white border-b border-gray-200">
-          <div className="h-full px-2 flex items-center justify-between">
-            <div className="flex items-center">
-              <div className="w-8 h-8 lg:w-20 lg:h-24">
-                <div className="relative w-12 h-12 sm:w-24 sm:h-24">
-                  <Image
-                    src="/trans.png"
-                    sizes="(max-width: 768px) 48px, 56px"
-                   fill
-                    quality={100}
-                    alt="Poynt Logo"
-                    className="rounded object-contain"
-                  />
-                </div>
+        <header className="h-16 md:h-14 bg-white border-b border-gray-200">
+          <div className=" max-w-7xl mx-auto px-4 flex items-center justify-between">
+            {/* Left Section: Logo and Title */}
+            <div className="flex items-center gap-3">
+              {/* Logo Container */}
+              <div className="relative">
+                <a href="/" className="block">
+                  <div className="relative w-10 h-10 md:w-12 md:h-12">
+                    <Image
+                      src="/trans.png"
+                      fill
+                      quality={90}
+                      priority
+                      alt="Poynt Logo"
+                      className="object-contain"
+                      sizes="(max-width: 768px) 40px, 48px"
+                    />
+                  </div>
+                </a>
               </div>
-              {isSidebarOpen && (
-                <span className="font-semibold text-gray-900 text-xl">
-                  Poynt
-                </span>
-              )}
+
+              {/* Brand Name */}
+              <span className="hidden md:block text-xl font-semibold text-gray-900 ml-2">
+                Poynt
+              </span>
             </div>
 
-            <div className="flex items-center gap-4">
-              <button className="flex items-center px-4 py-2 bg-[#B71C1C] text-white rounded-lg hover:bg-[#B71C1C]/80 transition-colors duration-200">
-                <Plus className="w-4 h-4 mr-2" />
-                New Campaign
-              </button>
-              <div className="w-9 h-9 rounded-full bg-gray-200 flex items-center justify-center">
-                <span className="text-sm font-medium text-gray-600">JD</span>
+            {/* Right Section: Actions and Profile */}
+            <div className="flex items-center gap-3 md:gap-4">
+              {/* Quick Start Guide */}
+              <div className="relative group">
+                <div className="flex items-center gap-3">
+                  <QuickStartButton
+                    isModalOpen={isModalOpen}
+                    setIsModalOpen={setIsModalOpen}
+                  />
+                  {/* Other header elements */}
+                </div>
               </div>
+
+              {/* New Campaign Button */}
+              <button
+                className="hidden md:flex items-center p-2 bg-[#B71C1C] text-white rounded-lg hover:bg-[#B71C1C]/90 transition-colors duration-200 whitespace-nowrap"
+                onClick={() => {
+                  router.push("/create_campaign");
+                }}
+              >
+                <Plus className="w-4 h-4 mr-2" />
+                <span className="text-sm">New Campaign</span>
+              </button>
+              <button
+                onClick={() => setIsModalOpen(true)}
+                className="flex items-center gap-2 px-4 py-2 bg-[#B71C1C] text-white rounded-lg hover:bg-[#B71C1C]/90 transition-colors"
+              >
+                <Building2 className="w-4 h-4" />
+                <span>Create Business</span>
+              </button>
+
+              <BusinessModal
+                isOpen={isModalOpen}
+                onClose={() => setIsModalOpen(false)}
+                onSubmit={handleSubmit}
+              />
+
+              {/* Mobile New Campaign Button */}
+              <button className="md:hidden flex items-center p-2 bg-[#B71C1C] text-white rounded-lg hover:bg-[#B71C1C]/90 transition-colors duration-200">
+                <Plus className="w-5 h-5" />
+              </button>
             </div>
           </div>
         </header>

@@ -78,47 +78,6 @@ export default function Page() {
           <h1 className="text-2xl font-bold text-gray-900">Campaign Manager</h1>
 
           {/* Account Selector */}
-          <div className="relative">
-            <button
-              onClick={() => setShowDropDown(!showDropDown)}
-              className="flex items-center gap-3 px-4 py-2 bg-white border border-gray-200 rounded-lg hover:bg-gray-50 transition-colors"
-            >
-              <div className="w-8 h-8 bg-[#B71C1C] rounded-full flex items-center justify-center">
-                <span className="text-white font-medium">P</span>
-              </div>
-              <div className="text-left">
-                <p className="text-sm font-medium text-gray-700">
-                  Business Account
-                </p>
-                <p className="text-xs text-gray-500">sol_poynt@gmail.com</p>
-              </div>
-              {showDropDown ? (
-                <ChevronUp size={16} />
-              ) : (
-                <ChevronDown size={16} />
-              )}
-            </button>
-
-            {showDropDown && (
-              <div className="absolute top-full left-0 mt-2 w-full bg-white border border-gray-200 rounded-lg shadow-lg z-50">
-                <div className="p-2">
-                  {["Business Account 1", "Business Account 2"].map(
-                    (account, index) => (
-                      <button
-                        key={index}
-                        className="w-full text-left px-4 py-3 hover:bg-gray-50 rounded-md"
-                      >
-                        <p className="font-medium text-gray-700">{account}</p>
-                        <p className="text-sm text-gray-500">
-                          account{index + 1}@example.com
-                        </p>
-                      </button>
-                    )
-                  )}
-                </div>
-              </div>
-            )}
-          </div>
 
           {/* Wallet */}
           <div className="flex items-center gap-2 px-4 py-2 bg-white border border-gray-200 rounded-lg">
@@ -148,13 +107,14 @@ export default function Page() {
           </div>
         </div>
         <div className="flex gap-3">
-          <button className="flex items-center gap-2 px-4 py-2 bg-[#B71C1C] text-white rounded-lg hover:bg-[#805c02] transition-colors">
+          <button
+            onClick={() => {
+              router.push("/create_campaign");
+            }}
+            className="flex items-center gap-2 px-4 py-2 bg-[#B71C1C] text-white rounded-lg hover:bg-[#805c02] transition-colors"
+          >
             <Plus size={16} />
             <span>Create Campaign</span>
-          </button>
-          <button className="flex items-center gap-2 px-4 py-2 bg-[#B71C1C] text-white rounded-lg hover:bg-[#805c02] transition-colors">
-            <Plus size={16} />
-            <span>New Business</span>
           </button>
         </div>
       </div>

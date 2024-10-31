@@ -21,11 +21,12 @@ export default function Signup() {
         <div className="w-full lg:w-3/5 h-full bg-white flex flex-col items-center justify-center gap-10 py-10 overflow-y-scroll">
           <a href="/">
             <Image
-              className="w-24 h-auto md:w-[120px] md:h-[120px] rounded-lg"
+              className="w-10 h-10 md:w-16 md:h-16 lg:w-36 lg:h-36 rounded-lg object-contain"
               src="/trans.png"
-              width={250}
-              height={250}
-              quality={100}
+              width={80}
+              height={80}
+              quality={90}
+              priority
               alt="Poynt Logo"
             />
           </a>

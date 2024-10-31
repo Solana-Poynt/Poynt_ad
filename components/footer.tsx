@@ -4,33 +4,139 @@ import Image from "next/image";
 export default function Header() {
   return (
     <>
-      <div className="w-full h-fit bg-main px-8 py-4 md:px-20 md:py-14 mt-32 flex flex-col lg:flex-row justify-between items-center gap-6">
-        <a href="/">
-          <Image
-            className="w-24 h-auto md:w-fit"
-            src="/logo.png"
-            width={150}
-            height={50}
-            quality={100}
-            alt="Logo"
-          />
-        </a>
-
-        <div className="flex flex-col md:flex-row items-center justify-between gap-7">
-          <a
-            href={"/"}
-            className="cursor-pointer font-poppins font-normal text-base text-blacc hover:text-secondary"
-          >
-            Home
-          </a>
-          <a
-            href={"#"}
-            className="cursor-pointer font-poppins font-normal text-base text-blacc hover:text-secondary"
-          >
-            FAQ
-          </a>
+      <footer className="bg-gray-900 text-gray-400 py-12 px-4">
+        <div className="container mx-auto px-4">
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-8">
+            <div>
+              <h3 className="text-white text-sm lg:text-base font-semibold mb-4">
+                Product
+              </h3>
+              <ul className="space-y-2">
+                <li>
+                  <a
+                    href="#"
+                    className="hover:text-white text-sm lg:text-base transition-colors"
+                  >
+                    Features
+                  </a>
+                </li>
+                <li>
+                  <a
+                    href="#"
+                    className="hover:text-white text-sm lg:text-base transition-colors"
+                  >
+                    Pricing
+                  </a>
+                </li>
+                <li>
+                  <a
+                    href="#"
+                    className="hover:text-white text-sm lg:text-base transition-colors"
+                  >
+                    API
+                  </a>
+                </li>
+              </ul>
+            </div>
+            <div>
+              <h3 className="text-white font-semibold text-sm lg:text-base mb-4">
+                Company
+              </h3>
+              <ul className="space-y-2">
+                <li>
+                  <a
+                    href="#"
+                    className="hover:text-white text-sm lg:text-base transition-colors"
+                  >
+                    About
+                  </a>
+                </li>
+                <li>
+                  <a
+                    href="#"
+                    className="hover:text-white text-sm lg:text-base transition-colors"
+                  >
+                    Blog
+                  </a>
+                </li>
+                <li>
+                  <a
+                    href="#"
+                    className="hover:text-white text-sm lg:text-base transition-colors"
+                  >
+                    Careers
+                  </a>
+                </li>
+              </ul>
+            </div>
+            <div>
+              <h3 className="text-white font-semibold text-sm lg:text-base mb-4">
+                Resources
+              </h3>
+              <ul className="space-y-2">
+                <li>
+                  <a
+                    href="#"
+                    className="hover:text-white text-sm lg:text-base transition-colors"
+                  >
+                    Documentation
+                  </a>
+                </li>
+                <li>
+                  <a
+                    href="#"
+                    className="hover:text-white text-sm lg:text-base transition-colors"
+                  >
+                    Help Center
+                  </a>
+                </li>
+                <li>
+                  <a
+                    href="#"
+                    className="hover:text-white text-sm lg:text-base transition-colors"
+                  >
+                    Guides
+                  </a>
+                </li>
+              </ul>
+            </div>
+            <div>
+              <h3 className="text-white font-semibold text-sm lg:text-base mb-4">
+                Legal
+              </h3>
+              <ul className="space-y-2">
+                <li>
+                  <a
+                    href="#"
+                    className="hover:text-white text-sm lg:text-base transition-colors"
+                  >
+                    Privacy
+                  </a>
+                </li>
+                <li>
+                  <a
+                    href="#"
+                    className="hover:text-white text-sm lg:text-base transition-colors"
+                  >
+                    Terms
+                  </a>
+                </li>
+                <li>
+                  <a
+                    href="#"
+                    className="hover:text-white  text-sm lg:text-base transition-colors"
+                  >
+                    Security
+                  </a>
+                </li>
+              </ul>
+            </div>
+          </div>
+          <div className="mt-12 text-sm lg:text-base pt-8 border-t border-gray-800 text-center">
+            <p>© 2024 Poynt. All rights reserved.</p>
+          </div>
         </div>
-      </div>
+      </footer>
     </>
   );
 }
