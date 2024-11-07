@@ -369,21 +369,21 @@ const CampaignModal = ({
             initial={{ opacity: 0, scale: 0.95 }}
             animate={{ opacity: 1, scale: 1 }}
             exit={{ opacity: 0, scale: 0.95 }}
-            className="relative w-full max-w-xl bg-white rounded-xl shadow-xl flex flex-col max-h-[90vh]"
+            className="relative w-full max-w-xl bg-white rounded-xl shadow-xl flex flex-col  max-h-[90vh]"
           >
            
             <button
               onClick={onClose}
-              className="absolute top-4 right-4 p-2 hover:bg-gray-100 rounded-lg transition-colors z-10"
+              className="absolute top-2 right-4 p-2 hover:bg-gray-100 rounded-lg transition-colors z-10"
             >
               <X className="w-5 h-5 text-gray-500" />
             </button>
 
             
-            <div className="p-6 border-b border-gray-200 flex-shrink-0">
+            <div className="py-6 px-6 border-b border-gray-200 flex-shrink-0">
               {" "}
               {/* Added flex-shrink-0 */}
-              <div className="flex justify-between mb-1">
+              <div className="flex justify-end pt-6">
                 {[1, 2, 3, 4].map((i) => (
                   <div
                     key={i}

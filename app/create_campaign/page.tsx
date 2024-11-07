@@ -66,7 +66,7 @@ const CampaignPage = () => {
   ];
 
   return (
-    <div className="min-h-screen bg-gray-50">
+    <div className="min-h-screen w-full bg-gray-50">
       <Header />
       {/* Hero Section */}
       <div className="bg-white border-b mt-12 border-gray-200">
