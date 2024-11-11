@@ -1,9 +1,9 @@
 // types/campaign.ts
 
 // Core Types
-export type AdType = 'display' | 'video' | 'native';
-export type EngagementType = 'awareness' | 'traffic' | 'conversion';
-export type CTAType = 'button' | 'link' | 'banner';
+export type AdType = "display" | "video" | "native";
+export type EngagementType = "awareness" | "traffic" | "conversion";
+export type CTAType = "button" | "link" | "banner";
 
 // Base Interfaces
 export interface PricingTier {
@@ -66,7 +66,7 @@ export interface CampaignFormData {
     interests?: string[];
     demographics?: string[];
   };
-  status?: 'draft' | 'pending' | 'active' | 'paused' | 'completed' | 'rejected';
+  status?: "draft" | "pending" | "active" | "paused" | "completed" | "rejected";
   createdAt?: Date;
   updatedAt?: Date;
   analytics?: {
@@ -90,56 +90,49 @@ export interface CampaignModalProps {
 // Constants
 export const DEFAULT_PRICING_TIERS: PricingTier[] = [
   {
-    id: 'tier-1',
+    id: "tier-1",
     impressions: 1000,
     price: 5,
     pricePerThousand: 5,
-    features: [
-      'Basic analytics',
-      'Manual bidding'
-    ],
-    description: 'Perfect for testing campaigns'
+    features: ["Basic analytics", "Manual bidding"],
+    description: "Perfect for testing campaigns",
   },
   {
-    id: 'tier-2',
+    id: "tier-2",
     impressions: 3000,
-    price: 13.50,
-    pricePerThousand: 4.50,
+    price: 13.5,
+    pricePerThousand: 4.5,
     recommended: true,
-    features: [
-      'Advanced analytics',
-      'Auto-optimization',
-      'Priority support'
-    ],
-    description: 'Most popular for small businesses'
+    features: ["Advanced analytics", "Auto-optimization", "Priority support"],
+    description: "Most popular for small businesses",
   },
   {
-    id: 'tier-3',
+    id: "tier-3",
     impressions: 5000,
     price: 20,
     pricePerThousand: 4,
     features: [
-      'Advanced analytics',
-      'Auto-optimization',
-      'Priority support',
-      'Custom reporting'
+      "Advanced analytics",
+      "Auto-optimization",
+      "Priority support",
+      "Custom reporting",
     ],
-    description: 'Ideal for growing businesses'
+    description: "Ideal for growing businesses",
   },
   {
-    id: 'tier-4',
+    id: "tier-4",
     impressions: 10000,
     price: 35,
-    pricePerThousand: 3.50,
+    pricePerThousand: 3.5,
     features: [
-      'Advanced analytics',
-      'Auto-optimization',
-      'Priority support',
-      'Custom reporting',
-      'Dedicated account manager'
+      "Advanced analytics",
+      "Auto-optimization",
+      "Priority support",
+      "Custom reporting",
+      "Dedicated account manager",
     ],
-    description: 'Best value for scale'
-  }
+    description: "Best value for scale",
+  },
 ];
 
 // Helper Functions
@@ -152,14 +145,27 @@ export const calculateCampaignMetrics = (campaign: CampaignFormData) => {
   };
 };
 
-export const validateCampaignForm = (data: Partial<CampaignFormData>): string[] => {
+export const validateCampaignForm = (
+  data: Partial<CampaignFormData>
+): string[] => {
   const errors: string[] = [];
-  
-  if (!data.name) errors.push('Campaign name is required');
-  if (!data.type) errors.push('Ad type is required');
-  if (!data.engagementType) errors.push('Engagement type is required');
-  if (!data.pricingTier) errors.push('Pricing tier is required');
-  if (!data.cta?.url) errors.push('CTA URL is required');
-  
+
+  if (!data.name) errors.push("Campaign name is required");
+  if (!data.type) errors.push("Ad type is required");
+  if (!data.engagementType) errors.push("Engagement type is required");
+  if (!data.pricingTier) errors.push("Pricing tier is required");
+  if (!data.cta?.url) errors.push("CTA URL is required");
+
   return errors;
 };
+
+export interface GoogleUser {
+  email: string;
+  name: string;
+  picture: string;
+  given_name: string;
+  family_name: string;
+  idtoken: string;
+  email_verified: boolean;
+  sub: string; // Google's user ID
+}
