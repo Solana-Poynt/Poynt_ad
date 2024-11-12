@@ -15,6 +15,7 @@ interface BusinessFormData {
   selectedCategories: string[];
 }
 
+
 const BusinessModal = ({
   isOpen,
   onClose,
