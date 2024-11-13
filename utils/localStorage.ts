@@ -11,7 +11,6 @@ export const getDataFromLocalStorage = (key: string) => {
     const value = localStorage.getItem(key);
     return value;
   } catch (error) {
-    // console.log("Error retrieving data:", error);
     return null;
   }
 };

@@ -1,13 +1,10 @@
 "use client";
-import { useState } from "react";
+import { useState, useCallback } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { X, Building2, Briefcase } from "lucide-react";
-
-interface BusinessIndustry {
-  id: string;
-  name: string;
-  icon: string;
-}
+import { X, Building2, Briefcase, Loader2 } from "lucide-react";
+import { NotificationState } from "@/types/general";
+import { baseURL } from "@/utils/config/baseUrl";
+import Notification from "./notification";
 
 interface BusinessFormData {
   businessName: string;
@@ -15,21 +12,37 @@ interface BusinessFormData {
   selectedCategories: string[];
 }
 
-
-const BusinessModal = ({
-  isOpen,
-  onClose,
-  onSubmit,
-}: {
+interface BusinessModalProps {
   isOpen: boolean;
   onClose: () => void;
-  onSubmit: (data: BusinessFormData) => void;
-}) => {
+}
+
+const BusinessModal = ({ isOpen, onClose }: BusinessModalProps) => {
+  // Form and loading state
   const [formData, setFormData] = useState<BusinessFormData>({
     businessName: "",
     businessIndustry: "",
     selectedCategories: [],
   });
+  const [isLoading, setIsLoading] = useState(false);
+
+  // Notification state
+  const [notification, setNotification] = useState<NotificationState>({
+    message: "",
+    status: "error",
+    show: false,
+  });
+
+  const showNotification = useCallback(
+    (message: string, status: "success" | "error") => {
+      setNotification({
+        message,
+        status,
+        show: true,
+      });
+    },
+    []
+  );
 
   const industries = [
     { id: "retail", name: "Retail & Shopping" },
@@ -84,18 +97,62 @@ const BusinessModal = ({
     { id: "enterprise", name: "Enterprise" },
   ];
 
-  const handleCategoryToggle = (categoryId: string) => {
+  const handleCategoryToggle = useCallback((categoryId: string) => {
     setFormData((prev) => ({
       ...prev,
       selectedCategories: prev.selectedCategories.includes(categoryId)
         ? prev.selectedCategories.filter((id) => id !== categoryId)
         : [...prev.selectedCategories, categoryId],
     }));
-  };
+  }, []);
 
-  const handleSubmit = () => {
-    onSubmit(formData);
-    onClose();
+  const handleSubmit = async () => {
+    if (
+      !formData.businessName ||
+      !formData.businessIndustry ||
+      formData.selectedCategories.length === 0
+    ) {
+      showNotification("Please fill in all required fields", "error");
+      return;
+    }
+
+    setIsLoading(true);
+    try {
+      const response = await fetch(`${baseURL}/business`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          name: formData.businessName,
+          industry: formData.businessIndustry,
+          category: formData.selectedCategories,
+        }),
+      });
+
+      const data = await response.json();
+
+      if (!response.ok) {
+        throw new Error(data.message || "Failed to create business");
+      }
+
+      showNotification("Business created successfully!", "success");
+      // Reset form
+      setFormData({
+        businessName: "",
+        businessIndustry: "",
+        selectedCategories: [],
+      });
+      onClose();
+    } catch (error) {
+      console.error("Error creating business:", error);
+      showNotification(
+        error instanceof Error ? error.message : "Failed to create business",
+        "error"
+      );
+    } finally {
+      setIsLoading(false);
+    }
   };
 
   return (
@@ -106,12 +163,10 @@ const BusinessModal = ({
             initial={{ opacity: 0, scale: 0.95 }}
             animate={{ opacity: 1, scale: 1 }}
             exit={{ opacity: 0, scale: 0.95 }}
-            className="relative w-full max-w-xl bg-white rounded-2xl shadow-xl flex flex-col max-h-[90vh]" // Changed this line
+            className="relative w-full max-w-xl bg-white rounded-2xl shadow-xl flex flex-col max-h-[90vh]"
           >
-            {/* Header - Fixed */}
+            {/* Header */}
             <div className="p-6 border-b border-gray-200 flex-shrink-0">
-              {" "}
-              {/* Added flex-shrink-0 */}
               <div className="flex justify-between items-center">
                 <h2 className="text-2xl font-semibold text-gray-900">
                   Create Business
@@ -119,16 +174,15 @@ const BusinessModal = ({
                 <button
                   onClick={onClose}
                   className="p-2 hover:bg-gray-100 rounded-lg transition-colors"
+                  disabled={isLoading}
                 >
                   <X className="w-5 h-5 text-gray-500" />
                 </button>
               </div>
             </div>
 
-            {/* Form Content - Scrollable */}
+            {/* Form Content */}
             <div className="flex-1 overflow-y-auto p-6">
-              {" "}
-              {/* Changed this line */}
               <div className="space-y-6">
                 {/* Business Name */}
                 <div>
@@ -146,7 +200,8 @@ const BusinessModal = ({
                           businessName: e.target.value,
                         }))
                       }
-                      className="w-full pl-10 pr-4 py-2 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#B71C1C]"
+                      disabled={isLoading}
+                      className="w-full pl-10 pr-4 py-2 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#B71C1C] disabled:bg-gray-50 disabled:cursor-not-allowed"
                       placeholder="Enter your business name"
                     />
                   </div>
@@ -167,7 +222,8 @@ const BusinessModal = ({
                           businessIndustry: e.target.value,
                         }))
                       }
-                      className="w-full pl-10 pr-4 py-2 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#B71C1C] appearance-none bg-white"
+                      disabled={isLoading}
+                      className="w-full pl-10 pr-4 py-2 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#B71C1C] appearance-none bg-white disabled:bg-gray-50 disabled:cursor-not-allowed"
                     >
                       <option value="">Select an industry</option>
                       {industries.map((industry) => (
@@ -189,12 +245,13 @@ const BusinessModal = ({
                       <button
                         key={category.id}
                         onClick={() => handleCategoryToggle(category.id)}
+                        disabled={isLoading}
                         className={`px-4 py-2 rounded-lg border text-sm font-medium transition-colors
-                        ${
-                          formData.selectedCategories.includes(category.id)
-                            ? "bg-[#B71C1C] border-[#B71C1C] text-white"
-                            : "border-gray-200 text-gray-700 hover:bg-gray-50"
-                        }`}
+                          ${
+                            formData.selectedCategories.includes(category.id)
+                              ? "bg-[#B71C1C] border-[#B71C1C] text-white"
+                              : "border-gray-200 text-gray-700 hover:bg-gray-50"
+                          } disabled:opacity-50 disabled:cursor-not-allowed`}
                       >
                         {category.name}
                       </button>
@@ -204,29 +261,47 @@ const BusinessModal = ({
               </div>
             </div>
 
-            {/* Footer - Fixed */}
+            {/* Footer */}
             <div className="p-6 border-t border-gray-200 flex justify-end gap-3 flex-shrink-0">
-              {" "}
-              {/* Added flex-shrink-0 */}
               <button
                 onClick={onClose}
-                className="px-4 py-2 text-gray-700 hover:bg-gray-100 rounded-lg transition-colors"
+                disabled={isLoading}
+                className="px-4 py-2 text-gray-700 hover:bg-gray-100 rounded-lg transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
               >
                 Cancel
               </button>
               <button
                 onClick={handleSubmit}
                 disabled={
+                  isLoading ||
                   !formData.businessName ||
                   !formData.businessIndustry ||
                   formData.selectedCategories.length === 0
                 }
-                className="px-4 py-2 bg-[#B71C1C] text-white rounded-lg hover:bg-[#B71C1C]/90 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                className="flex items-center justify-center px-4 py-2 bg-[#B71C1C] text-white rounded-lg hover:bg-[#B71C1C]/90 transition-colors disabled:opacity-50 disabled:cursor-not-allowed min-w-[120px]"
               >
-                Create Business
+                {isLoading ? (
+                  <>
+                    <Loader2 className="animate-spin mr-2 h-4 w-4" />
+                    Creating...
+                  </>
+                ) : (
+                  "Create Business"
+                )}
               </button>
             </div>
           </motion.div>
+
+          {/* Notification Component */}
+          {notification.show && (
+            <Notification
+              message={notification.message}
+              status={notification.status}
+              switchShowOff={() =>
+                setNotification((prev) => ({ ...prev, show: false }))
+              }
+            />
+          )}
         </div>
       )}
     </AnimatePresence>

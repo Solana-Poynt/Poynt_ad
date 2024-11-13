@@ -1,7 +1,11 @@
 "use client";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { useRouter } from "next/navigation";
+import {
+  getDataFromLocalStorage,
+  saveDataToLocalStorage,
+} from "@/utils/localStorage";
 import {
   ChevronRight,
   X,
@@ -12,6 +16,9 @@ import {
   InfoIcon,
   Building2,
 } from "lucide-react";
+import BusinessModal from "./businessmodal";
+import { BusinessFormData } from "@/types/general";
+import { access } from "fs";
 
 interface Step {
   title: string;
@@ -32,6 +39,7 @@ const QuickStartButton = ({ isModalOpen, setIsModalOpen }: QuickStartProps) => {
   const [currentStep, setCurrentStep] = useState(0);
 
   const router = useRouter();
+  const onboardModal = getDataFromLocalStorage("onboard");
 
   // Modal steps content
   const steps: Step[] = [
@@ -69,6 +77,22 @@ const QuickStartButton = ({ isModalOpen, setIsModalOpen }: QuickStartProps) => {
     },
   ];
 
+  const firstTime = () => {
+    if (onboardModal === "true") {
+      setIsOpen(false);
+    } else if (onboardModal === "false") {
+      setIsOpen(true);
+    }
+  };
+
+  const stopModal = () => {
+    saveDataToLocalStorage("onboard", "true");
+  };
+
+  useEffect(() => {
+    firstTime();
+  }, [onboardModal]);
+
   // Pulsing button component
   const PulsingButton = () => (
     <motion.button
@@ -76,10 +100,10 @@ const QuickStartButton = ({ isModalOpen, setIsModalOpen }: QuickStartProps) => {
       whileHover={{ scale: 1.05 }}
       whileTap={{ scale: 0.95 }}
     >
-      <InfoIcon className="w-5 h-5" />
+      <InfoIcon className="w-8 h-8 p-2 rounded-xl  bg-[#F0F0F0]" />
       {/* Pulsing rings */}
       <motion.span
-        className="absolute inset-0 rounded-full border-2 border-[#B71C1C]"
+        className="absolute inset-0  border-2 rounded-xl border-[#b5b4b4]"
         animate={{
           scale: [1, 1.5, 1],
           opacity: [0.8, 0, 0.8],
@@ -91,7 +115,7 @@ const QuickStartButton = ({ isModalOpen, setIsModalOpen }: QuickStartProps) => {
         }}
       />
       <motion.span
-        className="absolute inset-0 rounded-full border-2 border-[#B71C1C]"
+        className="absolute inset-0  border-2 rounded-xl border-[#b5b4b4]"
         animate={{
           scale: [1, 1.5, 1],
           opacity: [0.8, 0, 0.8],
@@ -125,6 +149,7 @@ const QuickStartButton = ({ isModalOpen, setIsModalOpen }: QuickStartProps) => {
                 onClick={() => {
                   setIsOpen(false);
                   setCurrentStep(0);
+                  stopModal();
                 }}
                 className="absolute top-4 right-4 p-2 hover:bg-gray-100 rounded-lg"
               >
@@ -219,6 +244,7 @@ const QuickStartButton = ({ isModalOpen, setIsModalOpen }: QuickStartProps) => {
                         } else {
                           setIsOpen(false);
                           setCurrentStep(0);
+                          stopModal();
                           // Add navigation to campaign creation or other action
 
                           router.push("/create_campaign");
@@ -236,6 +262,13 @@ const QuickStartButton = ({ isModalOpen, setIsModalOpen }: QuickStartProps) => {
               </div>
             </motion.div>
           </div>
+        )}
+
+        {isModalOpen && (
+          <BusinessModal
+            isOpen={isModalOpen}
+            onClose={() => setIsModalOpen(false)}
+          />
         )}
       </AnimatePresence>
     </>

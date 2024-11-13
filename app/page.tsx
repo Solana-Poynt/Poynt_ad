@@ -12,6 +12,7 @@ import {
 } from "lucide-react";
 import Header from "../components/header";
 import Footer from "../components/footer";
+import { getDataFromLocalStorage } from "@/utils/localStorage";
 
 export default function Home() {
   const features = [
@@ -68,6 +69,7 @@ export default function Home() {
         "Monitor performance with our intuitive dashboard. Track clicks, impressions, and conversions in real-time.",
     },
   ];
+  const name = getDataFromLocalStorage("name");
 
   return (
     <div className="bg-white justify-center w-full">

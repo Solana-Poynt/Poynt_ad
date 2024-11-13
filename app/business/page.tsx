@@ -1,10 +1,10 @@
 "use client";
 import { useRouter } from "next/navigation";
 import Image from "next/image";
-import React, { useState } from "react";
+import React, { useState, useRef, useEffect } from "react";
 import { useMediaQuery } from "react-responsive";
 import QuickStartButton from "@/components/quick_modal";
-import BusinessModal from "@/components/businessmodal";
+import ProfileDropdown from "@/components/ProfileView";
 import {
   LineChart,
   Line,
@@ -19,10 +19,17 @@ import {
   Layout,
   PieChart,
   Users,
+  LogOut,
+  User,
+  Briefcase,
   Calendar,
+  Settings,
+  HelpCircle,
   ChevronDown,
+  ChevronUp,
   Building2,
 } from "lucide-react";
+import { getDataFromLocalStorage } from "@/utils/localStorage";
 
 const mockData = [
   { name: "Jan", value: 400 },
@@ -33,23 +40,11 @@ const mockData = [
   { name: "Jun", value: 900 },
 ];
 
-interface BusinessFormData {
-  businessName: string;
-  businessIndustry: string;
-  selectedCategories: string[];
-}
-
 export default function Page() {
   const router = useRouter();
   const isMobile = useMediaQuery({ query: "(max-width: 1000px)" });
-
   const [isModalOpen, setIsModalOpen] = useState<boolean>(false);
-
-  const handleSubmit = (data: BusinessFormData) => {
-    // Handle form submission
-    console.log("Form submitted:", data);
-    // You can add API call here
-  };
+  const accessToken = getDataFromLocalStorage("accessToken");
 
   const stats = [
     {
@@ -79,17 +74,17 @@ export default function Page() {
   ];
 
   return (
-    <div className="flex min-h-screen w-full bg-gray-50">
+    <div className="flex min-h-screen w-full">
       {/* Main Content */}
       <div className="flex-1 flex flex-col">
         {/* Header */}
-        <header className="h-16 md:h-14 bg-white border-b border-gray-200">
+        <header className="h-16 md:h-14 bg-white">
           <div className=" max-w-7xl mx-auto px-4 flex items-center justify-between">
             {/* Left Section: Logo and Title */}
             <div className="flex items-center gap-3">
               {/* Logo Container */}
               <div className="relative">
-                <a href="/" className="block">
+                <div className="block">
                   <div className="relative w-10 h-10 md:w-12 md:h-12">
                     <Image
                       src="/trans.png"
@@ -101,7 +96,7 @@ export default function Page() {
                       sizes="(max-width: 768px) 40px, 48px"
                     />
                   </div>
-                </a>
+                </div>
               </div>
 
               {/* Brand Name */}
@@ -113,6 +108,7 @@ export default function Page() {
             {/* Right Section: Actions and Profile */}
             <div className="flex items-center gap-3 md:gap-4">
               {/* Quick Start Guide */}
+
               <div className="relative group">
                 <div className="flex items-center gap-3">
                   <QuickStartButton
@@ -123,29 +119,9 @@ export default function Page() {
                 </div>
               </div>
 
-              {/* New Campaign Button */}
-              <button
-                className="hidden md:flex items-center p-2 bg-[#B71C1C] text-white rounded-lg hover:bg-[#B71C1C]/90 transition-colors duration-200 whitespace-nowrap"
-                onClick={() => {
-                  router.push("/create_campaign");
-                }}
-              >
-                <Plus className="w-4 h-4 mr-2" />
-                <span className="text-sm">New Campaign</span>
-              </button>
-              <button
-                onClick={() => setIsModalOpen(true)}
-                className="flex items-center gap-2 px-4 py-2 bg-[#B71C1C] text-white rounded-lg hover:bg-[#B71C1C]/90 transition-colors"
-              >
-                <Building2 className="w-4 h-4" />
-                <span>Create Business</span>
-              </button>
+              {/* PROFILE ICON SIDE  */}
 
-              <BusinessModal
-                isOpen={isModalOpen}
-                onClose={() => setIsModalOpen(false)}
-                onSubmit={handleSubmit}
-              />
+              <ProfileDropdown />
 
               {/* Mobile New Campaign Button */}
               <button className="md:hidden flex items-center p-2 bg-[#B71C1C] text-white rounded-lg hover:bg-[#B71C1C]/90 transition-colors duration-200">
@@ -157,15 +133,26 @@ export default function Page() {
 
         {/* Main Content Area */}
         <main className="flex-1 overflow-auto">
-          <div className="max-w-7xl mx-auto px-6 py-8">
+          <div className="max-w-7xl mx-auto px-6 py-12">
             {/* Page Title */}
-            <div className="mb-8">
-              <h1 className="text-2xl font-bold text-gray-900">
-                Campaign Overview
-              </h1>
-              <p className="mt-1 text-sm text-gray-500">
-                Track and manage your advertising campaigns
-              </p>
+            <div className="flex flex-row  justify-between items-center mb-8 bg-[#F0F0F0] w-full py-5 px-5 rounded-xl">
+              <div>
+                <h1 className="text-2xl font-bold text-gray-900">Dashboard</h1>
+                <p className="mt-1 text-sm font-semibold text-gray-500">
+                  Track and manage your advertising campaigns
+                </p>
+              </div>
+
+              {/* New Campaign Button */}
+              <button
+                className="hidden md:flex items-center p-3 bg-[#821414] text-white rounded-lg hover:bg-[#B71C1C] transition-colors duration-200 whitespace-nowrap"
+                onClick={() => {
+                  router.push("/create_campaign");
+                }}
+              >
+                <Plus className="w-4 h-4 mr-2" />
+                <span className="text-sm">Create a Campaign</span>
+              </button>
             </div>
 
             {/* Stats Grid */}

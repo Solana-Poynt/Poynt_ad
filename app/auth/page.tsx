@@ -8,18 +8,28 @@ import { AppDispatch, RootState } from "@/store/store";
 import { setIsAuth } from "@/store/slices/isAuthSlice";
 import Notification from "../../components/notification";
 import { baseURL } from "@/utils/config/baseUrl";
-import { getDataFromLocalStorage } from "@/utils/localStorage";
+import {
+  getDataFromLocalStorage,
+  saveDataToLocalStorage,
+} from "@/utils/localStorage";
 import { NotificationState } from "@/types/general";
 import { GoogleUser } from "@/types/campaign";
 
 interface LoginResponse {
+  status: number;
   message: string;
-  accessToken: string;
-  user: {
-    id: string;
-    email: string;
-    name: string;
-    role: string;
+  data: {
+    accessToken: string;
+    user: {
+      id: string;
+      email: string;
+      name: string;
+      role: string;
+      businesses: any[];
+      createdAt: string;
+      phoneNumber: string | null;
+      updatedAt: string;
+    };
   };
 }
 
@@ -33,7 +43,7 @@ export default function Signup() {
     show: false,
   });
 
-  //CHECK IF USER IS AUTHENTICATED
+  // CHECK IF USER IS AUTHENTICATED
   const isAuthenticated = useSelector(
     (state: RootState) => state.isAuth.isAuth
   );
@@ -59,11 +69,7 @@ export default function Signup() {
   // Handle backend authentication
   const handleBackendAuth = async (userData: GoogleUser): Promise<void> => {
     try {
-      console.log("Sending to backend:", {
-        email: userData.email,
-        name: userData.name,
-        idToken: userData.idtoken,
-      });
+      
 
       const response = await fetch(`${baseURL}/auth/google`, {
         method: "POST",
@@ -75,26 +81,45 @@ export default function Signup() {
           name: userData.name,
         }),
       });
+
       if (!response.ok) {
-        showNotification("Sign in Failed!", "error");
+        const errorData = await response.json();
+        console.error("Authentication error:", errorData);
+        showNotification(`Sign in failed: ${errorData.message}`, "error");
+        return;
       }
 
       const data: LoginResponse = await response.json();
+
+    
       showNotification("Successfully signed in!", "success");
+
       // Dispatch auth state
       dispatch(
         setIsAuth({
           isAuth: true,
-          accessToken: data.accessToken,
-          user: data.user,
+          accessToken: data.data.accessToken,
+          user: {
+            id: data.data.user.id,
+            email: data.data.user.email,
+            name: data.data.user.name,
+            role: data.data.user.role,
+          },
         })
       );
+
+      // set LS for modal
+      saveDataToLocalStorage("onboard", "false");
       // Redirect after successful login
       setTimeout(() => {
         router.push("/business");
       }, 1000);
     } catch (error) {
-      showNotification("Authentication failed", "error");
+      console.error("Authentication error:", error);
+      showNotification(
+        "Authentication failed: An unexpected error occurred.",
+        "error"
+      );
     }
   };
 
@@ -121,6 +146,9 @@ export default function Signup() {
         if (!userData.email_verified) {
           throw new Error("Email not verified with Google");
         }
+
+    
+
         await handleBackendAuth(userData);
       } catch (error) {
         showNotification("Cannot Connect to Google", "error");
