@@ -64,8 +64,8 @@ const config: Config = {
         },
       },
       fontFamily: {
-        lato: ['Lato"', "sans-serif"],
-        poppins: ['Poppins"', "sans-serif"],
+        lato: ["Lato", "sans-serif"],
+        poppins: ["Poppins", "sans-serif"],
       },
       boxShadow: {
         customhover: "0px 6px 8px 4px rgba(0, 0, 0, 0.05)",
@@ -92,12 +92,8 @@ const config: Config = {
           },
         },
         shine: {
-          from: {
-            transform: "translateX(-100%)",
-          },
-          to: {
-            transform: "translateX(100%)",
-          },
+          from: { transform: "translateX(-100%)" },
+          to: { transform: "translateX(100%)" },
         },
       },
       borderRadius: {
@@ -108,5 +104,6 @@ const config: Config = {
     },
   },
   plugins: [require("tailwindcss-animate")],
-};
+} satisfies Config;
+
 export default config;

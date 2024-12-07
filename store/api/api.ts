@@ -5,7 +5,7 @@ import {
 } from "@reduxjs/toolkit/query/react";
 import { baseURL } from "../../utils/config/baseUrl";
 import { getDataFromLocalStorage } from "../../utils/localStorage";
-import { setIsAuth, logOut } from "../slices/isAuthSlice";
+import { setIsAuth, logout } from "../slices/isAuthSlice";
 
 // Define types for the API data
 interface User {
@@ -90,7 +90,7 @@ const baseQueryWithReauth = async (
       result = await baseQuery(args, api, extraOptions);
     } else {
       // Log out the user if token refresh fails
-      api.dispatch(logOut());
+      api.dispatch(logout());
     }
   }
 
