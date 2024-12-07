@@ -3,7 +3,7 @@ import React, { useRef, useState, useEffect } from "react";
 import { ChevronDown, Building2, Briefcase } from "lucide-react";
 import BusinessModal from "./businessmodal";
 import { getDataFromLocalStorage } from "@/utils/localStorage";
-import { BusinessFormData } from "@/types/general";
+// import { BusinessFormData } from "@/types/general";
 
 interface Account {
   name: string;
@@ -77,7 +77,7 @@ const ProfileDropdown: React.FC = () => {
         onClick={() => setShowDropDown(!showDropDown)}
         onKeyDown={handleKeyDown}
         className={`
-          flex items-center gap-2 px-4 py-[7px] mr-6 rounded-lg
+          flex items-center gap-2 px-4 py-[5px] mr-6 rounded-lg
           border border-gray-200 shadow-sm
           hover:shadow-md hover:border-gray-300 
           bg-white

@@ -2,7 +2,7 @@
 import Image from "next/image";
 import React, { useState, useEffect, useCallback } from "react";
 import { useRouter } from "next/navigation";
-import { useGoogleLogin } from "@react-oauth/google";
+import GoogleLoginButton from "@/components/ui/google";
 import { useDispatch, useSelector } from "react-redux";
 import { AppDispatch, RootState } from "@/store/store";
 import { setIsAuth } from "@/store/slices/isAuthSlice";
@@ -13,7 +13,9 @@ import {
   saveDataToLocalStorage,
 } from "@/utils/localStorage";
 import { NotificationState } from "@/types/general";
-import { GoogleUser } from "@/types/campaign";
+import { motion, AnimatePresence } from "framer-motion";
+import LoadingOverlay from "@/components/ui/loading";
+import { useOkto, type OktoContextType } from "okto-sdk-react";
 
 interface LoginResponse {
   status: number;
@@ -33,6 +35,12 @@ interface LoginResponse {
   };
 }
 
+interface GoogleCredentialResponse {
+  credential?: string;
+  clientId?: string;
+  select_by?: string;
+}
+
 export default function Signup() {
   const router = useRouter();
   const dispatch = useDispatch<AppDispatch>();
@@ -43,58 +51,75 @@ export default function Signup() {
     show: false,
   });
 
-  // CHECK IF USER IS AUTHENTICATED
+  const { authenticate } = useOkto() as OktoContextType;
+
   const isAuthenticated = useSelector(
     (state: RootState) => state.isAuth.isAuth
   );
+
   useEffect(() => {
     if (isAuthenticated) {
       const role = getDataFromLocalStorage("role");
-      role === "admin" ? router.push(`/admin`) : router.push(`/business`);
+      const route = role === "admin" ? "/admin" : "/business";
+      router.push(route);
     }
-  }, [isAuthenticated]);
+  }, [isAuthenticated, router]);
 
-  // Notification helper
   const showNotification = useCallback(
     (message: string, status: "success" | "error") => {
-      setNotification({
-        message,
-        status,
-        show: true,
-      });
+      setNotification({ message, status, show: true });
     },
     []
   );
 
-  // Handle backend authentication
-  const handleBackendAuth = async (userData: GoogleUser): Promise<void> => {
-    try {
-      
+  const handleOktoAuth = async (idToken: string): Promise<boolean> => {
+    return new Promise((resolve, reject) => {
+      authenticate(idToken, (result, error) => {
+        if (error) {
+          console.error("Okto authentication error:", error);
+          reject(error);
+          return;
+        }
+        if (result) {
+          // console.log("Okto authentication successful");
+          resolve(true);
+          return;
+        }
+        reject(new Error("No authentication result received"));
+      });
+    });
+  };
 
+  const handleAuth = async (credential: GoogleCredentialResponse) => {
+    if (!credential?.credential) {
+      showNotification("Invalid credentials provided", "error");
+      return;
+    }
+
+    try {
+      setIsLoading(true);
+      const idToken = credential.credential;
+
+      // First authenticate with Okto
+      // console.log("Starting Okto authentication...");
+      await handleOktoAuth(idToken);
+      // console.log("Okto authentication successful");
+
+      // Then authenticate with your backend
       const response = await fetch(`${baseURL}/auth/google`, {
         method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({
-          email: userData.email,
-          name: userData.name,
-        }),
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ idToken: credential.credential }),
       });
 
       if (!response.ok) {
         const errorData = await response.json();
-        console.error("Authentication error:", errorData);
-        showNotification(`Sign in failed: ${errorData.message}`, "error");
-        return;
+        throw new Error(errorData.message);
       }
 
       const data: LoginResponse = await response.json();
-
-    
       showNotification("Successfully signed in!", "success");
 
-      // Dispatch auth state
       dispatch(
         setIsAuth({
           isAuth: true,
@@ -108,73 +133,49 @@ export default function Signup() {
         })
       );
 
-      // set LS for modal
       saveDataToLocalStorage("onboard", "false");
-      // Redirect after successful login
-      setTimeout(() => {
-        router.push("/business");
-      }, 1000);
+      router.push("/business");
     } catch (error) {
       console.error("Authentication error:", error);
       showNotification(
-        "Authentication failed: An unexpected error occurred.",
+        `Authentication failed: ${
+          error instanceof Error
+            ? error.message
+            : "An unexpected error occurred"
+        }`,
         "error"
       );
+    } finally {
+      setIsLoading(false);
     }
   };
-
-  // Google login implementation and idtoken accessing.
-  const handleGoogleSignIn = useGoogleLogin({
-    onSuccess: async (tokenResponse) => {
-      try {
-        setIsLoading(true);
-
-        const userInfoResponse = await fetch(
-          "https://www.googleapis.com/oauth2/v3/userinfo",
-          {
-            headers: {
-              Authorization: `Bearer ${tokenResponse.access_token}`,
-            },
-          }
-        );
-
-        if (!userInfoResponse.ok) {
-          throw new Error("Failed to get user info from Google");
-        }
-
-        const userData: GoogleUser = await userInfoResponse.json();
-        if (!userData.email_verified) {
-          throw new Error("Email not verified with Google");
-        }
-
-    
-
-        await handleBackendAuth(userData);
-      } catch (error) {
-        showNotification("Cannot Connect to Google", "error");
-      } finally {
-        setIsLoading(false);
-      }
-    },
-    onError: () => {
-      showNotification("Failed to sign in with Google", "error");
-      setIsLoading(false);
-    },
-  });
-
   return (
-    <div className="flex w-full h-screen">
-      {/* Background Image Section */}
-      <div className="hidden lg:block relative bg-[url('/pexel3.jpg')] bg-no-repeat bg-cover bg-center w-2/5 h-full">
-        <div className="absolute inset-0 bg-gradient-to-l from-secondary to-main opacity-60" />
-      </div>
+    <motion.div
+      className="flex w-full h-screen"
+      initial={{ opacity: 0 }}
+      animate={{ opacity: 1 }}
+      transition={{ duration: 0.5 }}
+    >
+      <motion.div
+        className="hidden lg:block relative bg-[url('/pexel3.jpg')] bg-no-repeat bg-cover bg-center w-2/5 h-full"
+        initial={{ x: -50, opacity: 0 }}
+        animate={{ x: 0, opacity: 1 }}
+        transition={{ duration: 0.6, delay: 0.2 }}
+      >
+        <div className="absolute inset-0 bg-gradient-to-l from-side to-main opacity-60" />
+      </motion.div>
 
-      {/* Sign Up Form Section */}
-      <div className="w-full lg:w-3/5 h-full bg-white flex flex-col items-center justify-center gap-10 py-10 overflow-y-auto">
-        {/* Logo */}
-        <a
+      <motion.div
+        className="w-full lg:w-3/5 h-full bg-white flex flex-col items-center justify-center gap-6 py-10 overflow-y-auto"
+        initial={{ x: 50, opacity: 0 }}
+        animate={{ x: 0, opacity: 1 }}
+        transition={{ duration: 0.6, delay: 0.4 }}
+      >
+        <motion.a
           href="/"
           className="transition-transform hover:scale-105"
+          whileHover={{ scale: 1.05 }}
+          whileTap={{ scale: 0.95 }}
           aria-label="Go to homepage"
         >
           <Image
@@ -186,54 +187,40 @@ export default function Signup() {
             priority
             alt="Poynt Logo"
           />
-        </a>
+        </motion.a>
 
-        {/* Title */}
-        <h2 className="w-full font-poppins font-semibold text-center text-xl md:text-2xl text-blacc">
+        <motion.h2
+          className="w-full font-poppins font-semibold text-center text-xl md:text-2xl text-blacc"
+          initial={{ y: 20, opacity: 0 }}
+          animate={{ y: 0, opacity: 1 }}
+          transition={{ duration: 0.6, delay: 0.6 }}
+        >
           Get Started
-        </h2>
+        </motion.h2>
 
-        {/* Notification Component */}
-        {notification.show && (
-          <Notification
-            message={notification.message}
-            status={notification.status}
-            switchShowOff={() =>
-              setNotification((prev) => ({ ...prev, show: false }))
-            }
-          />
-        )}
-
-        {/* Sign in Button Section */}
-        <div className="w-3/4 flex flex-col gap-6">
-          <button
-            onClick={() => !isLoading && handleGoogleSignIn()}
-            disabled={isLoading}
-            className={`
-              flex items-center justify-center px-6 py-3 rounded-full border-2 gap-3 md:gap-5 
-              transition-all duration-300 ease-in-out
-              ${
-                isLoading
-                  ? "bg-gray-300 cursor-not-allowed border-gray-300"
-                  : "border-secondary bg-secondary text-white hover:bg-transparent hover:text-secondary"
+        <AnimatePresence>
+          {notification.show && (
+            <Notification
+              message={notification.message}
+              status={notification.status}
+              switchShowOff={() =>
+                setNotification((prev) => ({ ...prev, show: false }))
               }
-            `}
-            aria-busy={isLoading}
-          >
-            {isLoading ? (
-              <div className="flex items-center gap-2">
-                <div className="animate-spin h-5 w-5 border-2 border-white border-t-transparent rounded-full" />
-                <span className="font-poppins">Signing in...</span>
-              </div>
-            ) : (
-              <>
-                <i className="bx bxl-google text-3xl" aria-hidden="true" />
-                <span className="font-poppins">Sign in with Google</span>
-              </>
-            )}
-          </button>
-        </div>
-      </div>
-    </div>
+            />
+          )}
+        </AnimatePresence>
+
+        <motion.div
+          className="flex flex-col gap-6"
+          initial={{ y: 20, opacity: 0 }}
+          animate={{ y: 0, opacity: 1 }}
+          transition={{ duration: 0.6, delay: 0.8 }}
+        >
+          <GoogleLoginButton isLoading={isLoading} onSuccess={handleAuth} />
+        </motion.div>
+
+        <AnimatePresence>{isLoading && <LoadingOverlay />}</AnimatePresence>
+      </motion.div>
+    </motion.div>
   );
 }

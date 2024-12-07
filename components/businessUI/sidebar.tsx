@@ -1,15 +1,15 @@
 "use client";
-import Image from "next/image";
+// import Image from "next/image";
 import React, { useState, useRef, useEffect } from "react";
 import { useRouter, usePathname } from "next/navigation";
 import { Icon } from "@iconify/react";
 import { useMediaQuery } from "react-responsive";
-import { Menu, X, ChevronDown, ChevronUp, Plus, LogOut } from "lucide-react";
-import { getDataFromLocalStorage } from "@/utils/localStorage";
-import { logOut } from "@/store/slices/isAuthSlice";
+import { LogOut } from "lucide-react";
+import { logout } from "@/store/slices/isAuthSlice";
 import { useDispatch } from "react-redux";
 import { AppDispatch } from "@/store/store";
 import { googleLogout } from "@react-oauth/google";
+import { useOkto, type OktoContextType } from "okto-sdk-react";
 
 interface NavProps {
   role: string;
@@ -24,15 +24,16 @@ interface MenuItem {
   link: string;
 }
 
-export default function Navigation({ role }: NavProps) {
+export default function SideNavigation({ role }: NavProps) {
   const router = useRouter();
   const dispatch = useDispatch<AppDispatch>();
 
   const pathname = usePathname();
-  const overlayRef = useRef(null);
+  // const overlayRef = useRef(null);
   const isMobile = useMediaQuery({ query: "(max-width: 1000px)" });
 
   const [isSidebarOpen, setIsSidebarOpen] = useState(true);
+  const { logOut } = useOkto() as OktoContextType;
 
   const [businessMenu, setBusinessMenu] = useState<MenuItem[]>([
     {
@@ -58,14 +59,6 @@ export default function Navigation({ role }: NavProps) {
       iconfilled: "solar:wallet-bold",
       title: "Wallet",
       link: "/business/wallet",
-    },
-    {
-      id: 4,
-      isSelected: false,
-      icon: "octicon:person-24",
-      iconfilled: "octicon:person-fill-24",
-      title: "Profile",
-      link: "/business/profile",
     },
   ]);
 
@@ -122,11 +115,12 @@ export default function Navigation({ role }: NavProps) {
     }
   }
 
-  const logout = async () => {
+  const logUserout = async () => {
     try {
       googleLogout();
       // Clear auth state in Redux
-      dispatch(logOut());
+      dispatch(logout());
+      logOut();
 
       router.push("/");
     } catch (error) {
@@ -164,29 +158,29 @@ export default function Navigation({ role }: NavProps) {
         onClick={() => handleNavigation(item.id, item.link)}
         className={`flex items-center ${
           isSidebarOpen ? "px-4" : "justify-center"
-        } py-2 mb-2 rounded-lg cursor-pointer transition-colors duration-200 ${
+        } py-2  mb-2 rounded-lg cursor-pointer transition-colors duration-200 ${
           item.isSelected
-            ? "bg-[#821414] text-white"
-            : "text-gray-600 hover:bg-gray-50"
+            ? "bg-main text-side"
+            : "text-[#575757] hover:bg-gray-50"
         }`}
       >
         {item.isSelected ? (
           <Icon
-            className="text-white"
+            className="text-side"
             icon={item.iconfilled}
             width="24"
             height="24"
           />
         ) : (
           <Icon
-            className="text-gray-600"
+            className="text-[#575757]"
             icon={item.icon}
             width="24"
             height="24"
           />
         )}
         {isSidebarOpen && (
-          <span className="ml-3 text-sm font-medium">{item.title}</span>
+          <span className="ml-3 text-xs font-medium">{item.title}</span>
         )}
       </div>
     ));
@@ -195,16 +189,12 @@ export default function Navigation({ role }: NavProps) {
     updateSelectedMenuItem(pathname);
   }, [pathname]);
 
-  
-
   return (
-    <aside
-      className={`${
-        isSidebarOpen ? "w-64" : "w-20"
-      } fixed inset-y-0 left-0 lg:relative h-screen bg-[#F0F0F0] border-r border-gray-200 flex flex-col transition-all duration-300 z-50`}
+    <div
+      className={`fixed inset-y-0 left-0 lg:relative h-full mb-4  py-5 rounded-lg bg-white border-r border-gray-200 flex flex-col transition-all duration-300 z-50`}
     >
       {/* Header */}
-      <div className="h-16 flex items-center justify-between px-4  border-gray-200">
+      {/* <div className="h-16 flex items-center justify-between px-4  border-gray-200">
         <button
           onClick={() => setIsSidebarOpen(!isSidebarOpen)}
           className="p-2 hover:bg-gray-100 rounded-lg transition-colors duration-200"
@@ -215,7 +205,7 @@ export default function Navigation({ role }: NavProps) {
             <Menu className="w-5 h-5 text-gray-600" />
           )}
         </button>
-      </div>
+      </div> */}
 
       {/* Navigation Items */}
       <nav className="flex-1 p-4 overflow-y-auto">
@@ -227,11 +217,11 @@ export default function Navigation({ role }: NavProps) {
       </nav>
 
       {/* Profile & Logout Section */}
-      <div className="p-4 border-t border-gray-200 space-y-2">
+      <div className="p-4 border-t border-gray-200">
         {isSidebarOpen && (
           <button
             onClick={() => {
-              logout();
+              logUserout();
             }}
             className="w-full flex items-center gap-3 px-4 py-2 text-gray-600 hover:bg-gray-50 rounded-lg transition-colors"
           >
@@ -240,6 +230,6 @@ export default function Navigation({ role }: NavProps) {
           </button>
         )}
       </div>
-    </aside>
+    </div>
   );
 }

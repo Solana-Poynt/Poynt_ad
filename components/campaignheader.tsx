@@ -5,11 +5,9 @@
 import { useState, useEffect } from "react";
 import Image from "next/image";
 import Link from "next/link";
-import { IoMenu, IoClose } from "react-icons/io5";
 import { File } from "lucide-react";
 
 export default function Header() {
-  const [isMenuOpen, setIsMenuOpen] = useState(false);
   const [hasScrolled, setHasScrolled] = useState(false);
 
   useEffect(() => {

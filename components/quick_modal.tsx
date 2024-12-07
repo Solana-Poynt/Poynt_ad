@@ -17,8 +17,8 @@ import {
   Building2,
 } from "lucide-react";
 import BusinessModal from "./businessmodal";
-import { BusinessFormData } from "@/types/general";
-import { access } from "fs";
+// import { BusinessFormData } from "@/types/general";
+// import { access } from "fs";
 
 interface Step {
   title: string;

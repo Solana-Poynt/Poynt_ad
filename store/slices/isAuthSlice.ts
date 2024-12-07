@@ -69,7 +69,7 @@ export const isAuthSlice = createSlice({
       saveDataToLocalStorage("name", user.name);
       saveDataToLocalStorage("role", user.role);
     },
-    logOut: (state) => {
+    logout: (state) => {
       state.isAuth = false;
       state.accessToken = null;
       state.user = {
@@ -90,6 +90,6 @@ export const isAuthSlice = createSlice({
 });
 
 // Export the actions for use in components
-export const { setIsAuth, logOut } = isAuthSlice.actions;
+export const { setIsAuth, logout } = isAuthSlice.actions;
 
 export default isAuthSlice.reducer;

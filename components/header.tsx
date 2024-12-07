@@ -1,6 +1,4 @@
 "use client";
-// #B71C1C #FDF6E6
-"use client";
 
 import { useState, useEffect } from "react";
 import Image from "next/image";

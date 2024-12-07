@@ -10,9 +10,6 @@ import {
   MousePointerClick,
   Eye,
   Info,
-  MapPin,
-  CheckCircle,
-  AlertCircle,
   Loader,
 } from "lucide-react";
 import {
