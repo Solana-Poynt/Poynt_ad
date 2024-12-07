@@ -3,7 +3,7 @@
 import { PropsWithChildren } from "react";
 import { OktoProvider, BuildType } from "okto-sdk-react";
 
-const OKTO_CLIENT_API_KEY = process.env.NEXT_PUBLIC_OKTO_CLIENT_API_KEY!;
+const OKTO_CLIENT_API_KEY = process.env.NEXT_PUBLIC_OKTO_CLIENT_API!;
 
 if (!OKTO_CLIENT_API_KEY) {
   throw new Error(
