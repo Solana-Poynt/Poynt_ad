@@ -1,55 +1,69 @@
 "use client";
 import { useRouter } from "next/navigation";
-import { useState, useRef } from "react";
+import { useState } from "react";
 import {
-  Search,
   Plus,
   Edit2,
   ChevronDown,
   ChevronUp,
-  Wallet,
+  Copy,
+  Trash2,
+  FileText,
 } from "lucide-react";
 
 interface Campaign {
   id: number;
   name: string;
-  status: "Active" | "Paused" | "Draft";
+  status: "Active" | "Inactive" | "Pending";
   budget: number;
-  reach: number;
-  impressions: number;
-  costPerReach: number;
-  fundsSpent: number;
+  amountSpent: number;
+  reached: number;
+  costPerView: number;
+  linkClick: number;
+  ctr: string;
   isActive: boolean;
 }
 
 export default function Page() {
   const router = useRouter();
-  const overlayRef = useRef<HTMLDivElement>(null);
-  const [showDropDown, setShowDropDown] = useState(false);
-  const [search, setSearch] = useState("");
+  const [activeTab, setActiveTab] = useState<string>("all");
   const [selectedCampaigns, setSelectedCampaigns] = useState<number[]>([]);
 
   const campaigns: Campaign[] = [
     {
       id: 1,
-      name: "Summer Sale Campaign",
+      name: "Summer sales campaign",
       status: "Active",
-      budget: 20000,
-      reach: 5000,
-      impressions: 2500,
-      costPerReach: 500,
-      fundsSpent: 13000,
+      budget: 200,
+      amountSpent: 200,
+      reached: 100,
+      costPerView: 0.085,
+      linkClick: 10,
+      ctr: "1%",
       isActive: true,
     },
     {
       id: 2,
-      name: "Back to School Promo",
-      status: "Paused",
-      budget: 15000,
-      reach: 3000,
-      impressions: 1800,
-      costPerReach: 400,
-      fundsSpent: 8000,
+      name: "Summer sales campaign",
+      status: "Pending",
+      budget: 200,
+      amountSpent: 200,
+      reached: 100,
+      costPerView: 0.085,
+      linkClick: 10,
+      ctr: "1%",
+      isActive: false,
+    },
+    {
+      id: 3,
+      name: "Summer sales campaign",
+      status: "Inactive",
+      budget: 200,
+      amountSpent: 200,
+      reached: 100,
+      costPerView: 0.085,
+      linkClick: 10,
+      ctr: "1%",
       isActive: false,
     },
   ];
@@ -70,89 +84,141 @@ export default function Page() {
     }
   };
 
+  const getStatusColor = (status: string) => {
+    switch (status) {
+      case "Active":
+        return "text-green-600";
+      case "Pending":
+        return "text-yellow-600";
+      case "Inactive":
+        return "text-gray-400";
+      default:
+        return "text-gray-600";
+    }
+  };
+
   return (
-    <div className="p-6 max-w-[1600px] mx-auto">
-      {/* Header Section */}
-      <div className="flex flex-col lg:flex-row justify-between gap-4 mb-8">
-        <div className="flex flex-col justify-between w-full lg:flex-row items-start lg:items-center gap-4">
-          <h1 className="text-2xl font-bold text-gray-900">Campaign Manager</h1>
-
-          {/* Account Selector */}
-
-          {/* Wallet */}
-          <div className="flex items-center gap-2 px-4 py-2 bg-white border border-gray-200 rounded-lg">
-            <Wallet size={16} className="text-gray-500" />
-            <span className="text-sm text-gray-600 font-medium">
-              1FfmbH...paPH
-            </span>
-          </div>
-        </div>
-      </div>
-
-      {/* Search and Actions */}
-      <div className="flex flex-col lg:flex-row gap-4 mb-6">
-        <div className="flex-1">
-          <div className="relative">
-            <Search
-              className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400"
-              size={20}
-            />
-            <input
-              type="text"
-              value={search}
-              onChange={(e) => setSearch(e.target.value)}
-              placeholder="Search campaigns..."
-              className="w-full pl-10 pr-4 py-2 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
-            />
-          </div>
-        </div>
-        <div className="flex gap-3">
+    <div className="px-6 relative max-w-[1600px] mx-auto">
+      <div className="flex justify-between items-center mb-20">
+        <div className="flex flex-row w-full justify-between gap-4 items-center">
+          <h1 className="text-2xl font-semibold text-text">Campaign</h1>
           <button
-            onClick={() => {
-              router.push("/create_campaign");
-            }}
-            className="flex items-center gap-2 px-4 py-2 bg-[#B71C1C] text-white rounded-lg hover:bg-[#805c02] transition-colors"
+            onClick={() => router.push("/create_campaign")}
+            className="flex items-center gap-2 px-4 py-2 bg-[#8B1212] text-white rounded-lg hover:bg-[#6F0E0E] transition-colors"
           >
             <Plus size={16} />
-            <span>Create Campaign</span>
+            <span>Create a campaign</span>
           </button>
         </div>
       </div>
+      {/* Tabs  */}
+      <div className=" mb-8 bg-white rounded-xl overflow-hidden">
+        {/* Tab Navigation */}
+        <div className="flex flex-row">
+          <div className="absolute top-28 bg-white rounded-3xl p-5">
+            <button
+              onClick={() => setActiveTab("all")}
+              className={`px-4 py-2 font-medium text-sm ${
+                activeTab === "all"
+                  ? "text-[#8B1212] border-b-2 border-[#8B1212]"
+                  : "text-gray-500"
+              }`}
+            >
+              All ads
+            </button>
+            <button
+              onClick={() => setActiveTab("active")}
+              className={`px-4 py-2 font-medium text-sm ${
+                activeTab === "active"
+                  ? "text-[#8B1212] border-b-2 border-[#8B1212]"
+                  : "text-gray-500"
+              }`}
+            >
+              Active ads
+            </button>
+            <button
+              onClick={() => setActiveTab("inactive")}
+              className={`px-4 py-2 font-medium text-sm ${
+                activeTab === "inactive"
+                  ? "text-[#8B1212] border-b-2 border-[#8B1212]"
+                  : "text-gray-500"
+              }`}
+            >
+              Inactive ads
+            </button>
+            <button
+              onClick={() => setActiveTab("pending")}
+              className={`px-4 py-2 font-medium text-sm ${
+                activeTab === "pending"
+                  ? "text-[#8B1212] border-b-2 border-[#8B1212]"
+                  : "text-gray-500"
+              }`}
+            >
+              Pending ads
+            </button>
+          </div>
 
-      {/* Campaigns Table */}
-      <div className="bg-white border border-gray-200 rounded-lg overflow-hidden">
-        <div className="overflow-x-auto">
-          <table className="w-full">
+          {/* Action Buttons */}
+          <div className="bg-main w-full  flex justify-end gap-3 pb-4 mb-4">
+            <button className="py-1 px-2 flex bg-white flex-row items-center gap-1 text-gray-600 hover:bg-gray-100 rounded-lg text-xs">
+              <Edit2 size={20} />
+              <h1>Edit</h1>
+            </button>
+            <button className="py-1 px-2 flex bg-white flex-row items-center gap-1 text-gray-600 hover:bg-gray-100 rounded-lg text-xs">
+              <Trash2 size={20} />
+              <h1>Delete</h1>
+            </button>
+            <button className="py-1 px-2 flex bg-white flex-row items-center gap-1 text-gray-600 hover:bg-gray-100 rounded-lg text-xs">
+              <FileText size={20} />
+              <h1>Report</h1>
+            </button>
+
+            <button className="py-1 px-2 flex bg-white flex-row items-center gap-1 text-gray-600 hover:bg-gray-100 rounded-lg text-xs">
+              <Copy size={20} />
+              <h1>Copy</h1>
+            </button>
+          </div>
+        </div>
+
+        {/* Campaigns Table */}
+        <div>
+          <table className="bg-white rounded-xl w-full">
             <thead>
-              <tr className="bg-gray-50 border-b border-gray-200">
-                <th className="w-12 p-4">
+              <tr className="border-b border-gray-200">
+                <th className="w-12 px-4 py-3">
                   <input
                     type="checkbox"
-                    className="w-4 h-4 rounded border-gray-300 text-blue-600 focus:ring-blue-500"
+                    className="w-4 h-4 rounded border-gray-300"
                     checked={selectedCampaigns.length === campaigns.length}
                     onChange={toggleSelectAll}
                   />
                 </th>
-                <th className="w-16 p-4 text-left text-sm font-medium text-gray-500">
+                <th className="px-4 py-3 text-left text-sm font-medium text-gray-500">
                   Status
                 </th>
-                <th className="p-4 text-left text-sm font-medium text-gray-500">
+                <th className="px-4 py-3 text-left text-sm font-medium text-gray-500">
                   Campaign
                 </th>
-                <th className="p-4 text-left text-sm font-medium text-gray-500">
+                <th className="px-4 py-3 text-left text-sm font-medium text-gray-500">
                   Budget
                 </th>
-                <th className="p-4 text-left text-sm font-medium text-gray-500">
-                  Reach
+                <th className="px-4 py-3 text-left text-sm font-medium text-gray-500">
+                  Amount spent
                 </th>
-                <th className="p-4 text-left text-sm font-medium text-gray-500">
-                  Impressions
+                <th className="px-4 py-3 text-left text-sm font-medium text-gray-500">
+                  Reached
                 </th>
-                <th className="p-4 text-left text-sm font-medium text-gray-500">
-                  Cost/Reach
+                <th className="px-4 py-3 text-left text-sm font-medium text-gray-500">
+                  Cost per view
                 </th>
-                <th className="p-4 text-left text-sm font-medium text-gray-500">
-                  Spent
+                <th className="px-4 py-3 text-left text-sm font-medium text-gray-500">
+                  Link click
+                </th>
+                <th className="px-4 py-3 text-left text-sm font-medium text-gray-500">
+                  CTR
+                </th>
+                <th className="px-4 py-3 text-left text-sm font-medium text-gray-500">
+                  On/Off
                 </th>
               </tr>
             </thead>
@@ -162,58 +228,68 @@ export default function Page() {
                   key={campaign.id}
                   className="border-b border-gray-200 hover:bg-gray-50"
                 >
-                  <td className="w-12 p-4">
+                  <td className="px-4 py-3">
                     <input
                       type="checkbox"
-                      className="w-4 h-4 rounded border-gray-300 text-blue-600 focus:ring-blue-500"
+                      className="w-4 h-4 rounded border-gray-300"
                       checked={selectedCampaigns.includes(campaign.id)}
                       onChange={() => toggleCampaign(campaign.id)}
                     />
                   </td>
-                  <td className="w-16 p-4">
+                  <td className="px-4 py-3">
+                    <span
+                      className={`flex items-center gap-2 ${getStatusColor(
+                        campaign.status
+                      )}`}
+                    >
+                      <span className="w-2 h-2 rounded-full bg-current" />
+                      {campaign.status}
+                    </span>
+                  </td>
+                  <td className="px-4 py-3 font-medium text-gray-900">
+                    {campaign.name}
+                  </td>
+                  <td className="px-4 py-3">${campaign.budget}</td>
+                  <td className="px-4 py-3">${campaign.amountSpent}</td>
+                  <td className="px-4 py-3">{campaign.reached}</td>
+                  <td className="px-4 py-3">${campaign.costPerView}</td>
+                  <td className="px-4 py-3">{campaign.linkClick}</td>
+                  <td className="px-4 py-3">{campaign.ctr}</td>
+                  <td className="px-4 py-3">
                     <label className="relative inline-flex items-center cursor-pointer">
                       <input
                         type="checkbox"
                         className="sr-only peer"
                         checked={campaign.isActive}
                       />
-                      <div className="w-9 h-5 bg-gray-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-blue-300 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-4 after:w-4 after:transition-all peer-checked:bg-blue-600"></div>
+                      <div className="w-9 h-5 bg-gray-200 peer-focus:outline-none peer-focus:ring-2 peer-focus:ring-[#8B1212] rounded-full peer peer-checked:after:translate-x-full after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-4 after:w-4 after:transition-all peer-checked:bg-[#8B1212]"></div>
                     </label>
-                  </td>
-                  <td className="p-4">
-                    <div className="font-medium text-gray-900">
-                      {campaign.name}
-                    </div>
-                  </td>
-                  <td className="p-4">
-                    <div className="text-gray-900">
-                      ${campaign.budget.toLocaleString()}
-                    </div>
-                  </td>
-                  <td className="p-4">
-                    <div className="text-gray-900">
-                      {campaign.reach.toLocaleString()}
-                    </div>
-                  </td>
-                  <td className="p-4">
-                    <div className="text-gray-900">
-                      {campaign.impressions.toLocaleString()}
-                    </div>
-                  </td>
-                  <td className="p-4">
-                    <div className="text-gray-900">
-                      ${campaign.costPerReach}
-                    </div>
-                  </td>
-                  <td className="p-4">
-                    <div className="text-gray-900">
-                      ${campaign.fundsSpent.toLocaleString()}
-                    </div>
                   </td>
                 </tr>
               ))}
             </tbody>
           </table>
+
+          {/* Pagination */}
+          <div className="flex items-center justify-between px-4 py-3 border-t border-gray-200">
+            <button className="flex items-center gap-1 text-sm text-gray-600">
+              <ChevronDown size={16} /> Previous
+            </button>
+            <div className="flex items-center gap-2">
+              <button className="px-3 py-1 rounded bg-[#8B1212] text-white">
+                01
+              </button>
+              <button className="px-3 py-1 text-gray-600">02</button>
+              <button className="px-3 py-1 text-gray-600">03</button>
+              <button className="px-3 py-1 text-gray-600">04</button>
+              <button className="px-3 py-1 text-gray-600">05</button>
+              <span className="text-gray-600">...</span>
+              <button className="px-3 py-1 text-gray-600">10</button>
+            </div>
+            <button className="flex items-center gap-1 text-sm text-gray-600">
+              Next <ChevronUp size={16} className="rotate-90" />
+            </button>
+          </div>
         </div>
       </div>
     </div>

@@ -1,9 +1,8 @@
 import type { Metadata, Viewport } from "next";
-import type { ReactNode } from "react";
 import localFont from "next/font/local";
 import "./globals.css";
 import { StoreProvider } from "../store/provider";
-// import OktoProviders from "@/components/OKtoProvider";
+import OktoProviders from "@/components/OKtoProvider";
 
 import Providers from "@/components/Provider";
 
@@ -35,8 +34,8 @@ export default async function RootLayout({
           <body
             className={`${geistSans.variable} ${geistMono.variable} antialiased`}
           >
-            {children}
-            {/* <OktoProviders>{children}</OktoProviders> */}
+            {/* {children} */}
+            <OktoProviders>{children}</OktoProviders>
           </body>
         </html>
       </Providers>
