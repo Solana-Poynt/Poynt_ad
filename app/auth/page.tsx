@@ -76,7 +76,7 @@ export default function Signup() {
     return new Promise((resolve, reject) => {
       authenticate(idToken, (result, error) => {
         if (error) {
-          console.error("Okto authentication error:", error);
+          // console.error("Okto authentication error:", error);
           reject(error);
           return;
         }
@@ -136,7 +136,7 @@ export default function Signup() {
       saveDataToLocalStorage("onboard", "false");
       router.push("/business");
     } catch (error) {
-      console.error("Authentication error:", error);
+      // console.error("Authentication error:", error);
       showNotification(
         `Authentication failed: ${
           error instanceof Error

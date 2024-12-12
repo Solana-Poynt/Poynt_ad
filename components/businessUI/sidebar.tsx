@@ -191,7 +191,7 @@ export default function SideNavigation({ role }: NavProps) {
 
   return (
     <div
-      className={`fixed inset-y-0 left-0 lg:relative h-full mb-4  py-5 rounded-lg bg-white border-r border-gray-200 flex flex-col transition-all duration-300 z-50`}
+      className={`fixed inset-y-0 left-0 lg:relative h-[80vh] mb-4  py-5 rounded-lg bg-white border-r border-gray-200 flex flex-col transition-all duration-300 z-50`}
     >
       {/* Header */}
       {/* <div className="h-16 flex items-center justify-between px-4  border-gray-200">

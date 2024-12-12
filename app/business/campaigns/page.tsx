@@ -10,6 +10,8 @@ import {
   Trash2,
   FileText,
 } from "lucide-react";
+import { useGetBusinessQuery } from "../../../store/api/api";
+import { getDataFromLocalStorage } from "@/utils/localStorage";
 
 interface Campaign {
   id: number;
@@ -28,6 +30,17 @@ export default function Page() {
   const router = useRouter();
   const [activeTab, setActiveTab] = useState<string>("all");
   const [selectedCampaigns, setSelectedCampaigns] = useState<number[]>([]);
+
+  //IMPLEMENT FETCH A BUSINESS DATA BY ID
+  const currentBusinessId = getDataFromLocalStorage("currentBusinessId");
+  // Fetch businessData
+  const {
+    data: businessRetrievedData,
+    isLoading: businessIsLoading,
+    error: businessError,
+  } = useGetBusinessQuery({ id: currentBusinessId });
+  const business = businessRetrievedData && businessRetrievedData?.data;
+  const businessCampaigns = business?.campaigns;
 
   const campaigns: Campaign[] = [
     {

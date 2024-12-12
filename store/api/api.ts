@@ -100,16 +100,46 @@ const baseQueryWithReauth = async (
 export const api = createApi({
   reducerPath: "request",
   baseQuery: baseQueryWithReauth,
-  tagTypes: ["Users"], // You can define tagTypes here if you need them for cache invalidation
+  tagTypes: ["Users", "Business", "Campaigns"], // You can define tagTypes here if you need them for cache invalidation
   refetchOnFocus: true,
   refetchOnMountOrArgChange: true,
   refetchOnReconnect: true,
   endpoints: (builder) => ({
     getUser: builder.query<IResponse, { id: string | null }>({
       query: ({ id }) => {
+        return `users/${id}`;
+      },
+      providesTags: ["Users"],
+    }),
+    getAllUsers: builder.query<IResponse, null>({
+      query: () => {
         return `users`;
       },
       providesTags: ["Users"],
+    }),
+    getBusiness: builder.query<IResponse, { id: string | null }>({
+      query: ({ id }) => {
+        return `business/${id}`;
+      },
+      providesTags: ["Business"],
+    }),
+    getAllBusiness: builder.query<IResponse, null>({
+      query: () => {
+        return `business`;
+      },
+      providesTags: ["Business"],
+    }),
+    getCampaign: builder.query<IResponse, { id: string | null }>({
+      query: ({ id }) => {
+        return `campaign/${id}`;
+      },
+      providesTags: ["Campaigns"],
+    }),
+    getAllCampaigns: builder.query<IResponse, null>({
+      query: () => {
+        return `campaign`;
+      },
+      providesTags: ["Campaigns"],
     }),
     sendData: builder.mutation<any, SendDataRequest>({
       query: ({ url, data, type }) => ({
@@ -117,7 +147,7 @@ export const api = createApi({
         method: type,
         body: data,
       }),
-      invalidatesTags: () => ["Users"],
+      invalidatesTags: () => ["Users", "Business", "Campaigns"],
       transformResponse: (response: any) => {
         return response;
       },
@@ -125,4 +155,11 @@ export const api = createApi({
   }),
 });
 
-export const { useGetUserQuery } = api;
+export const {
+  useGetUserQuery,
+  useGetAllUsersQuery,
+  useGetBusinessQuery,
+  useGetAllBusinessQuery,
+  useGetCampaignQuery,
+  useGetAllCampaignsQuery,
+} = api;
