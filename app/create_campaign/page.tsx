@@ -24,6 +24,7 @@ interface CampaignBenefit {
 
 const CampaignPage = () => {
   const [isModalOpen, setIsModalOpen] = useState(false);
+  const [selectedPricing, setSelectedPricing] = useState<null | number>(null);
   const router = useRouter();
 
   const benefits: CampaignBenefit[] = [
@@ -149,7 +150,10 @@ const CampaignPage = () => {
                   ${tier.price}
                 </div>
                 <button
-                  onClick={() => setIsModalOpen(true)}
+                  onClick={() => {
+                    setSelectedPricing(index);
+                    setIsModalOpen(true);
+                  }}
                   className={`mt-6 w-full py-2 px-4 rounded-lg transition-colors ${
                     tier.recommended
                       ? "bg-[#B71C1C] text-white hover:bg-[#B71C1C]/90"
@@ -212,11 +216,16 @@ const CampaignPage = () => {
       <Footer />
 
       {/* Campaign Creation Modal */}
-      <CampaignModal
-        isOpen={isModalOpen}
-        onClose={() => setIsModalOpen(false)}
-        pricingTiers={DEFAULT_PRICING_TIERS}
-      />
+      {selectedPricing !== null && (
+        <CampaignModal
+          isOpen={isModalOpen}
+          onClose={() => {
+            setSelectedPricing(null);
+            setIsModalOpen(false);
+          }}
+          pricingTiers={DEFAULT_PRICING_TIERS[selectedPricing]}
+        />
+      )}
     </div>
   );
 };

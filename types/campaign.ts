@@ -82,7 +82,7 @@ export interface CampaignFormData {
 export interface CampaignModalProps {
   isOpen: boolean;
   onClose: () => void;
-  pricingTiers: PricingTier[];
+  pricingTiers: PricingTier;
   initialData?: Partial<CampaignFormData>;
   onSubmit?: (data: CampaignFormData) => Promise<void>;
 }

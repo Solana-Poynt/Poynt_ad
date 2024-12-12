@@ -30,7 +30,7 @@ export default function Layout({
 
   return (
     <motion.div
-      className="flex flex-col h-full w-full overflow-y-hidden bg-main px-5"
+      className="flex flex-col h-screen w-full overflow-y-hidden bg-main px-5"
       initial={{ opacity: 0 }}
       animate={{ opacity: 1 }}
       transition={{ duration: 0.3 }}
@@ -39,13 +39,13 @@ export default function Layout({
         <BusinessHeader />
       </div>
 
-      <div className="flex flex-1 z-10 mt-9">
+      <div className="flex flex-1 z-10 mt-4">
         <div className="flex-none">
           <SideNavigation role="business" />
         </div>
 
         <motion.main
-          className="flex-1 overflow-auto"
+          className="flex-1 h-[80vh]"
           initial={{ x: 20, opacity: 0 }}
           animate={{ x: 0, opacity: 1 }}
           transition={{ delay: 0.2, duration: 0.4 }}
