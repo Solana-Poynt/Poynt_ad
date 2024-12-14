@@ -38,14 +38,13 @@ const CampaignModal = ({
       text: "",
       url: "",
     },
-    geolocation: {
+    targetLocation: {
       enabled: false,
       country: "",
       city: "",
     },
+    budget: 0,
   });
-
-  console.log(formData.pricingTier.price);
 
   const adTypes = [
     {
@@ -263,12 +262,12 @@ const CampaignModal = ({
         <label className="flex items-center">
           <input
             type="checkbox"
-            checked={formData.geolocation?.enabled}
+            checked={formData.targetLocation?.enabled}
             onChange={(e) =>
               setFormData({
                 ...formData,
-                geolocation: {
-                  ...formData.geolocation,
+                targetLocation: {
+                  ...formData.targetLocation,
                   enabled: e.target.checked,
                 },
               })
@@ -278,7 +277,7 @@ const CampaignModal = ({
           <span className="ml-2 text-gray-700">Enable location targeting</span>
         </label>
 
-        {formData.geolocation?.enabled && (
+        {formData.targetLocation?.enabled && (
           <div className="space-y-4 mt-4">
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-1">
@@ -286,12 +285,12 @@ const CampaignModal = ({
               </label>
               <input
                 type="text"
-                value={formData.geolocation.country}
+                value={formData.targetLocation.country}
                 onChange={(e) =>
                   setFormData({
                     ...formData,
-                    geolocation: {
-                      ...formData.geolocation,
+                    targetLocation: {
+                      ...formData.targetLocation,
                       country: e.target.value,
                     },
                   })
@@ -307,12 +306,12 @@ const CampaignModal = ({
               </label>
               <input
                 type="text"
-                value={formData.geolocation.city}
+                value={formData.targetLocation.city}
                 onChange={(e) =>
                   setFormData({
                     ...formData,
-                    geolocation: {
-                      ...formData.geolocation,
+                    targetLocation: {
+                      ...formData.targetLocation,
                       city: e.target.value,
                     },
                   })
@@ -346,11 +345,11 @@ const CampaignModal = ({
             {formData.pricingTier.impressions.toLocaleString()}
           </span>
         </div>
-        {formData.geolocation?.enabled && (
+        {formData.targetLocation?.enabled && (
           <div className="flex justify-between items-center">
             <span className="text-gray-600">Location</span>
             <span className="font-medium">
-              {formData.geolocation.city}, {formData.geolocation.country}
+              {formData.targetLocation.city}, {formData.targetLocation.country}
             </span>
           </div>
         )}

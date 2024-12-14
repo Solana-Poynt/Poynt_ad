@@ -53,7 +53,7 @@ export interface CampaignFormData {
   engagementType: EngagementType;
   pricingTier: PricingTier;
   cta: CTAData;
-  geolocation: GeolocationData;
+  targetLocation: GeolocationData;
   startDate?: Date;
   endDate?: Date;
   budget?: number;
