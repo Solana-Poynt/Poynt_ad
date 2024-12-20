@@ -1,6 +1,7 @@
 "use client";
 import { useRouter } from "next/navigation";
 import React, { useEffect, useState } from "react";
+import { useGetUserQuery } from "../../store/api/api";
 import { getDataFromLocalStorage } from "@/utils/localStorage";
 import Image from "next/image";
 import { Trophy } from "lucide-react";
@@ -43,6 +44,17 @@ export default function Page() {
     email: null,
   });
 
+  //IMPLEMENT FETCH USERS DATA BY ID
+  const id = getDataFromLocalStorage("id");
+  // Fetch userData
+  const {
+    data: userRetrievedData,
+    isLoading: userIsLoading,
+    error: userError,
+  } = useGetUserQuery({ id: id });
+  const user = userRetrievedData && userRetrievedData?.data;
+  const usersBuisnesses = user?.businesses;
+
   useEffect(() => {
     setMounted(true);
     const name = getDataFromLocalStorage("name");
@@ -53,10 +65,10 @@ export default function Page() {
   if (!mounted) return null;
 
   return (
-    <main className="flex flex-col w-full h-screen">
+    <main className="flex flex-col w-full h-full px-4">
       {/* Fixed Header */}
       <div className="bg-[#F0F0F0] pb-4">
-        <div className="max-w-7xl mx-auto px-4">
+        <div className="max-w-7xl mx-auto">
           <div className="flex flex-col gap-4">
             <h1 className="text-base font-semibold text-text">
               Performance Overview
@@ -92,8 +104,8 @@ export default function Page() {
       </div>
 
       {/* Scrollable Content */}
-      <div className="flex-1 overflow-y-auto bg-[#F0F0F0]">
-        <div className="max-w-7xl w-full mx-auto pl-5 py-6">
+      <div className="flex-1 bg-[#F0F0F0] overflow-auto">
+        <div className="max-w-7xl w-full mx-auto py-6">
           <div className="flex flex-row w-full gap-5 mb-6">
             {/* Top performing ads */}
             <div className="col-span-2 w-[60%] bg-white p-4 rounded-lg">

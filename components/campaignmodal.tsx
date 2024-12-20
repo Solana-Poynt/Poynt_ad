@@ -33,16 +33,17 @@ const CampaignModal = ({
     name: "",
     type: "display",
     engagementType: "awareness",
-    pricingTier: pricingTiers[0],
+    pricingTier: pricingTiers,
     cta: {
       text: "",
       url: "",
     },
-    geolocation: {
+    targetLocation: {
       enabled: false,
       country: "",
       city: "",
     },
+    budget: 0,
   });
 
   const adTypes = [
@@ -79,12 +80,12 @@ const CampaignModal = ({
       title: "Website Traffic",
       description: "Drive visitors to your site",
     },
-    {
-      id: "conversion",
-      icon: <Target className="w-6 h-6" />,
-      title: "Conversions",
-      description: "Generate leads and sales",
-    },
+    // {
+    //   id: "conversion",
+    //   icon: <Target className="w-6 h-6" />,
+    //   title: "Conversions",
+    //   description: "Generate leads and sales",
+    // },
   ];
 
   const handleNext = () => {
@@ -155,7 +156,11 @@ const CampaignModal = ({
           <input
             type="text"
             value={formData.name}
-            onChange={(e) => setFormData({ ...formData, name: e.target.value })}
+            onChange={(e) =>
+              setFormData((prev: CampaignFormData) => {
+                return { ...prev, name: e.target.value };
+              })
+            }
             className="w-full px-4 py-2 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#B71C1C]"
             placeholder="Enter campaign name"
           />
@@ -222,9 +227,11 @@ const CampaignModal = ({
               type="url"
               value={formData.cta.url}
               onChange={(e) =>
-                setFormData({
-                  ...formData,
-                  cta: { ...formData.cta, url: e.target.value },
+                setFormData((prev: CampaignFormData) => {
+                  return {
+                    ...prev,
+                    cta: { ...formData.cta, url: e.target.value },
+                  };
                 })
               }
               className="px-4 py-2 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#B71C1C]"
@@ -255,12 +262,12 @@ const CampaignModal = ({
         <label className="flex items-center">
           <input
             type="checkbox"
-            checked={formData.geolocation?.enabled}
+            checked={formData.targetLocation?.enabled}
             onChange={(e) =>
               setFormData({
                 ...formData,
-                geolocation: {
-                  ...formData.geolocation,
+                targetLocation: {
+                  ...formData.targetLocation,
                   enabled: e.target.checked,
                 },
               })
@@ -270,7 +277,7 @@ const CampaignModal = ({
           <span className="ml-2 text-gray-700">Enable location targeting</span>
         </label>
 
-        {formData.geolocation?.enabled && (
+        {formData.targetLocation?.enabled && (
           <div className="space-y-4 mt-4">
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-1">
@@ -278,12 +285,12 @@ const CampaignModal = ({
               </label>
               <input
                 type="text"
-                value={formData.geolocation.country}
+                value={formData.targetLocation.country}
                 onChange={(e) =>
                   setFormData({
                     ...formData,
-                    geolocation: {
-                      ...formData.geolocation,
+                    targetLocation: {
+                      ...formData.targetLocation,
                       country: e.target.value,
                     },
                   })
@@ -299,12 +306,12 @@ const CampaignModal = ({
               </label>
               <input
                 type="text"
-                value={formData.geolocation.city}
+                value={formData.targetLocation.city}
                 onChange={(e) =>
                   setFormData({
                     ...formData,
-                    geolocation: {
-                      ...formData.geolocation,
+                    targetLocation: {
+                      ...formData.targetLocation,
                       city: e.target.value,
                     },
                   })
@@ -338,11 +345,11 @@ const CampaignModal = ({
             {formData.pricingTier.impressions.toLocaleString()}
           </span>
         </div>
-        {formData.geolocation?.enabled && (
+        {formData.targetLocation?.enabled && (
           <div className="flex justify-between items-center">
             <span className="text-gray-600">Location</span>
             <span className="font-medium">
-              {formData.geolocation.city}, {formData.geolocation.country}
+              {formData.targetLocation.city}, {formData.targetLocation.country}
             </span>
           </div>
         )}
@@ -368,7 +375,6 @@ const CampaignModal = ({
             exit={{ opacity: 0, scale: 0.95 }}
             className="relative w-full max-w-xl bg-white rounded-xl shadow-xl flex flex-col  max-h-[90vh]"
           >
-           
             <button
               onClick={onClose}
               className="absolute top-2 right-4 p-2 hover:bg-gray-100 rounded-lg transition-colors z-10"
@@ -376,11 +382,10 @@ const CampaignModal = ({
               <X className="w-5 h-5 text-gray-500" />
             </button>
 
-            
             <div className="py-6 px-6 border-b border-gray-200 flex-shrink-0">
               {" "}
               {/* Added flex-shrink-0 */}
-              <div className="flex justify-end pt-6">
+              <div className="flex justify-end pt-6 gap-2">
                 {[1, 2, 3, 4].map((i) => (
                   <div
                     key={i}
@@ -419,7 +424,6 @@ const CampaignModal = ({
               </div>
             </div>
 
-            
             <div className="p-6 border-t border-gray-200 flex justify-between flex-shrink-0">
               {" "}
               {/* Added flex-shrink-0 */}

@@ -7,9 +7,9 @@ const BusinessHeader = () => {
   const [search, setSearch] = useState<string>("");
 
   return (
-    <div className="px-6 py-3">
+    <div className="py-5">
       <header className="rounded-xl bg-white shadow-sm">
-        <div className="max-w-7xl mx-auto py-3 px-6 flex items-center gap-8">
+        <div className="mx-auto py-3 px-6 flex items-center justify-between gap-8">
           {/* Logo Section */}
           <div className="flex items-center min-w-[100px]">
             <div className="relative w-12 h-12">

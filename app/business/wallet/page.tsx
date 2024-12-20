@@ -318,10 +318,10 @@ export default function WalletDashboard() {
 
     try {
       const newWalletResponse = await createWallet();
-      console.log("📥 New wallet response:", newWalletResponse);
+      // console.log("📥 New wallet response:", newWalletResponse);
 
       setWallet(newWalletResponse.wallets[0]);
-      console.log("🔄 Fetching portfolio for existing wallet...");
+      // console.log("🔄 Fetching portfolio for existing wallet...");
       await fetchPortfolio();
     } catch (err) {
       console.error("❌ Wallet error:", err);

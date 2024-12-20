@@ -53,7 +53,7 @@ export interface CampaignFormData {
   engagementType: EngagementType;
   pricingTier: PricingTier;
   cta: CTAData;
-  geolocation: GeolocationData;
+  targetLocation: GeolocationData;
   startDate?: Date;
   endDate?: Date;
   budget?: number;
@@ -82,7 +82,7 @@ export interface CampaignFormData {
 export interface CampaignModalProps {
   isOpen: boolean;
   onClose: () => void;
-  pricingTiers: PricingTier[];
+  pricingTiers: PricingTier;
   initialData?: Partial<CampaignFormData>;
   onSubmit?: (data: CampaignFormData) => Promise<void>;
 }
