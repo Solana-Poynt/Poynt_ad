@@ -317,25 +317,17 @@ export default function WalletDashboard() {
     setError(null);
 
     try {
-      // console.log("🔍 Getting existing wallets...");
-      const response = (await getWallets()) as WalletsResponse;
-      // console.log("📥 Wallets response:", response);
+      const newWalletResponse = await createWallet();
+      console.log("📥 New wallet response:", newWalletResponse);
 
-      if (response?.wallets?.length > 0) {
-        // console.log("💳 Existing wallet found:", response.wallets[0]);
-        setWallet(response.wallets[0]);
-        // console.log("🔄 Fetching portfolio for existing wallet...");
-        await fetchPortfolio();
-      } else {
-        // console.log("🆕 No wallet found, creating new wallet...");
-        const newWalletResponse = await createWallet();
-        // console.log("📥 New wallet response:", newWalletResponse);
-      }
+      setWallet(newWalletResponse.wallets[0]);
+      console.log("🔄 Fetching portfolio for existing wallet...");
+      await fetchPortfolio();
     } catch (err) {
       console.error("❌ Wallet error:", err);
       setError(err instanceof Error ? err.message : "Failed to handle wallet");
     } finally {
-      // console.log("✅ Wallet handling process completed");
+      console.log("✅ Wallet handling process completed");
       setIsLoading(false);
     }
   }, [getWallets, createWallet, fetchPortfolio]);
