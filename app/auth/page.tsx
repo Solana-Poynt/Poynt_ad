@@ -88,11 +88,15 @@ export default function Signup() {
       // console.log("Starting Okto authentication...");
       await handleOktoAuth(idToken);
       // console.log("Okto authentication successful");
-
+      // /auth/google
       // Then authenticate with your backend
       const response = await fetch(`${baseURL}/auth/google`, {
         method: "POST",
-        headers: { "Content-Type": "application/json" },
+        credentials: "include",
+        headers: {
+          "Content-Type": "application/json",
+          "Access-Control-Allow-Origin": "https://poyntad.vercel.app",
+        },
         body: JSON.stringify({ idToken: credential.credential }),
       });
 
