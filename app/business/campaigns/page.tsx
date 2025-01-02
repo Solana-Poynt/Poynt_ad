@@ -112,7 +112,7 @@ export default function Page() {
 
   return (
     <div className="px-6 relative max-w-[1600px] mx-auto">
-      <div className="flex justify-between items-center mb-20">
+      <div className="flex justify-between items-center mb-12">
         <div className="flex flex-row w-full justify-between gap-4 items-center">
           <h1 className="text-2xl font-semibold text-text">Campaign</h1>
           <button
@@ -125,10 +125,10 @@ export default function Page() {
         </div>
       </div>
       {/* Tabs  */}
-      <div className=" mb-8 bg-white rounded-xl overflow-hidden">
+      <div className=" mb-2 bg-white rounded-xl over">
         {/* Tab Navigation */}
         <div className="flex flex-row">
-          <div className="absolute top-28 bg-white rounded-3xl p-5">
+          <div className="absolute top-20 bg-white rounded-3xl p-5">
             <button
               onClick={() => setActiveTab("all")}
               className={`px-4 py-2 font-medium text-sm ${
@@ -194,9 +194,9 @@ export default function Page() {
         </div>
 
         {/* Campaigns Table */}
-        <div>
+        <div className="overflow-auto" style={{ maxHeight: "600px" }}>
           <table className="bg-white rounded-xl w-full">
-            <thead>
+            <thead className="sticky top-0 bg-white z-10">
               <tr className="border-b border-gray-200">
                 <th className="w-12 px-4 py-3">
                   <input

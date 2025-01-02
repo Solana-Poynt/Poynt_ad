@@ -28,13 +28,13 @@ export default function Layout({
 
   return (
     <motion.div
-      className="flex flex-col h-full w-full overflow-y-hidden"
+      className="flex flex-col h-full w-full"
       initial={{ opacity: 0 }}
       animate={{ opacity: 1 }}
       transition={{ duration: 0.3 }}
     >
       <motion.main
-        className="flex-1 overflow-auto"
+        className=""
         initial={{ x: 20, opacity: 0 }}
         animate={{ x: 0, opacity: 1 }}
         transition={{ delay: 0.2, duration: 0.4 }}

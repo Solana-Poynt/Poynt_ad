@@ -6,6 +6,7 @@ import { Icon } from "@iconify/react";
 import { useMediaQuery } from "react-responsive";
 import { LogOut } from "lucide-react";
 import { logout } from "@/store/slices/isAuthSlice";
+import { clearWallet } from "@/store/slices/isWalletSlice";
 import { useDispatch } from "react-redux";
 import { AppDispatch } from "@/store/store";
 import { googleLogout } from "@react-oauth/google";
@@ -120,6 +121,9 @@ export default function SideNavigation({ role }: NavProps) {
       googleLogout();
       // Clear auth state in Redux
       dispatch(logout());
+      // clear wallet State
+      dispatch(clearWallet());
+
       logOut();
 
       router.push("/");

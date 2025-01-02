@@ -8,24 +8,25 @@ import { Trophy } from "lucide-react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Copy } from "lucide-react";
 import { Plus } from "lucide-react";
+import { useWalletManagement } from "@/utils/hooks/useWallet";
 
 const adCards = [
   {
-    title: "First campaign",
+    title: "1st Campaign",
     rate: "0%",
     bgColor: "bg-[#FEF3C7]",
     iconBg: "bg-[#D9770680]",
     rateColor: "text-amber-800",
   },
   {
-    title: "Second campaign",
+    title: "2nd Campaign",
     rate: "0%",
     bgColor: "bg-[#DCFCE7]",
     iconBg: "bg-[#16A34A80]",
     rateColor: "text-green-800",
   },
   {
-    title: "Third campaign",
+    title: "3rd Campaign",
     rate: "0%",
     bgColor: "bg-[#F3E8FF]",
     iconBg: "bg-[#9747FF80]",
@@ -44,8 +45,14 @@ export default function Page() {
     email: null,
   });
 
-  //IMPLEMENT FETCH USERS DATA BY ID
+  //IMPLEMENT FETCH USERS DATA
   const id = getDataFromLocalStorage("id");
+  const wallet: string | any = getDataFromLocalStorage("wallet");
+  const balance = getDataFromLocalStorage("walletbalance");
+
+  // console.log("Balance:", balance);
+  // console.log("Address:", wallet);
+
   // Fetch userData
   const {
     data: userRetrievedData,
@@ -64,24 +71,23 @@ export default function Page() {
 
   if (!mounted) return null;
 
+
+  
+
   return (
     <main className="flex flex-col w-full h-full px-4">
       {/* Fixed Header */}
-      <div className="bg-[#F0F0F0] pb-4">
+      <div className="bg-[#f3f3f3] pb-2">
         <div className="max-w-7xl mx-auto">
           <div className="flex flex-col gap-4">
-            <h1 className="text-base font-semibold text-text">
-              Performance Overview
-            </h1>
-
-            <div className="flex flex-row justify-between items-center bg-white w-full p-8 rounded-lg">
+            <div className="flex flex-row justify-between items-center bg-white w-full p-3 rounded-lg">
               <div className="flex flex-col gap-3 w-1/2 text-text">
-                <h1>Hello {userData.name}</h1>
-                <h1 className="text-xl font-medium">
+                <h1 className="text-sm font-semibold">Hello {userData.name}</h1>
+                <h1 className="text-lg font-medium">
                   Create and manage your advertising campaigns
                 </h1>
                 <button
-                  className="hidden md:flex items-center mt-4 w-1/2 p-3 bg-side text-white rounded-lg hover:bg-[#B71C1C] transition-colors duration-200 whitespace-nowrap"
+                  className="hidden md:flex items-center w-1/2 p-3 bg-side text-white rounded-lg hover:bg-[#B71C1C] transition-colors duration-200 whitespace-nowrap"
                   onClick={() => router.push("/create_campaign")}
                 >
                   <Plus className="w-4 h-4 mr-2" />
@@ -104,8 +110,8 @@ export default function Page() {
       </div>
 
       {/* Scrollable Content */}
-      <div className="flex-1 bg-[#F0F0F0] overflow-auto">
-        <div className="max-w-7xl w-full mx-auto py-6">
+      <div className="flex-1 bg-[#f3f3f3] overflow-auto">
+        <div className="max-w-7xl w-full mx-auto py-3 pr-2">
           <div className="flex flex-row w-full gap-5 mb-6">
             {/* Top performing ads */}
             <div className="col-span-2 w-[60%] bg-white p-4 rounded-lg">
@@ -159,37 +165,38 @@ export default function Page() {
                       Balance
                     </span>
                     <span className="text-xl font-bold tracking-tight">
-                      $ 0.00
+                      {balance || "--"} SOL
                     </span>
                   </div>
                   <div className="space-y-3 pt-4 border-t border-white/10">
                     <p className="text-sm text-white/70 font-medium">
                       Wallet Address
                     </p>
-                    <div className="flex items-center justify-between bg-black/20 rounded-lg p-3">
-                      <p className="text-sm font-mono truncate text-white/90">
-                        No Wallet
-                      </p>
-                      <button
-                        className="ml-3 p-2 rounded-md hover:bg-white/10 transition-colors opacity-60 hover:opacity-100"
-                        onClick={() =>
-                          navigator.clipboard.writeText("Zxcyfc5VG678Mn69m")
-                        }
-                      >
-                        <Copy className="w-4 h-4" />
-                      </button>
-                    </div>
+                    {wallet ? (
+                      <div className="flex items-center justify-between bg-black/20 rounded-lg p-3">
+                        <p className="text-sm font-mono truncate text-white/90">
+                          {wallet}
+                        </p>
+                        <button
+                          className="ml-3 p-2 rounded-md hover:bg-white/10 transition-colors opacity-60 hover:opacity-100"
+                          onClick={() => navigator.clipboard.writeText(wallet)}
+                        >
+                          <Copy className="w-4 h-4" />
+                        </button>
+                      </div>
+                    ) : (
+                      <div className="flex items-center justify-between bg-black/20 rounded-lg p-3">
+                        <button
+                          className="ml-3 p-2 rounded-md"
+                          onClick={() => router.push("/business/wallet")}
+                        >
+                          Get Wallet
+                        </button>
+                      </div>
+                    )}
                   </div>
                 </CardContent>
               </Card>
-              <div className="grid grid-cols-2 gap-4 mt-4">
-                <button className="w-full py-2 px-4 bg-white rounded-lg border border-gray-200 hover:bg-gray-50 transition-colors text-sm font-medium">
-                  Withdraw
-                </button>
-                <button className="w-full py-2 px-4 bg-white rounded-lg border border-gray-200 hover:bg-gray-50 transition-colors text-sm font-medium">
-                  Deposit
-                </button>
-              </div>
             </div>
           </div>
 

@@ -39,7 +39,7 @@ export default function Layout({
         <BusinessHeader />
       </div>
 
-      <div className="flex flex-1 z-10 mt-4">
+      <div className="flex flex-1 z-10 ">
         <div className="flex-none">
           <SideNavigation role="business" />
         </div>

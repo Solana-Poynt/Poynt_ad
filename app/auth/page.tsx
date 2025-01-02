@@ -8,10 +8,6 @@ import { AppDispatch, RootState } from "@/store/store";
 import { setIsAuth } from "@/store/slices/isAuthSlice";
 import Notification from "../../components/notification";
 import { baseURL } from "@/utils/config/baseUrl";
-import {
-  getDataFromLocalStorage,
-  saveDataToLocalStorage,
-} from "@/utils/localStorage";
 import { NotificationState } from "@/types/general";
 import { motion, AnimatePresence } from "framer-motion";
 import LoadingOverlay from "@/components/ui/loading";
@@ -52,18 +48,6 @@ export default function Signup() {
   });
 
   const { authenticate } = useOkto() as OktoContextType;
-
-  const isAuthenticated = useSelector(
-    (state: RootState) => state.isAuth.isAuth
-  );
-
-  useEffect(() => {
-    if (isAuthenticated) {
-      const role = getDataFromLocalStorage("role");
-      const route = role === "admin" ? "/admin" : "/business";
-      router.push(route);
-    }
-  }, [isAuthenticated, router]);
 
   const showNotification = useCallback(
     (message: string, status: "success" | "error") => {
@@ -133,7 +117,7 @@ export default function Signup() {
         })
       );
 
-      saveDataToLocalStorage("onboard", "false");
+      // saveDataToLocalStorage("onboard", "false");
       router.push("/business");
     } catch (error) {
       // console.error("Authentication error:", error);

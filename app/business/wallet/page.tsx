@@ -1,25 +1,22 @@
 "use client";
-import { useState, useEffect, useCallback } from "react";
-import { useOkto, type OktoContextType } from "okto-sdk-react";
+import { useState, useEffect, useCallback, useRef } from "react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
-import { Copy, Wallet, ArrowUpRight, ArrowDownLeft } from "lucide-react";
-import { saveDataToLocalStorage } from "@/utils/localStorage";
+import {
+  Copy,
+  Wallet,
+  ArrowUpRight,
+  ArrowDownLeft,
+  RefreshCw,
+} from "lucide-react";
 import Notification from "@/components/notification";
 import { NotificationState } from "@/types/general";
+import { useSelector } from "react-redux";
+import { RootState } from "@/store/store";
+import { useWalletManagement } from "@/utils/hooks/useWallet";
 import { AnimatePresence } from "framer-motion";
 
-// Response types for Okto SDK
-interface WalletData {
-  address: string;
-  network_name: string;
-  success: boolean;
-}
-
-interface WalletsResponse {
-  wallets: WalletData[];
-}
-
+// Types
 interface TokenData {
   amount_in_inr: string;
   network_name: string;
@@ -27,28 +24,6 @@ interface TokenData {
   token_address: string;
   token_image: string;
   token_name: string;
-}
-
-// Mock transaction data
-const mockTransactions: TransactionData[] = [
-  {
-    id: "1",
-    type: "sent",
-    amount: "000",
-    date: "2024-01-23T10:32:00",
-    status: "Successful",
-    description: "Wallet transfer",
-  },
-];
-
-interface PortfolioData {
-  total: number;
-  tokens: TokenData[];
-}
-
-interface PortfolioResponse {
-  total: number;
-  tokens: TokenData[];
 }
 
 interface TransactionData {
@@ -60,7 +35,27 @@ interface TransactionData {
   description: string;
 }
 
-// Token List Component
+interface BalanceCardProps {
+  totalBalance: number;
+  address: string;
+  networkName: string;
+  onCopyAddress: (address: string) => void;
+  onRefresh: () => void;
+}
+
+// Mock Data - Move to separate file in production
+const mockTransactions: TransactionData[] = [
+  {
+    id: "1",
+    type: "sent",
+    amount: "000",
+    date: "2024-01-23T10:32:00",
+    status: "Successful",
+    description: "Wallet transfer",
+  },
+];
+
+// Component: TokenList
 const TokenList = ({ tokens }: { tokens: TokenData[] }) => (
   <Card className="bg-white shadow-sm sticky top-0">
     <CardContent className="p-6">
@@ -73,7 +68,7 @@ const TokenList = ({ tokens }: { tokens: TokenData[] }) => (
       <div className="space-y-3 max-h-[300px] overflow-y-auto">
         {tokens.map((token, index) => (
           <div
-            key={index}
+            key={`${token.token_address}-${index}`}
             className="flex items-center justify-between p-3 bg-gray-50 rounded-lg hover:bg-gray-100 transition-colors"
           >
             <div className="flex items-center gap-3">
@@ -106,7 +101,7 @@ const TokenList = ({ tokens }: { tokens: TokenData[] }) => (
   </Card>
 );
 
-// Loading Spinner Component
+// Component: LoadingSpinner
 const LoadingSpinner = () => (
   <div className="w-full min-h-[70vh] flex flex-col items-center justify-center p-6 animate-fadeIn">
     <div className="relative">
@@ -123,25 +118,31 @@ const LoadingSpinner = () => (
   </div>
 );
 
-// Balance Card Component
+// Component: BalanceCard
 const BalanceCard = ({
   totalBalance,
   address,
   networkName,
   onCopyAddress,
-}: {
-  totalBalance: number;
-  address: string;
-  networkName: string;
-  onCopyAddress: (address: string) => void;
-}) => (
+  onRefresh,
+}: BalanceCardProps) => (
   <Card className="bg-gradient-to-br from-side to-side/65 text-white">
     <CardContent className="p-6 space-y-6">
-      <div>
-        <p className="text-sm text-gray-200">Total Balance</p>
-        <h2 className="text-3xl font-bold mt-1">
-          {totalBalance || "0.00"} SOL
-        </h2>
+      <div className="flex justify-between items-start">
+        <div>
+          <p className="text-sm text-gray-200">Total Balance</p>
+          <h2 className="text-3xl font-bold mt-1">
+            {totalBalance || "0.00"} SOL
+          </h2>
+        </div>
+        <Button
+          size="sm"
+          variant="ghost"
+          className="text-white hover:bg-white/10"
+          onClick={onRefresh}
+        >
+          <RefreshCw className="h-4 w-4" />
+        </Button>
       </div>
 
       <div className="space-y-2">
@@ -163,14 +164,14 @@ const BalanceCard = ({
       <div className="grid grid-cols-2 gap-3 pt-4">
         <Button
           variant="outline"
-          className="text-gray-900 border-white hover:bg-white/10"
+          className="text-white border-white/20 hover:bg-white/10"
         >
           <ArrowUpRight className="mr-2 h-4 w-4" />
           Send
         </Button>
         <Button
           variant="outline"
-          className="text-gray-900 border-white hover:bg-white/10"
+          className="text-white border-white/20 hover:bg-white/10"
         >
           <ArrowDownLeft className="mr-2 h-4 w-4" />
           Receive
@@ -180,7 +181,7 @@ const BalanceCard = ({
   </Card>
 );
 
-// Transaction History Component
+// Component: TransactionHistory
 const TransactionHistory = ({
   transactions,
   activeTab,
@@ -189,88 +190,96 @@ const TransactionHistory = ({
   transactions: TransactionData[];
   activeTab: "all" | "received" | "sent";
   setActiveTab: (tab: "all" | "received" | "sent") => void;
-}) => (
-  <Card className="bg-white shadow-sm">
-    <CardContent className="p-6">
-      <div className="sticky top-0 bg-white z-10 pb-6">
-        <div className="flex justify-between items-center">
-          <h2 className="text-lg font-semibold">Recent Transactions</h2>
-          <div className="flex space-x-2">
-            {["all", "received", "sent"].map((tab) => (
-              <Button
-                key={tab}
-                variant={activeTab === tab ? "default" : "ghost"}
-                size="sm"
-                onClick={() => setActiveTab(tab as "all" | "received" | "sent")}
-              >
-                {tab.charAt(0).toUpperCase() + tab.slice(1)}
-              </Button>
-            ))}
+}) => {
+  const filteredTransactions = transactions.filter((transaction) =>
+    activeTab === "all" ? true : transaction.type === activeTab
+  );
+
+  return (
+    <Card className="bg-white shadow-sm">
+      <CardContent className="p-6">
+        <div className="sticky top-0 bg-white z-10 pb-6">
+          <div className="flex justify-between items-center">
+            <h2 className="text-lg font-semibold">Recent Transactions</h2>
+            <div className="flex space-x-2">
+              {["all", "received", "sent"].map((tab) => (
+                <Button
+                  key={tab}
+                  variant={activeTab === tab ? "default" : "ghost"}
+                  size="sm"
+                  onClick={() =>
+                    setActiveTab(tab as "all" | "received" | "sent")
+                  }
+                >
+                  {tab.charAt(0).toUpperCase() + tab.slice(1)}
+                </Button>
+              ))}
+            </div>
           </div>
         </div>
-      </div>
 
-      <div className="space-y-4 max-h-[400px] overflow-y-auto">
-        {transactions.length > 0 ? (
-          transactions.map((transaction) => (
-            <div
-              key={transaction.id}
-              className="flex items-center justify-between p-4 hover:bg-gray-50 rounded-lg transition-colors"
-            >
-              <div className="flex items-center space-x-3">
-                <div
-                  className={`p-2 rounded-full ${
-                    transaction.type === "received"
-                      ? "bg-green-100"
-                      : "bg-red-100"
-                  }`}
-                >
-                  {transaction.type === "received" ? (
-                    <ArrowDownLeft className="h-5 w-5 text-green-600" />
-                  ) : (
-                    <ArrowUpRight className="h-5 w-5 text-red-600" />
-                  )}
+        <div className="space-y-4 max-h-[400px] overflow-y-auto">
+          {filteredTransactions.length > 0 ? (
+            filteredTransactions.map((transaction) => (
+              <div
+                key={transaction.id}
+                className="flex items-center justify-between p-4 hover:bg-gray-50 rounded-lg transition-colors"
+              >
+                <div className="flex items-center space-x-3">
+                  <div
+                    className={`p-2 rounded-full ${
+                      transaction.type === "received"
+                        ? "bg-green-100"
+                        : "bg-red-100"
+                    }`}
+                  >
+                    {transaction.type === "received" ? (
+                      <ArrowDownLeft className="h-5 w-5 text-green-600" />
+                    ) : (
+                      <ArrowUpRight className="h-5 w-5 text-red-600" />
+                    )}
+                  </div>
+                  <div>
+                    <p className="font-medium">{transaction.description}</p>
+                    <p className="text-sm text-gray-500">
+                      {new Date(transaction.date).toLocaleString()}
+                    </p>
+                  </div>
                 </div>
-                <div>
-                  <p className="font-medium">{transaction.description}</p>
-                  <p className="text-sm text-gray-500">
-                    {new Date(transaction.date).toLocaleString()}
+                <div className="text-right">
+                  <p
+                    className={`font-medium ${
+                      transaction.type === "sent"
+                        ? "text-red-500"
+                        : "text-green-500"
+                    }`}
+                  >
+                    {transaction.type === "sent" ? "-" : "+"}₹
+                    {transaction.amount}
                   </p>
+                  <p className="text-sm text-gray-500">{transaction.status}</p>
                 </div>
               </div>
-              <div className="text-right">
-                <p
-                  className={`font-medium ${
-                    transaction.type === "sent"
-                      ? "text-red-500"
-                      : "text-green-500"
-                  }`}
-                >
-                  {transaction.type === "sent" ? "-" : "+"}₹{transaction.amount}
-                </p>
-                <p className="text-sm text-gray-500">{transaction.status}</p>
-              </div>
+            ))
+          ) : (
+            <div className="text-center py-8">
+              <Wallet className="mx-auto h-12 w-12 text-gray-300" />
+              <p className="mt-2 text-gray-500">No transactions found</p>
             </div>
-          ))
-        ) : (
-          <div className="text-center py-8">
-            <Wallet className="mx-auto h-12 w-12 text-gray-300" />
-            <p className="mt-2 text-gray-500">No transactions found</p>
-          </div>
-        )}
-      </div>
-    </CardContent>
-  </Card>
-);
+          )}
+        </div>
+      </CardContent>
+    </Card>
+  );
+};
 
-// Main Component
 export default function WalletDashboard() {
-  const { getWallets, createWallet, getPortfolio } =
-    useOkto() as OktoContextType;
-  const [wallet, setWallet] = useState<WalletData | null>(null);
-  const [portfolio, setPortfolio] = useState<PortfolioData | null>(null);
-  const [isLoading, setIsLoading] = useState(false);
-  const [error, setError] = useState<string | null>(null);
+  const walletState = useSelector((state: RootState) => state.wallet);
+
+  const isMounted = useRef(true);
+  const initAttempted = useRef(false);
+
+  // Component state
   const [activeTab, setActiveTab] = useState<"all" | "received" | "sent">(
     "all"
   );
@@ -280,112 +289,119 @@ export default function WalletDashboard() {
     show: false,
   });
 
-  const showNotification = useCallback(
-    (message: string, status: "success" | "error") => {
-      setNotification({ message, status, show: true });
+  // Cleanup on unmount
+  useEffect(() => {
+    return () => {
+      isMounted.current = false;
+    };
+  }, []);
+
+  const safeSetState = useCallback(
+    (setter: React.Dispatch<React.SetStateAction<any>>, value: any) => {
+      if (isMounted.current) {
+        setter(value);
+      }
     },
     []
   );
 
-  const fetchPortfolio = useCallback(async () => {
-    // console.log("🔄 Fetching portfolio data...");
-    try {
-      const portfolioData = (await getPortfolio()) as PortfolioResponse;
-      // console.log("📊 Raw portfolio data:", portfolioData);
-
-      if (portfolioData) {
-        const formattedPortfolio: PortfolioData = {
-          total: portfolioData.total,
-          tokens: portfolioData.tokens || [],
-        };
-
-        const totalBal: string | any = portfolio?.total;
-
-        saveDataToLocalStorage("balance", totalBal);
-        // console.log("✅ Formatted portfolio:", formattedPortfolio);
-        setPortfolio(formattedPortfolio);
+  const showNotification = useCallback(
+    (message: string, status: "success" | "error") => {
+      if (isMounted.current) {
+        safeSetState(setNotification, { message, status, show: true });
       }
-    } catch (err) {
-      console.error("❌ Portfolio error:", err);
-      setError("Failed to fetch portfolio data");
-    }
-  }, [getPortfolio]);
+    },
+    [safeSetState]
+  );
 
-  const handleWallet = useCallback(async () => {
-    // console.log("🔄 Starting wallet handling process...");
-    setIsLoading(true);
-    setError(null);
-
-    try {
-      const newWalletResponse = await createWallet();
-      // console.log("📥 New wallet response:", newWalletResponse);
-
-      setWallet(newWalletResponse.wallets[0]);
-      // console.log("🔄 Fetching portfolio for existing wallet...");
-      await fetchPortfolio();
-    } catch (err) {
-      console.error("❌ Wallet error:", err);
-      setError(err instanceof Error ? err.message : "Failed to handle wallet");
-    } finally {
-      console.log("✅ Wallet handling process completed");
-      setIsLoading(false);
-    }
-  }, [getWallets, createWallet, fetchPortfolio]);
-
-  const handleCopyAddress = useCallback(async (address: string) => {
-    // console.log("📋 Copying address:", address);
-    try {
-      await navigator.clipboard.writeText(address);
-      // console.log("✅ Address copied to clipboard");
-      showNotification("Wallet Copied Successfully", "success");
-      // You could add a toast notification here
-    } catch (err) {
-      console.error("❌ Failed to copy address:", err);
-    }
-  }, []);
+  const {
+    wallet,
+    portfolio,
+    initializeWallet,
+    refreshBalance,
+    tokensHeld,
+    handleCopyAddress,
+  } = useWalletManagement(showNotification);
 
   useEffect(() => {
-    // console.log("🚀 Component mounted, initializing wallet...");
-    handleWallet();
-  }, [handleWallet]);
+    const init = async () => {
+      if (!isMounted.current || initAttempted.current) return;
+      initAttempted.current = true;
 
-  if (isLoading) {
+      try {
+        await initializeWallet();
+      } catch (error) {
+        if (isMounted.current) {
+          showNotification(
+            error instanceof Error
+              ? error.message
+              : "Failed to initialize wallet",
+            "error"
+          );
+        }
+      }
+    };
+
+    init();
+  }, [initializeWallet, showNotification]);
+
+  {
+    /* // Safe handlers */
+  }
+  const handleRefresh = useCallback(async () => {
+    if (!isMounted.current) return;
+    await refreshBalance();
+  }, [refreshBalance]);
+
+  const handleAddressCopy = useCallback(
+    async (address: string) => {
+      if (!isMounted.current) return;
+      await handleCopyAddress(address);
+    },
+    [handleCopyAddress]
+  );
+
+  const handleTabChange = useCallback(
+    (tab: "all" | "received" | "sent") => {
+      safeSetState(setActiveTab, tab);
+    },
+    [safeSetState]
+  );
+
+  if (walletState.loading || (!wallet && !walletState.error)) {
     return <LoadingSpinner />;
   }
 
   return (
     <div className="w-full h-screen flex flex-col">
-      {/* Header */}
       <div className="p-4 border-b">
         <h1 className="text-2xl font-bold">My Wallet</h1>
       </div>
 
-      {error && (
+      {walletState.error && (
         <div className="bg-red-50 text-red-500 p-4 rounded-lg mx-4 mt-4">
-          {error}
+          {walletState.error}
         </div>
       )}
 
-      {/* Main Content */}
       {wallet && (
         <div className="flex-1 grid grid-cols-1 lg:grid-cols-3 gap-6 p-4 min-h-0">
-          {/* Fixed Left Column */}
           <div className="lg:col-span-1 lg:sticky lg:top-4 lg:self-start">
             <BalanceCard
               totalBalance={portfolio?.total || 0}
               address={wallet.address}
               networkName={wallet.network_name}
-              onCopyAddress={handleCopyAddress}
+              onCopyAddress={handleAddressCopy}
+              onRefresh={handleRefresh}
             />
           </div>
 
-          {/* Scrollable Right Column */}
           <div className="lg:col-span-2 space-y-6 overflow-y-auto max-h-[calc(100vh-8rem)]">
-            {portfolio?.tokens && <TokenList tokens={portfolio.tokens} />}
+            {portfolio?.tokens && <TokenList tokens={tokensHeld} />}
             <TransactionHistory
               transactions={mockTransactions}
               activeTab={activeTab}
-              setActiveTab={setActiveTab}
+              setActiveTab={handleTabChange}
             />
           </div>
         </div>
@@ -397,7 +413,10 @@ export default function WalletDashboard() {
             message={notification.message}
             status={notification.status}
             switchShowOff={() =>
-              setNotification((prev) => ({ ...prev, show: false }))
+              safeSetState(setNotification, (prev: any) => ({
+                ...prev,
+                show: false,
+              }))
             }
           />
         )}

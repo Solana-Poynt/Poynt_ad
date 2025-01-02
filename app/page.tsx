@@ -13,8 +13,27 @@ import {
 import Header from "../components/header";
 import Footer from "../components/footer";
 import { getDataFromLocalStorage } from "@/utils/localStorage";
+import { useRouter } from "next/navigation";
+import { useSelector } from "react-redux";
+import { RootState } from "@/store/store";
 
 export default function Home() {
+  const router = useRouter();
+
+  const isAuthenticated = useSelector(
+    (state: RootState) => state.isAuth.isAuth
+  );
+
+  const handleAuth = () => {
+    if (isAuthenticated) {
+      const role = getDataFromLocalStorage("role");
+      const route = role === "admin" ? "/admin" : "/business";
+      router.push(route);
+    } else {
+      router.push("/auth");
+    }
+  };
+
   const features = [
     {
       icon: <ChartBar className=" w-5 h-5 lg:w-8 lg:h-8 text-[#B71C1C]" />,
@@ -69,7 +88,7 @@ export default function Home() {
         "Monitor performance with our intuitive dashboard. Track clicks, impressions, and conversions in real-time.",
     },
   ];
-  const name = getDataFromLocalStorage("name");
+  // const name = getDataFromLocalStorage("name");
 
   return (
     <div className="bg-white justify-center w-full">
@@ -109,15 +128,16 @@ export default function Home() {
 
           {/* CTA Buttons */}
           <div className=" mt-8 lg:mt-14 flex justify-center relative gap-x-6">
-            <a
-              href="/auth"
+            <button
+              onClick={handleAuth}
+              // href="/auth"
               className="rounded-lg bg-[#B71C1C] p-2  lg:px-8 lg:py-4 text-white hover:bg-[#D32F2F] transition-colors flex items-center gap-2"
             >
               <span className="text-xs lg:text-base font-semibold">
                 Start Free Trial
               </span>
               <ArrowRight className="w-4 h-4" />
-            </a>
+            </button>
 
             <button
               disabled
