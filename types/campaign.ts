@@ -11,7 +11,7 @@ export interface PricingTier {
   impressions: number;
   price: number;
   recommended?: boolean;
-  features?: string[];
+  features: string[];
   pricePerThousand: number; // Cost per 1000 impressions (CPM)
   description?: string;
 }
@@ -92,29 +92,31 @@ export const DEFAULT_PRICING_TIERS: PricingTier[] = [
   {
     id: "tier-1",
     impressions: 1000,
-    price: 5,
-    pricePerThousand: 5,
-    features: ["Basic analytics", "Manual bidding"],
+    price: 4,
+    pricePerThousand: 4,
+    features: ["Basic analytics", "Gasless Transaction"],
     description: "Perfect for testing campaigns",
   },
   {
     id: "tier-2",
     impressions: 3000,
-    price: 13.5,
-    pricePerThousand: 4.5,
+    price: 10.5,
+    pricePerThousand: 3.5,
     recommended: true,
-    features: ["Advanced analytics", "Auto-optimization", "Priority support"],
+    features: ["Advanced analytics", "Auto-optimization", "Gasless Transaction", "Priority support"],
     description: "Most popular for small businesses",
   },
   {
     id: "tier-3",
     impressions: 5000,
-    price: 20,
-    pricePerThousand: 4,
+    price: 15,
+    pricePerThousand: 3,
     features: [
       "Advanced analytics",
       "Auto-optimization",
+      "Gasless Transaction",
       "Priority support",
+      "Transaction Reciept",
       "Custom reporting",
     ],
     description: "Ideal for growing businesses",
@@ -122,16 +124,18 @@ export const DEFAULT_PRICING_TIERS: PricingTier[] = [
   {
     id: "tier-4",
     impressions: 10000,
-    price: 35,
-    pricePerThousand: 3.5,
+    price: 28,
+    pricePerThousand: 2.8,
     features: [
       "Advanced analytics",
       "Auto-optimization",
       "Priority support",
+      "Gasless Transaction",
+      "Transaction Reciept",
       "Custom reporting",
       "Dedicated account manager",
     ],
-    description: "Best value for scale",
+    description: "Best value for scaling businesses",
   },
 ];
 

@@ -29,7 +29,8 @@ interface AuthPayload {
   };
 }
 
-// Define the initial state based on the AuthState interface
+// Define the initial state based on the AuthState interface//// This checks if there's any saved login information in the browser's storage when the app starts.
+
 const initialState: AuthState = {
   isAuth: checkAuthStatus(),
   accessToken: getDataFromLocalStorage("accessToken"),
@@ -85,6 +86,8 @@ export const isAuthSlice = createSlice({
       deleteDataFromLocalStorage("email");
       deleteDataFromLocalStorage("name");
       deleteDataFromLocalStorage("role");
+      // deleteDataFromLocalStorage("wallet");
+      // deleteDataFromLocalStorage("walletbalance");
     },
   },
 });

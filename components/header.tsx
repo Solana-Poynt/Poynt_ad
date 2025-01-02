@@ -4,10 +4,29 @@ import { useState, useEffect } from "react";
 import Image from "next/image";
 import Link from "next/link";
 import { IoMenu, IoClose } from "react-icons/io5";
+import { getDataFromLocalStorage } from "@/utils/localStorage";
+import { useRouter } from "next/navigation";
+import { useSelector } from "react-redux";
+import { RootState } from "@/store/store";
 
 export default function Header() {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const [hasScrolled, setHasScrolled] = useState(false);
+  const router = useRouter();
+
+  const isAuthenticated = useSelector(
+    (state: RootState) => state.isAuth.isAuth
+  );
+
+  const handleAuth = () => {
+    if (isAuthenticated) {
+      const role = getDataFromLocalStorage("role");
+      const route = role === "admin" ? "/admin" : "/business";
+      router.push(route);
+    } else {
+      router.push("/auth");
+    }
+  };
 
   const navItems = [
     { id: 1, title: "FAQ", href: "/faq" },
@@ -87,12 +106,12 @@ export default function Header() {
                 </Link>
               ))}
 
-              <Link
-                href="/auth"
+              <button
+                onClick={handleAuth}
                 className="ml-8 inline-flex items-center px-6 py-2.5 border border-transparent text-sm font-medium rounded-lg text-white bg-[#B71C1C] hover:bg-[#805c02] focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-[#805c02] transition-all duration-200 transform hover:scale-105"
               >
                 Create Account
-              </Link>
+              </button>
             </div>
 
             {/* Mobile menu button */}
