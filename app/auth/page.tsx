@@ -95,7 +95,6 @@ export default function Signup() {
         credentials: "include",
         headers: {
           "Content-Type": "application/json",
-          "Access-Control-Allow-Origin": "https://poyntad.vercel.app",
         },
         body: JSON.stringify({ idToken: credential.credential }),
       });
