@@ -116,6 +116,7 @@ export default function Signup() {
             email: data.data.user.email,
             name: data.data.user.name,
             role: data.data.user.role,
+            businessId: data.data.user.businesses[0].id,
           },
         })
       );
@@ -206,7 +207,9 @@ export default function Signup() {
           <GoogleLoginButton isLoading={isLoading} onSuccess={handleAuth} />
         </motion.div>
 
-        <AnimatePresence>{isLoading && <LoadingOverlay />}</AnimatePresence>
+        <AnimatePresence>
+          {isLoading && <LoadingOverlay loaderText="Signing you in..." />}
+        </AnimatePresence>
       </motion.div>
     </motion.div>
   );

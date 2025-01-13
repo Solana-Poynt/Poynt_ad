@@ -1,7 +1,7 @@
 import React from "react";
 import { motion } from "framer-motion";
 
-const LoadingOverlay = () => (
+const LoadingOverlay = ({ loaderText }: { loaderText: string }) => (
   <motion.div
     initial={{ opacity: 0 }}
     animate={{ opacity: 1 }}
@@ -14,7 +14,7 @@ const LoadingOverlay = () => (
       className="bg-side p-8 rounded-2xl shadow-xl flex flex-col items-center gap-4"
     >
       <div className="w-12 h-12 border-4 border-[#fca311] border-t-transparent rounded-full animate-spin" />
-      <p className="text-white font-medium text-lg">Signing you in...</p>
+      <p className="text-white font-medium text-lg">{loaderText}</p>
     </motion.div>
   </motion.div>
 );

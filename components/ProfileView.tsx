@@ -2,19 +2,33 @@
 import React, { useRef, useState, useEffect } from "react";
 import { ChevronDown, Building2, Briefcase } from "lucide-react";
 import BusinessModal from "./businessmodal";
-import { getDataFromLocalStorage } from "@/utils/localStorage";
+import {
+  getDataFromLocalStorage,
+  saveDataToLocalStorage,
+} from "@/utils/localStorage";
+import { useGetUserQuery } from "@/store/api/api";
+import { motion, AnimatePresence } from "framer-motion";
+import LoadingOverlay from "./ui/loading";
+import { useRouter } from "next/navigation";
 // import { BusinessFormData } from "@/types/general";
 
 interface Account {
+  id: string;
   name: string;
   email: string;
+  industry?: string;
+  category?: any;
+  campaigns?: any;
 }
 
 const ProfileDropdown: React.FC = () => {
   // State management
   const [showDropDown, setShowDropDown] = useState<boolean>(false);
+  const [currentBusiness, setCurrentBusiness] = useState<Account | null>(null);
   const [isModalOpen, setIsModalOpen] = useState<boolean>(false);
+  const [isLoading, setIsLoading] = useState<boolean>(false);
   const [mounted, setMounted] = useState<boolean>(false);
+  const router = useRouter();
   const [userData, setUserData] = useState<{
     name: string | null;
     email: string | null;
@@ -27,11 +41,14 @@ const ProfileDropdown: React.FC = () => {
   const buttonRef = useRef<HTMLButtonElement>(null);
   const dropdownRef = useRef<HTMLDivElement>(null);
 
-  // Sample accounts - could be moved to props or API call
-  const accounts: Account[] = [
-    { name: "Business Account 1", email: "business1@example.com" },
-    { name: "Business Account 2", email: "business2@example.com" },
-  ];
+  // Fetch all User business
+  const userId = getDataFromLocalStorage("id");
+  const {
+    data: usersServerData,
+    isLoading: userIsLoading,
+    error: userError,
+  } = useGetUserQuery({ id: userId });
+  const accounts: Account[] = usersServerData?.data?.businesses;
 
   // Effect to handle hydration and initial data loading
   useEffect(() => {
@@ -72,6 +89,9 @@ const ProfileDropdown: React.FC = () => {
 
   return (
     <div className="relative" ref={dropdownRef}>
+      <AnimatePresence>
+        {isLoading && <LoadingOverlay loaderText="Switching accounts..." />}
+      </AnimatePresence>
       <button
         ref={buttonRef}
         onClick={() => setShowDropDown(!showDropDown)}
@@ -105,8 +125,21 @@ const ProfileDropdown: React.FC = () => {
           </div>
           <div className="flex flex-col items-start">
             <span className="text-sm font-medium text-gray-900">
-              {userData.name || "User"}
+              {(currentBusiness
+                ? currentBusiness.name
+                : accounts &&
+                  accounts.filter((item) => {
+                    return item.id === getDataFromLocalStorage("businessId");
+                  })[0].name) || "Business Account"}
             </span>
+            <p className="text-xs text-gray-500">
+              {(currentBusiness
+                ? currentBusiness.email
+                : accounts &&
+                  accounts.filter((item) => {
+                    return item.id === getDataFromLocalStorage("businessId");
+                  })[0].email) || "Business email"}
+            </p>
           </div>
           <ChevronDown
             size={16}
@@ -143,33 +176,47 @@ const ProfileDropdown: React.FC = () => {
 
         {/* Business Accounts */}
         <div className="p-2">
-          {accounts.map((item, index) => (
-            <button
-              key={index}
-              className={`
+          {accounts && accounts.length > 0
+            ? accounts.map((item, index) => (
+                <button
+                  key={index}
+                  onClick={() => {
+                    setIsLoading(true);
+                    setShowDropDown(!showDropDown);
+                    setTimeout(() => {
+                      setCurrentBusiness(item);
+                      saveDataToLocalStorage("businessId", item.id);
+                      setIsLoading(false);
+                      router.push("/business");
+                    }, 3000);
+                  }}
+                  className={`
                 w-full text-left px-3 py-2 flex items-center gap-3 
                 hover:bg-gray-50 rounded-md 
                 transition-all duration-200 
                 focus:outline-none focus:bg-gray-50
                 transform hover:translate-x-1
               `}
-              style={{
-                transitionDelay: `${index * 50}ms`,
-              }}
-              role="menuitem"
-            >
-              <div
-                className="flex-shrink-0 w-8 h-8 rounded-full bg-gray-100 flex items-center justify-center
+                  style={{
+                    transitionDelay: `${index * 50}ms`,
+                  }}
+                  role="menuitem"
+                >
+                  <div
+                    className="flex-shrink-0 w-8 h-8 rounded-full bg-gray-100 flex items-center justify-center
                 transform transition-transform duration-300 hover:rotate-12"
-              >
-                <Briefcase size={16} className="text-gray-600" />
-              </div>
-              <div>
-                <p className="text-sm font-medium text-gray-900">{item.name}</p>
-                <p className="text-xs text-gray-500">{item.email}</p>
-              </div>
-            </button>
-          ))}
+                  >
+                    <Briefcase size={16} className="text-gray-600" />
+                  </div>
+                  <div>
+                    <p className="text-sm font-medium text-gray-900">
+                      {item.name}
+                    </p>
+                    <p className="text-xs text-gray-500">{item.email}</p>
+                  </div>
+                </button>
+              ))
+            : ""}
 
           {/* Create Business Button */}
           <div className="border-t border-gray-100 mt-2 pt-2">

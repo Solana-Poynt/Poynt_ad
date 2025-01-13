@@ -38,6 +38,7 @@ interface RefreshResponse {
     name: string;
     email: string;
     role: string;
+    businessId: string;
   };
 }
 
@@ -162,4 +163,5 @@ export const {
   useGetAllBusinessQuery,
   useGetCampaignQuery,
   useGetAllCampaignsQuery,
+  useSendDataMutation,
 } = api;

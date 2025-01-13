@@ -20,6 +20,9 @@ import { NotificationState } from "@/types/general";
 import Notification from "./notification";
 import { useWalletManagement } from "@/utils/hooks/useWallet";
 import { cn } from "@/lib/utils";
+import { useSendDataMutation } from "@/store/api/api";
+import { getDataFromLocalStorage } from "@/utils/localStorage";
+import { removeEmptyStrings } from "@/utils/util";
 
 // Types
 interface CampaignModalProps {
@@ -30,10 +33,10 @@ interface CampaignModalProps {
 
 interface CampaignFormData {
   name: string;
-  type: AdType;
-  engagementType: EngagementType;
+  adType: AdType;
+  engagementGoal: engagementGoal;
   pricingTier: PricingTier;
-  mediaFiles: File[];
+  media: File[];
   headline?: string;
   content?: string;
   cta: {
@@ -46,16 +49,17 @@ interface CampaignFormData {
     city: string;
   };
   budget: number;
+  costPerReach: string;
   paymentMethod: string;
   transactionhash: string;
 }
 
-type AdType = "display" | "video";
-type EngagementType = "awareness" | "traffic";
+type AdType = "display_ads" | "video_ads";
+type engagementGoal = "brand_awareness" | "website_traffic";
 
-const engagementTypes = [
+const engagementGoals = [
   {
-    id: "awareness",
+    id: "brand_awareness",
     title: "Brand Awareness",
     description: "Maximize visibility and reach",
     icon: <Target className="w-5 h-5" />,
@@ -67,7 +71,7 @@ const engagementTypes = [
     ],
   },
   {
-    id: "traffic",
+    id: "website_traffic",
     title: "Website Traffic",
     description: "Drive visitors to your site",
     icon: <MousePointer className="w-5 h-5" />,
@@ -80,6 +84,7 @@ const engagementTypes = [
     ],
   },
 ];
+
 const CampaignModal = ({
   isOpen,
   onClose,
@@ -96,10 +101,10 @@ const CampaignModal = ({
   // Form data state
   const [formData, setFormData] = useState<CampaignFormData>({
     name: "",
-    type: "display",
-    engagementType: "awareness",
+    adType: "display_ads",
+    engagementGoal: "brand_awareness",
     pricingTier: pricingTiers,
-    mediaFiles: [],
+    media: [],
     headline: "",
     content: "",
     cta: {
@@ -112,6 +117,7 @@ const CampaignModal = ({
       city: "",
     },
     budget: pricingTiers.price,
+    costPerReach: `${pricingTiers.pricePerThousand}/1000`,
     paymentMethod: "",
     transactionhash: "",
   });
@@ -171,7 +177,7 @@ const CampaignModal = ({
     (e: React.ChangeEvent<HTMLInputElement>, type: string) => {
       const files = Array.from(e.target.files || []);
       setUploadedFiles(files);
-      setFormData((prev) => ({ ...prev, mediaFiles: files }));
+      setFormData((prev) => ({ ...prev, media: files }));
     },
     []
   );
@@ -184,40 +190,101 @@ const CampaignModal = ({
     });
     setFormData((prev) => ({
       ...prev,
-      mediaFiles: prev.mediaFiles.filter((_, i) => i !== index),
+      media: prev.media.filter((_, i) => i !== index),
     }));
   }, []);
 
+  //Get users current businessId
+  const businessId = getDataFromLocalStorage("businessId");
+
+  //MAKE API CALL TO upload campaign data
+  const [createCampaign, { isLoading, reset }] = useSendDataMutation();
   // Form submission
   const handleSubmit = async () => {
-    try {
-      setIsSubmitting(true);
-      setError(null);
+    setIsSubmitting(true);
+    setError(null);
 
-      if (!formData.name || !formData.mediaFiles.length) {
-        throw new Error("Please fill in all required fields");
+    if (!formData.name || !formData.media.length) {
+      throw new Error("Please fill in all required fields");
+    }
+
+    // API call simulation
+    // Remove Empty Data
+    const readyData = removeEmptyStrings(formData);
+    const newFormData = new FormData();
+    if (formData.media && formData.media.length > 0) {
+      newFormData.append("media", formData.media[0]); // Since maxCount: 1
+    }
+
+    // Remove media from readyData since we're handling it separately
+    const { media, ...bodyData } = readyData;
+    // Append all other fields with proper type handling
+    Object.entries(bodyData).forEach(([key, value]) => {
+      if (value !== null && value !== undefined) {
+        if (typeof value === "object") {
+          newFormData.append(key, JSON.stringify(value));
+        } else {
+          newFormData.append(key, String(value)); // Convert to string
+        }
       }
+    });
 
-      // API call simulation
-      await new Promise((resolve) => setTimeout(resolve, 2000));
+    const request: any = await createCampaign({
+      url: `campaign/${businessId}`,
+      data: newFormData,
+      type: "POST",
+    });
+
+    if (request?.data) {
+      const { data, message, status } = request?.data;
+      // Reset form
+      setFormData({
+        name: "",
+        adType: "display_ads",
+        engagementGoal: "brand_awareness",
+        pricingTier: pricingTiers,
+        media: [],
+        headline: "",
+        content: "",
+        cta: {
+          text: "",
+          url: "",
+        },
+        targetLocation: {
+          enabled: false,
+          country: "",
+          city: "",
+        },
+        budget: pricingTiers.price,
+        costPerReach: `${pricingTiers.pricePerThousand}/1000`,
+        paymentMethod: "",
+        transactionhash: "",
+      });
       setSuccess(true);
-      showNotification("Campaign created successfully", "success");
-    } catch (err) {
-      const errorMessage =
-        err instanceof Error ? err.message : "Something went wrong";
-      setError(errorMessage);
-      showNotification(errorMessage, "error");
-    } finally {
+      showNotification(message, "success");
       setIsSubmitting(false);
+    } else {
+      setError(
+        request?.error?.data?.message
+          ? request?.error?.data?.message
+          : "Check Internet Connection and try again"
+      );
+      setIsSubmitting(false);
+      showNotification(
+        request?.error?.data?.message
+          ? request?.error?.data?.message
+          : "Check Internet Connection and try again",
+        "error"
+      );
     }
   };
 
   // Engagement type selection
   const handleEngagementSelect = useCallback(
-    (type: "awareness" | "traffic") => {
+    (type: "brand_awareness" | "website_traffic") => {
       setFormData((prev) => ({
         ...prev,
-        engagementType: type,
+        engagementGoal: type,
       }));
     },
     []
@@ -229,9 +296,9 @@ const CampaignModal = ({
       case 0: // Pricing confirmation
         return true;
       case 1: // Ad engagement selection
-        return Boolean(formData.engagementType);
+        return Boolean(formData.engagementGoal);
       case 2: // Ad type selection
-        return formData.mediaFiles.length > 0;
+        return formData.media.length > 0;
       case 3: // Campaign details
         return Boolean(formData.name && formData.cta.text && formData.cta.url);
       case 4: // Payment step
@@ -299,15 +366,15 @@ const CampaignModal = ({
       </h3>
 
       <div className="grid grid-cols-1 gap-4">
-        {engagementTypes.map((type) => (
+        {engagementGoals.map((type) => (
           <div
             key={type.id}
-            onClick={() => handleEngagementSelect(type.id as EngagementType)}
+            onClick={() => handleEngagementSelect(type.id as engagementGoal)}
             className={`
                 bg-gradient-to-br from-gray-50 to-gray-100 rounded-xl p-6
                 cursor-pointer transition-all duration-200 border
                 ${
-                  formData.engagementType === (type.id as EngagementType)
+                  formData.engagementGoal === (type.id as engagementGoal)
                     ? "border-side ring-1 ring-side shadow-md"
                     : "border-gray-200 hover:border-gray-300"
                 }
@@ -321,7 +388,7 @@ const CampaignModal = ({
                     className={`
                       w-10 h-10 rounded-lg flex items-center justify-center
                       ${
-                        formData.engagementType === (type.id as EngagementType)
+                        formData.engagementGoal === (type.id as engagementGoal)
                           ? "bg-side/10 text-side"
                           : "bg-white text-gray-600"
                       }
@@ -336,7 +403,7 @@ const CampaignModal = ({
                     <p className="text-sm text-gray-600">{type.description}</p>
                   </div>
                 </div>
-                {formData.engagementType === type.id && (
+                {formData.engagementGoal === type.id && (
                   <div className="h-6 w-6 bg-side/10 rounded-full flex items-center justify-center">
                     <Check className="w-4 h-4 text-side" />
                   </div>
@@ -344,7 +411,7 @@ const CampaignModal = ({
               </div>
 
               {/* Details (shown when selected) */}
-              {formData.engagementType === type.id && (
+              {formData.engagementGoal === type.id && (
                 <div className="pt-4 border-t border-gray-200 space-y-4">
                   <div>
                     <h5 className="font-medium text-gray-900 mb-2">
@@ -380,15 +447,15 @@ const CampaignModal = ({
       </div>
 
       {/* Campaign Tips */}
-      {formData.engagementType && (
+      {formData.engagementGoal && (
         <div className="mt-4 p-4 bg-white rounded-lg border border-gray-200">
           <h5 className="text-sm font-medium text-gray-900 mb-2">
             Campaign Tips
           </h5>
           <p className="text-sm text-gray-600">
-            {formData.engagementType === "awareness" &&
+            {formData.engagementGoal === "brand_awareness" &&
               "Brand awareness campaigns are perfect for reaching new audiences and increasing your brand's visibility. Focus on creating memorable, engaging content."}
-            {formData.engagementType === "traffic" &&
+            {formData.engagementGoal === "website_traffic" &&
               "Traffic campaigns are ideal when you want to drive visitors to your website. Ensure your landing pages are optimized for the best results."}
           </p>
         </div>
@@ -406,7 +473,7 @@ const CampaignModal = ({
       <div className="space-y-4">
         {[
           {
-            id: "display",
+            id: "display_ads",
             icon: <Image className="w-6 h-6" />,
             title: "Display Ads",
             description: "Static images or animated banners",
@@ -417,7 +484,7 @@ const CampaignModal = ({
             },
           },
           {
-            id: "video",
+            id: "video_ads",
             icon: <Play className="w-6 h-6" />,
             title: "Video Ads",
             description: "Short-form video content",
@@ -431,20 +498,20 @@ const CampaignModal = ({
           <div
             key={type.id}
             className={`p-4 rounded-xl border transition-all ${
-              formData.type === type.id
+              formData.adType === type.id
                 ? "border-side bg-side/5"
                 : "border-gray-200"
             }`}
           >
             <button
               onClick={() =>
-                setFormData({ ...formData, type: type.id as AdType })
+                setFormData({ ...formData, adType: type.id as AdType })
               }
               className="flex items-start gap-4 w-full text-left"
             >
               <div
                 className={`p-2 rounded-lg ${
-                  formData.type === type.id
+                  formData.adType === type.id
                     ? "bg-side text-white"
                     : "bg-gray-100 text-gray-600"
                 }`}
@@ -457,18 +524,18 @@ const CampaignModal = ({
               </div>
               <motion.div
                 initial={false}
-                animate={{ rotate: formData.type === type.id ? 90 : 0 }}
+                animate={{ rotate: formData.adType === type.id ? 90 : 0 }}
                 transition={{ duration: 0.2 }}
               >
                 <ChevronRight
                   className={`w-5 h-5 ${
-                    formData.type === type.id ? "text-side" : "text-gray-400"
+                    formData.adType === type.id ? "text-side" : "text-gray-400"
                   }`}
                 />
               </motion.div>
             </button>
 
-            {formData.type === type.id && (
+            {formData.adType === type.id && (
               <motion.div
                 initial={{ opacity: 0, height: 0 }}
                 animate={{ opacity: 1, height: "auto" }}
@@ -498,8 +565,10 @@ const CampaignModal = ({
                     <div className="border-2 border-dashed border-gray-200 rounded-lg p-6 text-center hover:border-side/50 transition-colors">
                       <input
                         type="file"
-                        accept={type.id === "display" ? "image/*" : "video/*"}
-                        multiple={type.id === "display"}
+                        accept={
+                          type.id === "display_ads" ? "image/*" : "video/*"
+                        }
+                        multiple={type.id === "display_ads"}
                         onChange={(e) => handleFileUpload(e, type.id)}
                         className="hidden"
                         id={`${type.id}-upload`}
@@ -510,7 +579,7 @@ const CampaignModal = ({
                       >
                         <Upload className="w-8 h-8 text-gray-400 mx-auto mb-2" />
                         <div className="text-sm text-gray-600">
-                          {type.id === "display" ? (
+                          {type.id === "display_ads" ? (
                             <>
                               Drag and drop or click to upload images
                               <div className="text-xs text-gray-400 mt-1">
@@ -534,7 +603,7 @@ const CampaignModal = ({
                 {/* Content Preview */}
                 {uploadedFiles.length > 0 && (
                   <div className="space-y-4">
-                    {type.id === "display" ? (
+                    {type.id === "display_ads" ? (
                       <div className="grid grid-cols-2 gap-4">
                         {uploadedFiles.map((file, index) => (
                           <div key={index} className="relative group">
@@ -780,6 +849,7 @@ const CampaignModal = ({
         );
         return;
       }
+
       // we need to visit here again
       setIsConfirmed(true);
       showNotification("Budget confirmed successfully", "success");
@@ -965,8 +1035,8 @@ const CampaignModal = ({
           <div className="space-y-4">
             {[
               { label: "Campaign Name", value: formData.name },
-              { label: "Ad Type", value: formData.type },
-              { label: "Engagement Type", value: formData.engagementType },
+              { label: "Ad Type", value: formData.adType },
+              { label: "Engagement Type", value: formData.engagementGoal },
               {
                 label: "Impressions per package",
                 value: formData.pricingTier.impressions.toLocaleString(),

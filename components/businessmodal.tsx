@@ -3,13 +3,14 @@ import { useState, useCallback } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { X, Building2, Briefcase, Loader2 } from "lucide-react";
 import { NotificationState } from "@/types/general";
-import { baseURL } from "@/utils/config/baseUrl";
 import Notification from "./notification";
+import { useSendDataMutation } from "@/store/api/api";
 
 interface BusinessFormData {
-  businessName: string;
-  businessIndustry: string;
-  selectedCategories: string[];
+  name: string;
+  email: string;
+  industry: string;
+  category: string[];
 }
 
 interface BusinessModalProps {
@@ -20,11 +21,11 @@ interface BusinessModalProps {
 const BusinessModal = ({ isOpen, onClose }: BusinessModalProps) => {
   // Form and loading state
   const [formData, setFormData] = useState<BusinessFormData>({
-    businessName: "",
-    businessIndustry: "",
-    selectedCategories: [],
+    name: "",
+    email: "",
+    industry: "",
+    category: [],
   });
-  const [isLoading, setIsLoading] = useState(false);
 
   // Notification state
   const [notification, setNotification] = useState<NotificationState>({
@@ -100,58 +101,50 @@ const BusinessModal = ({ isOpen, onClose }: BusinessModalProps) => {
   const handleCategoryToggle = useCallback((categoryId: string) => {
     setFormData((prev) => ({
       ...prev,
-      selectedCategories: prev.selectedCategories.includes(categoryId)
-        ? prev.selectedCategories.filter((id) => id !== categoryId)
-        : [...prev.selectedCategories, categoryId],
+      category: prev.category.includes(categoryId)
+        ? prev.category.filter((id) => id !== categoryId)
+        : [...prev.category, categoryId],
     }));
   }, []);
 
+  const [createBusiness, { isLoading, reset }] = useSendDataMutation();
   const handleSubmit = async () => {
     if (
-      !formData.businessName ||
-      !formData.businessIndustry ||
-      formData.selectedCategories.length === 0
+      !formData.name ||
+      !formData.email ||
+      !formData.industry ||
+      formData.category.length === 0
     ) {
       showNotification("Please fill in all required fields", "error");
       return;
     }
 
-    setIsLoading(true);
-    try {
-      const response = await fetch(`${baseURL}/business`, {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({
-          name: formData.businessName,
-          industry: formData.businessIndustry,
-          category: formData.selectedCategories,
-        }),
-      });
+    const request: any = await createBusiness({
+      url: "business",
+      data: formData,
+      type: "POST",
+    });
 
-      const data = await response.json();
-
-      if (!response.ok) {
-        throw new Error(data.message || "Failed to create business");
-      }
-
-      showNotification("Business created successfully!", "success");
+    if (request?.data) {
+      const { data, message, status } = request?.data;
+      showNotification(message, "success");
       // Reset form
       setFormData({
-        businessName: "",
-        businessIndustry: "",
-        selectedCategories: [],
+        name: "",
+        email: "",
+        industry: "",
+        category: [],
       });
-      onClose();
-    } catch (error) {
-      console.error("Error creating business:", error);
+      setTimeout(() => {
+        onClose();
+      }, 6000);
+    } else {
       showNotification(
-        error instanceof Error ? error.message : "Failed to create business",
+        request?.error?.data?.message
+          ? request?.error?.data?.message
+          : "Check Internet Connection and try again",
         "error"
       );
-    } finally {
-      setIsLoading(false);
     }
   };
 
@@ -193,16 +186,39 @@ const BusinessModal = ({ isOpen, onClose }: BusinessModalProps) => {
                     <Building2 className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400" />
                     <input
                       type="text"
-                      value={formData.businessName}
+                      value={formData.name}
                       onChange={(e) =>
                         setFormData((prev) => ({
                           ...prev,
-                          businessName: e.target.value,
+                          name: e.target.value,
                         }))
                       }
                       disabled={isLoading}
                       className="w-full pl-10 pr-4 py-2 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#B71C1C] disabled:bg-gray-50 disabled:cursor-not-allowed"
                       placeholder="Enter your business name"
+                    />
+                  </div>
+                </div>
+
+                {/* Business email */}
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-2">
+                    Business Email
+                  </label>
+                  <div className="relative">
+                    <Building2 className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400" />
+                    <input
+                      type="text"
+                      value={formData.email}
+                      onChange={(e) =>
+                        setFormData((prev) => ({
+                          ...prev,
+                          email: e.target.value,
+                        }))
+                      }
+                      disabled={isLoading}
+                      className="w-full pl-10 pr-4 py-2 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#B71C1C] disabled:bg-gray-50 disabled:cursor-not-allowed"
+                      placeholder="Enter your business email"
                     />
                   </div>
                 </div>
@@ -215,11 +231,11 @@ const BusinessModal = ({ isOpen, onClose }: BusinessModalProps) => {
                   <div className="relative">
                     <Briefcase className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400" />
                     <select
-                      value={formData.businessIndustry}
+                      value={formData.industry}
                       onChange={(e) =>
                         setFormData((prev) => ({
                           ...prev,
-                          businessIndustry: e.target.value,
+                          industry: e.target.value,
                         }))
                       }
                       disabled={isLoading}
@@ -248,7 +264,7 @@ const BusinessModal = ({ isOpen, onClose }: BusinessModalProps) => {
                         disabled={isLoading}
                         className={`px-4 py-2 rounded-lg border text-sm font-medium transition-colors
                           ${
-                            formData.selectedCategories.includes(category.id)
+                            formData.category.includes(category.id)
                               ? "bg-[#B71C1C] border-[#B71C1C] text-white"
                               : "border-gray-200 text-gray-700 hover:bg-gray-50"
                           } disabled:opacity-50 disabled:cursor-not-allowed`}
@@ -274,9 +290,10 @@ const BusinessModal = ({ isOpen, onClose }: BusinessModalProps) => {
                 onClick={handleSubmit}
                 disabled={
                   isLoading ||
-                  !formData.businessName ||
-                  !formData.businessIndustry ||
-                  formData.selectedCategories.length === 0
+                  !formData.name ||
+                  !formData.email ||
+                  !formData.industry ||
+                  formData.category.length === 0
                 }
                 className="flex items-center justify-center px-4 py-2 bg-[#B71C1C] text-white rounded-lg hover:bg-[#B71C1C]/90 transition-colors disabled:opacity-50 disabled:cursor-not-allowed min-w-[120px]"
               >

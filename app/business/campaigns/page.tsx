@@ -1,6 +1,6 @@
 "use client";
 import { useRouter } from "next/navigation";
-import { useState } from "react";
+import { useCallback, useState } from "react";
 import {
   Plus,
   Edit2,
@@ -10,76 +10,82 @@ import {
   Trash2,
   FileText,
 } from "lucide-react";
-import { useGetBusinessQuery } from "../../../store/api/api";
+import {
+  useGetBusinessQuery,
+  useSendDataMutation,
+} from "../../../store/api/api";
 import { getDataFromLocalStorage } from "@/utils/localStorage";
+import { NotificationState } from "@/types/general";
+import Notification from "../../../components/notification";
+import { AnimatePresence } from "framer-motion";
 
 interface Campaign {
-  id: number;
+  id: string;
   name: string;
-  status: "Active" | "Inactive" | "Pending";
+  campaignStatus: "Active" | "Paused" | "Pending" | "Completed" | "Rejected";
   budget: number;
   amountSpent: number;
   reached: number;
-  costPerView: number;
+  costPerReach: number;
   linkClick: number;
   ctr: string;
-  isActive: boolean;
 }
 
 export default function Page() {
   const router = useRouter();
-  const [activeTab, setActiveTab] = useState<string>("all");
-  const [selectedCampaigns, setSelectedCampaigns] = useState<number[]>([]);
+  const [activeTab, setActiveTab] = useState<string>("All");
+  const [selectedCampaigns, setSelectedCampaigns] = useState<string[]>([]);
 
-  //IMPLEMENT FETCH A BUSINESS DATA BY ID
-  const currentBusinessId = getDataFromLocalStorage("currentBusinessId");
+  //Get users current businessId
+  const businessId = getDataFromLocalStorage("businessId");
   // Fetch businessData
   const {
     data: businessRetrievedData,
     isLoading: businessIsLoading,
     error: businessError,
-  } = useGetBusinessQuery({ id: currentBusinessId });
+  } = useGetBusinessQuery({ id: businessId });
   const business = businessRetrievedData && businessRetrievedData?.data;
-  const businessCampaigns = business?.campaigns;
+  const businessCampaigns: Campaign[] = business?.campaigns;
 
-  const campaigns: Campaign[] = [
-    {
-      id: 1,
-      name: "Summer sales campaign",
-      status: "Active",
-      budget: 200,
-      amountSpent: 200,
-      reached: 100,
-      costPerView: 0.085,
-      linkClick: 10,
-      ctr: "1%",
-      isActive: true,
+  // FILTER ADS FOR TABS
+  const activeCampaigns =
+    businessCampaigns &&
+    businessCampaigns.filter(
+      (item: Campaign) => item.campaignStatus === "Active"
+    );
+  const inactiveCampaigns =
+    businessCampaigns &&
+    businessCampaigns.filter(
+      (item: Campaign) => item.campaignStatus === "Paused"
+    );
+  const pendingCampaigns =
+    businessCampaigns &&
+    businessCampaigns.filter(
+      (item: Campaign) => item.campaignStatus === "Pending"
+    );
+
+  const campaigns: Campaign[] =
+    activeTab === "Active"
+      ? activeCampaigns
+      : activeTab === "Paused"
+      ? inactiveCampaigns
+      : activeTab === "Pending"
+      ? pendingCampaigns
+      : businessCampaigns;
+
+  // Notification state
+  const [notification, setNotification] = useState<NotificationState>({
+    message: "",
+    status: "error",
+    show: false,
+  });
+
+  const showNotification = useCallback(
+    (message: string, status: "success" | "error") => {
+      setNotification({ message, status, show: true });
     },
-    {
-      id: 2,
-      name: "Summer sales campaign",
-      status: "Pending",
-      budget: 200,
-      amountSpent: 200,
-      reached: 100,
-      costPerView: 0.085,
-      linkClick: 10,
-      ctr: "1%",
-      isActive: false,
-    },
-    {
-      id: 3,
-      name: "Summer sales campaign",
-      status: "Inactive",
-      budget: 200,
-      amountSpent: 200,
-      reached: 100,
-      costPerView: 0.085,
-      linkClick: 10,
-      ctr: "1%",
-      isActive: false,
-    },
-  ];
+    []
+  );
 
   const toggleSelectAll = () => {
     if (selectedCampaigns.length === campaigns.length) {
@@ -89,7 +95,7 @@ export default function Page() {
     }
   };
 
-  const toggleCampaign = (id: number) => {
+  const toggleCampaign = (id: string) => {
     if (selectedCampaigns.includes(id)) {
       setSelectedCampaigns((prev) => prev.filter((campId) => campId !== id));
     } else {
@@ -103,10 +109,59 @@ export default function Page() {
         return "text-green-600";
       case "Pending":
         return "text-yellow-600";
-      case "Inactive":
+      case "Paused":
         return "text-gray-400";
+      case "Rejected":
+        return "text-red-400";
       default:
         return "text-gray-600";
+    }
+  };
+
+  //MAKE API CALL TO delete a campaign.
+  const [deleteFunc, { isLoading, reset }] = useSendDataMutation();
+  const deleteCampaign = async () => {
+    if (selectedCampaigns.length > 0) {
+      const request: any = await deleteFunc({
+        url: `campaign`,
+        data: { arrayOfCampaignIds: selectedCampaigns },
+        type: "DELETE",
+      });
+      if (request?.data) {
+        const { data, message, status } = request?.data;
+        setSelectedCampaigns([]);
+        showNotification(message, "success");
+      } else {
+        showNotification(
+          request?.error?.data?.message
+            ? request?.error?.data?.message
+            : "Check Internet Connection and try again",
+          "error"
+        );
+      }
+    } else {
+      showNotification("No campaign selected", "error");
+    }
+  };
+  //MAKE API CALL TO switch campaign status.
+  const [pauseFunc, { isLoading: pauseIsLoading, reset: pauseReset }] =
+    useSendDataMutation();
+  const pauseCampaign = async (id: string) => {
+    const request: any = await pauseFunc({
+      url: `campaign/status/${id}`,
+      data: {},
+      type: "PATCH",
+    });
+    if (request?.data) {
+      const { data, message, status } = request?.data;
+      showNotification(message, "success");
+    } else {
+      showNotification(
+        request?.error?.data?.message
+          ? request?.error?.data?.message
+          : "Check Internet Connection and try again",
+        "error"
+      );
     }
   };
 
@@ -130,9 +185,9 @@ export default function Page() {
         <div className="flex flex-row">
           <div className="absolute top-20 bg-white rounded-3xl p-5">
             <button
-              onClick={() => setActiveTab("all")}
+              onClick={() => setActiveTab("All")}
               className={`px-4 py-2 font-medium text-sm ${
-                activeTab === "all"
+                activeTab === "All"
                   ? "text-[#8B1212] border-b-2 border-[#8B1212]"
                   : "text-gray-500"
               }`}
@@ -140,9 +195,9 @@ export default function Page() {
               All ads
             </button>
             <button
-              onClick={() => setActiveTab("active")}
+              onClick={() => setActiveTab("Active")}
               className={`px-4 py-2 font-medium text-sm ${
-                activeTab === "active"
+                activeTab === "Active"
                   ? "text-[#8B1212] border-b-2 border-[#8B1212]"
                   : "text-gray-500"
               }`}
@@ -150,9 +205,9 @@ export default function Page() {
               Active ads
             </button>
             <button
-              onClick={() => setActiveTab("inactive")}
+              onClick={() => setActiveTab("Paused")}
               className={`px-4 py-2 font-medium text-sm ${
-                activeTab === "inactive"
+                activeTab === "Paused"
                   ? "text-[#8B1212] border-b-2 border-[#8B1212]"
                   : "text-gray-500"
               }`}
@@ -160,9 +215,9 @@ export default function Page() {
               Inactive ads
             </button>
             <button
-              onClick={() => setActiveTab("pending")}
+              onClick={() => setActiveTab("Pending")}
               className={`px-4 py-2 font-medium text-sm ${
-                activeTab === "pending"
+                activeTab === "Pending"
                   ? "text-[#8B1212] border-b-2 border-[#8B1212]"
                   : "text-gray-500"
               }`}
@@ -177,7 +232,10 @@ export default function Page() {
               <Edit2 size={20} />
               <h1>Edit</h1>
             </button>
-            <button className="py-1 px-2 flex bg-white flex-row items-center gap-1 text-gray-600 hover:bg-gray-100 rounded-lg text-xs">
+            <button
+              onClick={deleteCampaign}
+              className="py-1 px-2 flex bg-white flex-row items-center gap-1 text-gray-600 hover:bg-gray-100 rounded-lg text-xs"
+            >
               <Trash2 size={20} />
               <h1>Delete</h1>
             </button>
@@ -202,7 +260,11 @@ export default function Page() {
                   <input
                     type="checkbox"
                     className="w-4 h-4 rounded border-gray-300"
-                    checked={selectedCampaigns.length === campaigns.length}
+                    checked={
+                      campaigns
+                        ? selectedCampaigns.length === campaigns.length
+                        : false
+                    }
                     onChange={toggleSelectAll}
                   />
                 </th>
@@ -222,7 +284,7 @@ export default function Page() {
                   Reached
                 </th>
                 <th className="px-4 py-3 text-left text-sm font-medium text-gray-500">
-                  Cost per view
+                  Cost per reach
                 </th>
                 <th className="px-4 py-3 text-left text-sm font-medium text-gray-500">
                   Link click
@@ -236,50 +298,61 @@ export default function Page() {
               </tr>
             </thead>
             <tbody>
-              {campaigns.map((campaign) => (
-                <tr
-                  key={campaign.id}
-                  className="border-b border-gray-200 hover:bg-gray-50"
-                >
-                  <td className="px-4 py-3">
-                    <input
-                      type="checkbox"
-                      className="w-4 h-4 rounded border-gray-300"
-                      checked={selectedCampaigns.includes(campaign.id)}
-                      onChange={() => toggleCampaign(campaign.id)}
-                    />
-                  </td>
-                  <td className="px-4 py-3">
-                    <span
-                      className={`flex items-center gap-2 ${getStatusColor(
-                        campaign.status
-                      )}`}
-                    >
-                      <span className="w-2 h-2 rounded-full bg-current" />
-                      {campaign.status}
-                    </span>
-                  </td>
-                  <td className="px-4 py-3 font-medium text-gray-900">
-                    {campaign.name}
-                  </td>
-                  <td className="px-4 py-3">${campaign.budget}</td>
-                  <td className="px-4 py-3">${campaign.amountSpent}</td>
-                  <td className="px-4 py-3">{campaign.reached}</td>
-                  <td className="px-4 py-3">${campaign.costPerView}</td>
-                  <td className="px-4 py-3">{campaign.linkClick}</td>
-                  <td className="px-4 py-3">{campaign.ctr}</td>
-                  <td className="px-4 py-3">
-                    <label className="relative inline-flex items-center cursor-pointer">
+              {campaigns &&
+                campaigns.map((campaign) => (
+                  <tr
+                    key={campaign.id}
+                    className="border-b border-gray-200 hover:bg-gray-50"
+                  >
+                    <td className="px-4 py-3">
                       <input
                         type="checkbox"
-                        className="sr-only peer"
-                        checked={campaign.isActive}
+                        className="w-4 h-4 rounded border-gray-300"
+                        checked={selectedCampaigns.includes(campaign.id)}
+                        onChange={() => toggleCampaign(campaign.id)}
                       />
-                      <div className="w-9 h-5 bg-gray-200 peer-focus:outline-none peer-focus:ring-2 peer-focus:ring-[#8B1212] rounded-full peer peer-checked:after:translate-x-full after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-4 after:w-4 after:transition-all peer-checked:bg-[#8B1212]"></div>
-                    </label>
-                  </td>
-                </tr>
-              ))}
+                    </td>
+                    <td className="px-4 py-3">
+                      <span
+                        className={`flex items-center gap-2 ${getStatusColor(
+                          campaign.campaignStatus
+                        )}`}
+                      >
+                        <span className="w-2 h-2 rounded-full bg-current" />
+                        {campaign.campaignStatus}
+                      </span>
+                    </td>
+                    <td className="px-4 py-3 font-medium text-gray-900">
+                      {campaign.name}
+                    </td>
+                    <td className="px-4 py-3">${campaign.budget}</td>
+                    <td className="px-4 py-3">${campaign.amountSpent}</td>
+                    <td className="px-4 py-3">{campaign.reached}</td>
+                    <td className="px-4 py-3">${campaign.costPerReach}</td>
+                    <td className="px-4 py-3">{campaign.linkClick}</td>
+                    <td className="px-4 py-3">
+                      {campaign.linkClick !== 0
+                        ? Number((campaign.linkClick / campaign.reached) * 100)
+                        : "0%"}
+                    </td>
+                    <td className="px-4 py-3">
+                      <label className="relative inline-flex items-center cursor-pointer">
+                        <input
+                          type="checkbox"
+                          className="sr-only peer"
+                          checked={campaign.campaignStatus === "Active"}
+                          onChange={() =>
+                            campaign.campaignStatus === "Paused" ||
+                            campaign.campaignStatus === "Active"
+                              ? pauseCampaign(campaign.id)
+                              : ""
+                          }
+                        />
+                        <div className="w-9 h-5 bg-gray-200 peer-focus:outline-none peer-focus:ring-2 peer-focus:ring-[#8B1212] rounded-full peer peer-checked:after:translate-x-full after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-4 after:w-4 after:transition-all peer-checked:bg-[#8B1212]"></div>
+                      </label>
+                    </td>
+                  </tr>
+                ))}
             </tbody>
           </table>
 
@@ -305,6 +378,18 @@ export default function Page() {
           </div>
         </div>
       </div>
+
+      <AnimatePresence>
+        {notification.show && (
+          <Notification
+            message={notification.message}
+            status={notification.status}
+            switchShowOff={() =>
+              setNotification((prev) => ({ ...prev, show: false }))
+            }
+          />
+        )}
+      </AnimatePresence>
     </div>
   );
 }
