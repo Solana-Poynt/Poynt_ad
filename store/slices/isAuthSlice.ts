@@ -14,6 +14,7 @@ interface AuthState {
     email: string | null;
     name: string | null;
     role: string | null;
+    businessId: string | null;
   };
 }
 
@@ -26,6 +27,7 @@ interface AuthPayload {
     email: string;
     name: string;
     role: string;
+    businessId: string;
   };
 }
 
@@ -39,6 +41,7 @@ const initialState: AuthState = {
     email: getDataFromLocalStorage("email"),
     name: getDataFromLocalStorage("name"),
     role: getDataFromLocalStorage("role"),
+    businessId: getDataFromLocalStorage("businessId"),
   },
 };
 
@@ -61,6 +64,7 @@ export const isAuthSlice = createSlice({
         email: user.email,
         name: user.name,
         role: user.role,
+        businessId: user.businessId,
       };
 
       // Save data in local storage if it exists
@@ -69,6 +73,7 @@ export const isAuthSlice = createSlice({
       saveDataToLocalStorage("email", user.email);
       saveDataToLocalStorage("name", user.name);
       saveDataToLocalStorage("role", user.role);
+      saveDataToLocalStorage("businessId", user.businessId);
     },
     logout: (state) => {
       state.isAuth = false;
@@ -78,6 +83,7 @@ export const isAuthSlice = createSlice({
         email: null,
         name: null,
         role: null,
+        businessId: null,
       };
 
       // Clear local storage
@@ -86,6 +92,7 @@ export const isAuthSlice = createSlice({
       deleteDataFromLocalStorage("email");
       deleteDataFromLocalStorage("name");
       deleteDataFromLocalStorage("role");
+      deleteDataFromLocalStorage("businessId");
       // deleteDataFromLocalStorage("wallet");
       // deleteDataFromLocalStorage("walletbalance");
     },

@@ -1,5 +1,6 @@
 "use client";
 import { useState } from "react";
+import { useRouter } from "next/navigation";
 import { motion, AnimatePresence } from "framer-motion";
 import { Check, ArrowRight, ChevronRight } from "lucide-react";
 import CampaignModal from "@/components/campaignmodal";
@@ -9,6 +10,7 @@ import Header from "@/components/campaignheader";
 import { cn } from "@/lib/utils";
 
 export default function CampaignPage() {
+  const router = useRouter();
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [selectedPricing, setSelectedPricing] = useState<number | null>(null);
 
@@ -105,7 +107,8 @@ export default function CampaignPage() {
               include our complete suite of targeting and analytics features.
             </p>
             <p className="text-side text-xs italic max-w-2xl py-4  mx-auto">
-              For test purposes, all price plans are in SOL to ensure effective testing
+              For test purposes, all price plans are in SOL to ensure effective
+              testing
             </p>
           </div>
 
@@ -253,7 +256,10 @@ export default function CampaignPage() {
         {selectedPricing !== null && isModalOpen && (
           <CampaignModal
             isOpen={isModalOpen}
-            onClose={() => setIsModalOpen(false)}
+            onClose={() => {
+              setIsModalOpen(false);
+              router.push("/business/campaigns");
+            }}
             pricingTiers={DEFAULT_PRICING_TIERS[selectedPricing]}
           />
         )}

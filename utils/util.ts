@@ -46,3 +46,18 @@ export const validateRegistration = (
 
   return true;
 };
+//FUNCTION TO REMOVE EMPTY VALUES AND KEYS FROM DATA
+export const removeEmptyStrings = (obj: any) => {
+  // Create a new object to store non-empty values
+  const newObj: any = {};
+
+  for (const key in obj) {
+    const value = obj[key];
+
+    if (value !== "" && value !== null && value !== undefined) {
+      newObj[key] = value;
+    }
+  }
+
+  return newObj;
+};
