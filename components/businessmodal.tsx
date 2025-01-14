@@ -1,5 +1,6 @@
 "use client";
 import { useState, useCallback } from "react";
+import { useRouter } from "next/navigation";
 import { motion, AnimatePresence } from "framer-motion";
 import { X, Building2, Briefcase, Loader2 } from "lucide-react";
 import { NotificationState } from "@/types/general";
@@ -21,6 +22,7 @@ interface BusinessModalProps {
 
 const BusinessModal = ({ isOpen, onClose }: BusinessModalProps) => {
   // Form and loading state
+  const router = useRouter();
   const [formData, setFormData] = useState<BusinessFormData>({
     name: "",
     email: "",
@@ -140,6 +142,7 @@ const BusinessModal = ({ isOpen, onClose }: BusinessModalProps) => {
       setTimeout(() => {
         onClose();
       }, 6000);
+      router.push("/business");
     } else {
       showNotification(
         request?.error?.data?.message
