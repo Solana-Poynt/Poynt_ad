@@ -5,6 +5,7 @@ import { X, Building2, Briefcase, Loader2 } from "lucide-react";
 import { NotificationState } from "@/types/general";
 import Notification from "./notification";
 import { useSendDataMutation } from "@/store/api/api";
+import { saveDataToLocalStorage } from "@/utils/localStorage";
 
 interface BusinessFormData {
   name: string;
@@ -127,6 +128,7 @@ const BusinessModal = ({ isOpen, onClose }: BusinessModalProps) => {
 
     if (request?.data) {
       const { data, message, status } = request?.data;
+      saveDataToLocalStorage("businessId", data.id);
       showNotification(message, "success");
       // Reset form
       setFormData({

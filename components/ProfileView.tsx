@@ -49,6 +49,11 @@ const ProfileDropdown: React.FC = () => {
     error: userError,
   } = useGetUserQuery({ id: userId });
   const accounts: Account[] = usersServerData?.data?.businesses;
+  const currentSelectedAccount =
+    accounts &&
+    accounts.filter((item) => {
+      return item.id === getDataFromLocalStorage("businessId");
+    });
 
   // Effect to handle hydration and initial data loading
   useEffect(() => {
@@ -128,19 +133,19 @@ const ProfileDropdown: React.FC = () => {
               {currentBusiness
                 ? currentBusiness.name
                 : accounts && accounts.length > 0
-                ? accounts.filter((item) => {
-                    return item.id === getDataFromLocalStorage("businessId");
-                  })[0].name
+                ? (currentSelectedAccount[0] &&
+                    currentSelectedAccount[0].name) ||
+                  "***"
                 : "---"}
             </span>
             <p className="text-xs text-gray-500">
               {currentBusiness
                 ? currentBusiness.email
                 : accounts && accounts.length > 0
-                ? accounts.filter((item) => {
-                    return item.id === getDataFromLocalStorage("businessId");
-                  })[0].email
-                : "--"}
+                ? (currentSelectedAccount[0] &&
+                    currentSelectedAccount[0].email) ||
+                  "***"
+                : "---"}
             </p>
           </div>
           <ChevronDown
