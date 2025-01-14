@@ -125,20 +125,22 @@ const ProfileDropdown: React.FC = () => {
           </div>
           <div className="flex flex-col items-start">
             <span className="text-sm font-medium text-gray-900">
-              {(currentBusiness
+              {currentBusiness
                 ? currentBusiness.name
-                : accounts &&
-                  accounts.filter((item) => {
+                : accounts && accounts.length > 0
+                ? accounts.filter((item) => {
                     return item.id === getDataFromLocalStorage("businessId");
-                  })[0].name) || "Business Account"}
+                  })[0].name
+                : "---"}
             </span>
             <p className="text-xs text-gray-500">
-              {(currentBusiness
+              {currentBusiness
                 ? currentBusiness.email
-                : accounts &&
-                  accounts.filter((item) => {
+                : accounts && accounts.length > 0
+                ? accounts.filter((item) => {
                     return item.id === getDataFromLocalStorage("businessId");
-                  })[0].email) || "Business email"}
+                  })[0].email
+                : "--"}
             </p>
           </div>
           <ChevronDown
