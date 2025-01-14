@@ -116,7 +116,10 @@ export default function Signup() {
             email: data.data.user.email,
             name: data.data.user.name,
             role: data.data.user.role,
-            businessId: data.data.user.businesses[0].id,
+            businessId:
+              data.data.user.businesses.length > 0
+                ? data.data.user.businesses[0].id
+                : "",
           },
         })
       );
