@@ -1,10 +1,12 @@
 import React, { useState } from "react";
 import ProfileDropdown from "@/components/ProfileView";
 import Image from "next/image";
-import { Search, Bell } from "lucide-react";
+import { Bell } from "lucide-react";
+import ReModal from "./reusablemodal";
 
 const BusinessHeader = () => {
-  const [search, setSearch] = useState<string>("");
+  // const [search, setSearch] = useState<string>("");
+  const [isOpen, setIsOpen] = useState<boolean>(false);
 
   return (
     <div className=" pt-3 pb-5">
@@ -12,21 +14,20 @@ const BusinessHeader = () => {
         <div className="mx-auto py-3 px-6 flex items-center justify-between gap-8">
           {/* Logo Section */}
           <div className="flex items-center min-w-[100px]">
-            <div className="relative w-12 h-12">
+            <div className="relative w-24 h-12">
               <Image
-                src="/trans.png"
+                src="/home-logo.svg"
                 fill
-                quality={90}
+                quality={100}
                 priority
                 alt="Poynt Logo"
                 className="object-contain"
               />
             </div>
-            <span className="text-base font-bold text-gray-900">Poynt</span>
           </div>
 
           {/* Search Section */}
-          <div className="flex-1 max-w-2xl">
+          {/* <div className="flex-1 max-w-2xl">
             <div className="relative group">
               <Search
                 className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 
@@ -44,7 +45,7 @@ const BusinessHeader = () => {
                          focus:bg-white hover:border-gray-300"
               />
             </div>
-          </div>
+          </div> */}
 
           {/* Actions Section */}
           <div className="flex items-center gap-4">
@@ -52,15 +53,26 @@ const BusinessHeader = () => {
               className="relative p-2.5 rounded-lg border border-gray-200 bg-white
                        hover:bg-gray-50 hover:border-gray-300 
                        transition-all duration-200 ease-in-out"
+              onClick={() => setIsOpen(true)}
             >
               <Bell className="w-5 h-5 text-gray-600" />
-              <span className="absolute -top-1 -right-1 w-2.5 h-2.5 bg-red-500 rounded-full" />
+              {/* <span className="absolute -top-1 -right-1 w-2.5 h-2.5 bg-red-500 rounded-full" /> */}
             </button>
             <div className="pl-2 border-l border-gray-200">
               <ProfileDropdown />
             </div>
           </div>
         </div>
+
+        <ReModal
+          isOpen={isOpen}
+          onClose={() => setIsOpen(false)}
+          title="Notifications and Messages"
+        >
+          <div className="">
+            <p className="text-zinc-800">No Message Found</p>
+          </div>
+        </ReModal>
       </header>
     </div>
   );

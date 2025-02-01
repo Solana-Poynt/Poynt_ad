@@ -173,10 +173,25 @@ const CampaignModal = ({
   }, [step]);
 
   // File handling
+  const MAX_VIDEO_SIZE = 50 * 1024 * 1024;
+  const MAX_IMAGE_SIZE = 5 * 1024 * 1024;
+
   const handleFileUpload = useCallback(
     (e: React.ChangeEvent<HTMLInputElement>, type: string) => {
       const files = Array.from(e.target.files || []);
-      setUploadedFiles(files);
+      const maxSize = type === "video_ads" ? MAX_VIDEO_SIZE : MAX_IMAGE_SIZE;
+      const invalidFiles = files.filter((file) => file.size > maxSize);
+
+      if (invalidFiles.length > 0) {
+        const sizeInMb = maxSize / (1024 * 1024);
+        showNotification(
+          `File size exceeds ${sizeInMb}MB limit. Please upload smaller files`,
+          "error"
+        );
+        e.target.value = "";
+        return;
+      }
+      setUploadedFiles((prev) => [...prev, ...files]);
       setFormData((prev) => ({ ...prev, media: files }));
     },
     []
