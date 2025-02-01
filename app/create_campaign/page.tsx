@@ -258,7 +258,7 @@ export default function CampaignPage() {
             isOpen={isModalOpen}
             onClose={() => {
               setIsModalOpen(false);
-              router.push("/business/campaigns");
+              router.push("/create_campaign");
             }}
             pricingTiers={DEFAULT_PRICING_TIERS[selectedPricing]}
           />

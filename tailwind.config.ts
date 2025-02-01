@@ -22,7 +22,7 @@ const config: Config = {
           DEFAULT: "hsl(var(--primary))",
           foreground: "hsl(var(--primary-foreground))",
         },
-        main: "#f3f3f3",
+        main: "#F3F4F6",
         text: "#2c2c2c",
         blacc: "#221911",
         overlay: "rgba(0, 0, 0, 0.55)",

@@ -1,66 +1,68 @@
 "use client";
 import { useRouter } from "next/navigation";
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useState, useCallback } from "react";
 import { useGetUserQuery } from "../../store/api/api";
 import { getDataFromLocalStorage } from "@/utils/localStorage";
 import Image from "next/image";
-import { Trophy } from "lucide-react";
-import { Card, CardContent } from "@/components/ui/card";
-import { Copy } from "lucide-react";
-import { Plus } from "lucide-react";
-import { useWalletManagement } from "@/utils/hooks/useWallet";
+import { AnimatePresence } from "framer-motion";
+import { NotificationState } from "@/types/general";
+import Notification from "@/components/notification";
+import { Trophy, Copy, Plus } from "lucide-react";
+import QuickStartButton from "@/components/quick_modal";
 
+// Move constants outside component
 const adCards = [
   {
     title: "1st Campaign",
     rate: "0%",
     bgColor: "bg-[#FEF3C7]",
     iconBg: "bg-[#D9770680]",
-    rateColor: "text-amber-800",
+    rateColor: "text-[#575757]",
   },
   {
     title: "2nd Campaign",
     rate: "0%",
     bgColor: "bg-[#DCFCE7]",
     iconBg: "bg-[#16A34A80]",
-    rateColor: "text-green-800",
+    rateColor: "text-[#575757]",
   },
   {
     title: "3rd Campaign",
     rate: "0%",
-    bgColor: "bg-[#F3E8FF]",
+    bgColor: "bg-[#F0F0F0]",
     iconBg: "bg-[#9747FF80]",
-    rateColor: "text-purple-800",
+    rateColor: "text-[#575757]",
   },
 ];
 
+interface UserData {
+  name: string | null;
+  email: string | null;
+}
+
 export default function Page() {
   const router = useRouter();
+  const [isModalOpen, setIsModalOpen] = useState<boolean>(false);
   const [mounted, setMounted] = useState<boolean>(false);
-  const [userData, setUserData] = useState<{
-    name: string | null;
-    email: string | null;
-  }>({
+  const [notification, setNotification] = useState<NotificationState>({
+    message: "",
+    status: "error",
+    show: false,
+  });
+  const [userData, setUserData] = useState<UserData>({
     name: null,
     email: null,
   });
 
-  //IMPLEMENT FETCH USERS DATA
+  // Get stored data
   const id = getDataFromLocalStorage("id");
-  const wallet: string | any = getDataFromLocalStorage("wallet");
+  const wallet = getDataFromLocalStorage("wallet");
   const balance = getDataFromLocalStorage("walletbalance");
 
-  // console.log("Balance:", balance);
-  // console.log("Address:", wallet);
+  // Fetch user data
+  const { data: userRetrievedData, isLoading } = useGetUserQuery({ id });
 
-  // Fetch userData
-  const {
-    data: userRetrievedData,
-    isLoading: userIsLoading,
-    error: userError,
-  } = useGetUserQuery({ id: id });
-  const user = userRetrievedData && userRetrievedData?.data;
-  const usersBuisnesses = user?.businesses;
+  const user = userRetrievedData?.data;
 
   useEffect(() => {
     setMounted(true);
@@ -69,25 +71,56 @@ export default function Page() {
     setUserData({ name, email });
   }, []);
 
+  // console.log("Loggggs:", user?.isOnBoarded);
+
+  const showNotification = useCallback(
+    (message: string, status: "success" | "error") => {
+      setNotification({ message, status, show: true });
+    },
+    []
+  );
+
+  useEffect(() => {
+    if (user?.isOnBoarded === false) {
+      setIsModalOpen(true);
+    }
+  }, [user]);
+
+  const handleCopyWallet = async () => {
+    if (wallet) {
+      try {
+        await navigator.clipboard.writeText(wallet);
+        showNotification("Wallet Address Copied", "success");
+      } catch (err) {
+        console.error("Failed to copy wallet address");
+        showNotification("Failed to copy wallet address", "error");
+      }
+    }
+  };
+
   if (!mounted) return null;
 
-
-  
+  const truncateWallet = (address: string) => {
+    if (!address) return "";
+    return `${address.slice(0, 6)}...${address.slice(-4)}`;
+  };
 
   return (
-    <main className="flex flex-col w-full h-full px-4">
+    <main className="flex flex-col w-full h-full pl-4">
       {/* Fixed Header */}
       <div className="bg-[#f3f3f3] pb-2">
         <div className="max-w-7xl mx-auto">
           <div className="flex flex-col gap-4">
             <div className="flex flex-row justify-between items-center bg-white w-full p-3 rounded-lg">
               <div className="flex flex-col gap-3 w-1/2 text-text">
-                <h1 className="text-sm font-semibold">Hello {userData.name}</h1>
-                <h1 className="text-lg font-medium">
+                <h1 className="text-sm text-[#727272]">
+                  Hello {userData.name}
+                </h1>
+                <h1 className="text-lg font-bold w-[80%] text-[#575757]">
                   Create and manage your advertising campaigns
                 </h1>
                 <button
-                  className="hidden md:flex items-center w-1/2 p-3 bg-side text-white rounded-lg hover:bg-[#B71C1C] transition-colors duration-200 whitespace-nowrap"
+                  className="hidden md:flex items-center w-[184px] p-2 bg-side text-white rounded-lg transition-colors duration-200 whitespace-nowrap hover:opacity-90"
                   onClick={() => router.push("/create_campaign")}
                 >
                   <Plus className="w-4 h-4 mr-2" />
@@ -101,7 +134,8 @@ export default function Page() {
                   height={200}
                   quality={90}
                   priority
-                  alt="Poynt Logo"
+                  alt="Campaign Illustration"
+                  className="object-contain"
                 />
               </div>
             </div>
@@ -110,22 +144,22 @@ export default function Page() {
       </div>
 
       {/* Scrollable Content */}
-      <div className="flex-1 bg-[#f3f3f3] overflow-auto">
-        <div className="max-w-7xl w-full mx-auto py-3 pr-2">
-          <div className="flex flex-row w-full gap-5 mb-6">
+      <div className="flex-1 bg-[#f3f3f3] overflow-auto scrollbar-hide">
+        <div className="max-w-7xl w-full mx-auto py-3">
+          <div className="flex flex-row w-full gap-3 mb-6">
             {/* Top performing ads */}
-            <div className="col-span-2 w-[60%] bg-white p-4 rounded-lg">
-              <h3 className="font-semibold text-text mb-6">
+            <div className="col-span-2 w-full bg-[#FAFAFA] p-4 rounded-3xl">
+              <h3 className="font-semibold text-text mb-3">
                 Top performing ads
               </h3>
-              <div className="grid grid-cols-3 gap-4">
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                 {adCards.map((card, index) => (
                   <div
                     key={index}
-                    className={`${card.bgColor} rounded-xl p-4 transition-all duration-200 hover:shadow-lg`}
+                    className={`${card.bgColor} rounded-xl p-3 flex flex-col gap-2 transition-all duration-200 hover:shadow-lg`}
                   >
                     <div
-                      className={`${card.iconBg} w-10 h-10 rounded-full flex items-center justify-center mb-3`}
+                      className={`${card.iconBg} w-10 h-10 rounded-[9.6px] flex items-center justify-center mb-3`}
                     >
                       <Trophy className="w-5 h-5 text-gray-700" />
                     </div>
@@ -146,57 +180,56 @@ export default function Page() {
             </div>
 
             {/* Wallet Card */}
-            <div className="bg-white w-[40%] p-3 rounded-lg">
-              <Card
-                className="rounded-2xl p-6 text-white relative overflow-hidden hover:scale-[1.02] transition-transform duration-300"
-                style={{
-                  background:
-                    "radial-gradient(366.41% 171.35% at 89.31% -24.73%, rgba(180, 30, 30, 0.95) 0%, rgba(20, 2, 2, 0.95) 83.5%)",
-                  boxShadow: `-4px -4px 12px 0px rgba(230, 160, 160, 0.25) inset,
-                              4px 4px 12px 0px rgba(230, 160, 160, 0.25) inset,
-                              0 10px 30px -10px rgba(0, 0, 0, 0.5)`,
-                  backdropFilter: "blur(16px)",
-                }}
-              >
-                {/* Decorative elements remain the same */}
-                <CardContent className="p-0 relative z-10">
-                  <div className="flex flex-row justify-between mb-4">
-                    <span className="text-sm font-medium text-white/80">
-                      Balance
-                    </span>
-                    <span className="text-xl font-bold tracking-tight">
-                      {balance || "--"} SOL
-                    </span>
-                  </div>
-                  <div className="space-y-3 pt-4 border-t border-white/10">
+            <div className="w-[342px] h-[272px] p-4 bg-[#FAFAFA] rounded-3xl">
+              <div className="relative w-[310px] h-[188px]">
+                <Image
+                  src="/wallet-card.svg"
+                  fill
+                  quality={100}
+                  priority
+                  alt="Wallet Card"
+                  className="object-cover rounded-2xl"
+                />
+
+                <div className="relative">
+                  <span className="text-xl text-white font-bold absolute right-9 top-12 tracking-tight">
+                    {`${balance} SOL`}
+                  </span>
+
+                  <div className="absolute left-4 top-24  pt-4 w-[280px]">
                     <p className="text-sm text-white/70 font-medium">
                       Wallet Address
                     </p>
                     {wallet ? (
-                      <div className="flex items-center justify-between bg-black/20 rounded-lg p-3">
-                        <p className="text-sm font-mono truncate text-white/90">
-                          {wallet}
+                      <div className="flex items-center rounded-lg p-2.5">
+                        <p className="text-sm font-mono text-white/90 truncate max-w-[130px]">
+                          {truncateWallet(wallet)}
                         </p>
                         <button
-                          className="ml-3 p-2 rounded-md hover:bg-white/10 transition-colors opacity-60 hover:opacity-100"
-                          onClick={() => navigator.clipboard.writeText(wallet)}
+                          className="ml-2 p-1.5 rounded-md hover:bg-white/10 transition-colors opacity-60 hover:opacity-100"
+                          onClick={handleCopyWallet}
+                          aria-label="Copy wallet address"
                         >
-                          <Copy className="w-4 h-4" />
+                          <Copy className="w-4 h-4 text-white" />
                         </button>
                       </div>
                     ) : (
-                      <div className="flex items-center justify-between bg-black/20 rounded-lg p-3">
-                        <button
-                          className="ml-3 p-2 rounded-md"
-                          onClick={() => router.push("/business/wallet")}
-                        >
-                          Get Wallet
-                        </button>
-                      </div>
+                      <p className="text-sm font-mono text-white/90">
+                        No Wallet Detected
+                      </p>
                     )}
                   </div>
-                </CardContent>
-              </Card>
+                </div>
+              </div>
+
+              <div className="flex items-center mt-6 bg-[#F0F0F0] rounded-lg">
+                <button
+                  className="w-full text-[#575757] p-2.5 text-sm font-medium hover:bg-gray-200 transition-colors rounded-lg"
+                  onClick={() => router.push("/business/wallet")}
+                >
+                  View Wallet
+                </button>
+              </div>
             </div>
           </div>
 
@@ -208,37 +241,27 @@ export default function Page() {
             <div className="flex p-8 w-full justify-center">
               <h1>No Campaigns Yet</h1>
             </div>
-            {/* <div className="p-4">
-              {[1, 2, 3].map((item) => (
-                <div
-                  key={item}
-                  className="flex items-center justify-between p-4 hover:bg-gray-50 rounded-lg cursor-pointer transition-colors duration-200"
-                >
-                  <div className="flex items-center gap-4">
-                    <div className="w-10 h-10 bg-blue-50 rounded-lg flex items-center justify-center">
-                      <Layout className="w-5 h-5 text-blue-600" />
-                    </div>
-                    <div>
-                      <h4 className="font-medium text-gray-900">
-                        Summer Sale Campaign
-                      </h4>
-                      <p className="text-sm text-gray-500">
-                        Created 2 days ago
-                      </p>
-                    </div>
-                  </div>
-                  <div className="flex items-center gap-4">
-                    <span className="px-3 py-1 bg-green-50 text-green-600 text-sm font-medium rounded-full">
-                      Active
-                    </span>
-                    <ChevronDown className="w-5 h-5 text-gray-400" />
-                  </div>
-                </div>
-              ))}
-            </div> */}
           </div>
         </div>
+
+        {/* QuickStart Modal */}
+        <QuickStartButton
+          showBusinessModal={isModalOpen}
+          setShowBusinessModal={setIsModalOpen}
+        />
       </div>
+
+      <AnimatePresence>
+        {notification.show && (
+          <Notification
+            message={notification.message}
+            status={notification.status}
+            switchShowOff={() =>
+              setNotification((prev) => ({ ...prev, show: false }))
+            }
+          />
+        )}
+      </AnimatePresence>
     </main>
   );
 }

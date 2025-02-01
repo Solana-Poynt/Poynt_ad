@@ -166,7 +166,7 @@ const ProfileDropdown: React.FC = () => {
           transition-all duration-300 ease-in-out origin-top-right
           ${
             showDropDown
-              ? "opacity-100 transform scale-100 translate-y-0"
+              ? "opacity-100 transform scale-100 translate-y-0 "
               : "opacity-0 transform scale-95 -translate-y-2 pointer-events-none"
           }
         `}

@@ -78,20 +78,18 @@ export default function Header() {
             {/* Logo and Brand Name */}
             <div className="flex items-center space-x-1">
               <Link href="/" className="flex items-center">
-                <div className="relative w-12 h-12 sm:w-14 sm:h-14">
+                <div className="relative w-12 h-12 sm:w-20 sm:h-14">
                   <Image
-                    src="/trans.png"
+                    src="/home-logo.svg"
                     fill
-                    sizes="(max-width: 768px) 48px, 56px"
+                    // sizes="(max-width: 768px) 48px, 56px"
                     priority
                     alt="Poynt Adblock Logo"
                     className="rounded object-contain"
                   />
                 </div>
               </Link>
-              <h2 className="text-lg sm:text-xl font-semibold text-gray-900 whitespace-nowrap">
-                Poynt
-              </h2>
+              
             </div>
 
             {/* Desktop Navigation */}
