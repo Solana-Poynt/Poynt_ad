@@ -4,7 +4,6 @@ import { motion, AnimatePresence } from "framer-motion";
 import { useRouter } from "next/navigation";
 import {
   ChevronRight,
-  X,
   Target,
   AlignLeft,
   DollarSign,
@@ -27,10 +26,13 @@ interface QuickStartProps {
   setShowBusinessModal: (open: boolean) => void;
 }
 
-const QuickStartButton = ({ showBusinessModal, setShowBusinessModal }: QuickStartProps) => {
+const QuickStartButton = ({
+  showBusinessModal,
+  setShowBusinessModal,
+}: QuickStartProps) => {
   const [currentStep, setCurrentStep] = useState(0);
   const [showBusinessForm, setShowBusinessForm] = useState(false);
-  const router = useRouter();
+  // const router = useRouter();
 
   const steps: Step[] = [
     {
@@ -47,7 +49,7 @@ const QuickStartButton = ({ showBusinessModal, setShowBusinessModal }: QuickStar
     {
       title: "Setup a Business Account",
       description:
-        "Easily manage advertising campaigns for multiple businesses through dedicated business accounts, all from your account.",
+        "Easily manage advertising campaigns for multiple businesses through dedicated business accounts, all from your account",
       icon: <AlignLeft className="w-6 h-6 text-[#B71C1C]" />,
       cta: true,
     },
@@ -61,7 +63,7 @@ const QuickStartButton = ({ showBusinessModal, setShowBusinessModal }: QuickStar
     {
       title: "Launch Campaign",
       description:
-        "Review settings and launch your campaign to start reaching your audience.",
+        "Review settings and launch your campaign to start reaching your audience. To get started, proceed with creating a business account first",
       icon: <Rocket className="w-6 h-6 text-[#B71C1C]" />,
     },
   ];
@@ -70,17 +72,14 @@ const QuickStartButton = ({ showBusinessModal, setShowBusinessModal }: QuickStar
     if (currentStep < steps.length - 1) {
       setCurrentStep(currentStep + 1);
     } else {
-      router.push("/create_campaign");
+      setShowBusinessForm(true);
+      setShowBusinessModal(false);
     }
   };
 
-  const handleFundWallet = () => {
-    router.push("/business/wallet");
-  };
-
-  const handleShowBusinessForm = () => {
-    setShowBusinessForm(true);
-  };
+  // const handleFundWallet = () => {
+  //   router.push("/business/wallet");
+  // };
 
   return (
     <AnimatePresence>
@@ -115,19 +114,7 @@ const QuickStartButton = ({ showBusinessModal, setShowBusinessModal }: QuickStar
                   </ul>
                 )}
 
-                {steps[currentStep].cta && (
-                  <div className="mt-7 ml-7">
-                    <button
-                      onClick={handleShowBusinessForm}
-                      className="flex items-center gap-2 px-4 py-2 bg-[#B71C1C] text-white rounded-lg hover:bg-[#B71C1C]/90 transition-colors"
-                    >
-                      <Building2 className="w-4 h-4" />
-                      <span>Create Business</span>
-                    </button>
-                  </div>
-                )}
-
-                {steps[currentStep].funding && (
+                {/* {steps[currentStep].funding && (
                   <div className="mt-7 ml-7">
                     <button
                       onClick={handleFundWallet}
@@ -137,7 +124,7 @@ const QuickStartButton = ({ showBusinessModal, setShowBusinessModal }: QuickStar
                       <span>Go to Wallet</span>
                     </button>
                   </div>
-                )}
+                )} */}
               </div>
 
               <div>
@@ -150,7 +137,9 @@ const QuickStartButton = ({ showBusinessModal, setShowBusinessModal }: QuickStar
                         className={`w-2 h-2 rounded-full ${
                           index === currentStep ? "bg-[#B71C1C]" : "bg-gray-200"
                         }`}
-                        animate={index === currentStep ? { scale: [1, 1.2, 1] } : {}}
+                        animate={
+                          index === currentStep ? { scale: [1, 1.2, 1] } : {}
+                        }
                         transition={{ duration: 0.5 }}
                       />
                     ))}
@@ -163,18 +152,33 @@ const QuickStartButton = ({ showBusinessModal, setShowBusinessModal }: QuickStar
                 {/* Navigation */}
                 <div className="flex justify-between">
                   <button
-                    onClick={() => currentStep > 0 && setCurrentStep(currentStep - 1)}
+                    onClick={() =>
+                      currentStep > 0 && setCurrentStep(currentStep - 1)
+                    }
                     className={`px-4 py-2 text-gray-600 rounded-lg hover:bg-gray-100 transition-colors ${
                       currentStep === 0 ? "invisible" : ""
                     }`}
                   >
                     Back
                   </button>
+                  {/* {steps[currentStep].cta && (
+                  <div className="mt-7 ml-7">
+                    <button
+                      onClick={handleShowBusinessForm}
+                      className="flex items-center gap-2 px-4 py-2 bg-[#B71C1C] text-white rounded-lg hover:bg-[#B71C1C]/90 transition-colors"
+                    >
+                      <Building2 className="w-4 h-4" />
+                      <span></span>
+                    </button>
+                  </div>
+                )} */}
                   <button
                     onClick={handleNext}
                     className="flex items-center gap-2 px-4 py-2 bg-[#B71C1C] text-white rounded-lg hover:bg-[#B71C1C]/90 transition-colors"
                   >
-                    {currentStep === steps.length - 1 ? "Create Campaign" : "Next"}
+                    {currentStep === steps.length - 1
+                      ? "Create Business"
+                      : "Next"}
                     <ChevronRight className="w-4 h-4" />
                   </button>
                 </div>
