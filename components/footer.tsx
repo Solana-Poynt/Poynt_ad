@@ -11,8 +11,8 @@ export default function Footer() {
   return (
     <footer className="bg-gray-900 border-t">
       <div className="max-w-7xl mx-auto px-4 py-6">
-        <div className="flex flex-col items-center justify-between gap-4 sm:flex-row">
-          <div className="flex items-center space-x-6">
+        <div className="flex flex-row justify-end  w-full">
+          {/* <div className="flex items-center w-full justify-between md:space-x-6">
             {footerLinks.map((link) => (
               <a
                 key={link.label}
@@ -22,9 +22,9 @@ export default function Footer() {
                 {link.label}
               </a>
             ))}
-          </div>
+          </div> */}
 
-          <p className="text-sm text-gray-500">
+          <p className="text-xs md:text-sm font-black text-gray-500">
             © {new Date().getFullYear()} Poynt. All rights reserved.
           </p>
         </div>

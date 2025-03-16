@@ -10,6 +10,7 @@ interface NotificationProps {
   switchShowOff: () => void;
 }
 
+
 const Notification: React.FC<NotificationProps> = ({
   message,
   status,

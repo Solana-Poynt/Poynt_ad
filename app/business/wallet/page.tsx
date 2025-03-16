@@ -22,7 +22,9 @@ const WalletDashboard = () => {
   const refreshTimeout = useRef<NodeJS.Timeout>();
 
   // Local state
-  const [activeTab, setActiveTab] = useState<"all" | "received" | "sent" | "tokens">("all");
+  const [activeTab, setActiveTab] = useState<
+    "all" | "received" | "sent" | "tokens"
+  >("all");
   const [isRefreshing, setIsRefreshing] = useState(false);
   const [notification, setNotification] = useState<NotificationState>({
     message: "",
@@ -157,7 +159,7 @@ const WalletDashboard = () => {
   // Error state
   if (walletState.error && !wallet) {
     return (
-      <div className="w-full h-screen flex items-center justify-center p-4">
+      <div className="w-full min-h-screen flex items-center justify-center p-4">
         <div className="bg-red-50 text-red-500 p-6 rounded-lg max-w-lg text-center">
           <h2 className="text-lg font-semibold mb-2">Wallet Error</h2>
           <p>{walletState.error}</p>
@@ -173,14 +175,16 @@ const WalletDashboard = () => {
   }
 
   return (
-    <div className="w-full min-h-screen flex flex-col px-4 ">
-      <header className="mb-9">
-        <h1 className="text-lg text-[#575757] font-medium">My Wallet</h1>
+    <div className="w-full overflow-hidden min-h-screen flex flex-col px-3 sm:px-4">
+      <header className="mb-4 sm:mb-9">
+        <h1 className="text-base md:text-xl sm:text-2xl text-[#575757] font-medium pt-2">
+          My Wallet
+        </h1>
       </header>
 
       {wallet && (
-        <div className="flex w-full items-center gap-4">
-          <div className="">
+        <div className="flex flex-col lg:flex-row w-full items-start gap-4 sm:gap-6">
+          <div className="w-full lg:w-auto lg:min-w-[350px]">
             <BalanceCard
               totalBalance={portfolio?.total || 0}
               address={wallet.address}
@@ -191,8 +195,10 @@ const WalletDashboard = () => {
             />
           </div>
 
-          <div>
-             <h2 className="text-lg mb-4 text-[#575757] font-medium">Inventory</h2>
+          <div className="w-full mt-4 lg:mt-0">
+            <h2 className="text-base md:text-lg mb-3 sm:mb-4 text-[#575757] font-medium">
+              Inventory
+            </h2>
             <Inventory
               transactions={[]}
               tokens={tokensHeld}

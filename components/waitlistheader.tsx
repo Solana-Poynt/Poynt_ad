@@ -87,41 +87,6 @@ export default function Header() {
                 </div>
               </Link>
             </div>
-
-            {/* Desktop Navigation */}
-            <div className="hidden lg:flex lg:items-center lg:space-x-8">
-              {navItems.map((item) => (
-                <Link
-                  key={item.id}
-                  href={item.href}
-                  className="text-black hover:text-[#B71C1C] px-3 tracking-wide py-2 text-sm font-medium transition-colors duration-200"
-                >
-                  {item.title}
-                </Link>
-              ))}
-
-              <button
-                onClick={handleAuth}
-                className="ml-8 inline-flex items-center px-6 py-2.5 border border-transparent text-sm font-medium rounded-lg text-white bg-[#B71C1C] hover:bg-[#805c02] focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-[#805c02] transition-all duration-200 transform hover:scale-105"
-              >
-                Register your business
-              </button>
-            </div>
-
-            {/* Mobile menu button */}
-            <div className="lg:hidden">
-              <button
-                onClick={() => setIsMenuOpen(!isMenuOpen)}
-                className="inline-flex items-center justify-center p-2 rounded-lg text-[#B71C1C] hover:text-gray-600 hover:bg-[#f8e8e8] focus:outline-none transition-colors duration-200"
-                aria-expanded={isMenuOpen}
-              >
-                {isMenuOpen ? (
-                  <IoClose className="block h-6 w-6" aria-hidden="true" />
-                ) : (
-                  <IoMenu className="block h-6 w-6" aria-hidden="true" />
-                )}
-              </button>
-            </div>
           </div>
         </div>
 
@@ -130,27 +95,7 @@ export default function Header() {
           className={`lg:hidden transition-all duration-200 ease-in-out ${
             isMenuOpen ? "max-h-64 opacity-100" : "max-h-0 opacity-0"
           } overflow-hidden`}
-        >
-          <div className="px-4 pt-2 pb-3 space-y-1 bg-white sm:px-6">
-            {navItems.map((item) => (
-              <Link
-                key={item.id}
-                href={item.href}
-                className="block px-4 py-2.5 text-xs tracking-wider md:text-base font-medium text-black hover:text-[#B71C1C] hover:bg-[#f8e8e8] rounded-lg  text-center transition-colors duration-200"
-                onClick={() => setIsMenuOpen(false)}
-              >
-                {item.title}
-              </Link>
-            ))}
-            <Link
-              href="/auth-biz/auth"
-              className="block w-full text-center px-4 py-3 text-xs md:text-base font-medium text-white bg-[#B71C1C] hover:bg-[#805c02]/70 rounded-lg transition-all duration-200 transform hover:scale-105 mt-4"
-              onClick={() => setIsMenuOpen(false)}
-            >
-              Register your business
-            </Link>
-          </div>
-        </div>
+        ></div>
       </nav>
     </header>
   );

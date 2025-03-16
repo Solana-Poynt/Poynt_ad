@@ -96,16 +96,16 @@ const QuickStartButton = ({
               <div className="mb-8">
                 <div className="flex items-center gap-4 mb-6">
                   {steps[currentStep].icon}
-                  <h3 className="text-xl font-bold text-gray-900">
+                  <h3 className="text-lg md:text-xl font-bold text-gray-900">
                     {steps[currentStep].title}
                   </h3>
                 </div>
-                <p className="text-sm px-6 font-semibold text-gray-600">
+                <p className="text-xs md:text-sm px-6 font-semibold text-gray-600">
                   {steps[currentStep].description}
                 </p>
 
                 {steps[currentStep].lists && (
-                  <ul className="list-disc ml-6 space-y-2 mt-6 text-sm px-6 font-semibold text-gray-600">
+                  <ul className="list-disc ml-6 space-y-2 mt-6 text-xs md:text-sm px-6 font-semibold text-gray-600">
                     {steps[currentStep].lists.map((item, index) => (
                       <li key={index} className="pl-2">
                         {item}
@@ -144,18 +144,18 @@ const QuickStartButton = ({
                       />
                     ))}
                   </div>
-                  <span className="text-sm text-gray-500">
+                  <span className="text-xs md:text-sm text-gray-500">
                     Step {currentStep + 1} of {steps.length}
                   </span>
                 </div>
 
                 {/* Navigation */}
-                <div className="flex justify-between">
+                <div className="flex justify-between mb-4">
                   <button
                     onClick={() =>
                       currentStep > 0 && setCurrentStep(currentStep - 1)
                     }
-                    className={`px-4 py-2 text-gray-600 rounded-lg hover:bg-gray-100 transition-colors ${
+                    className={`px-4 py-2 text-xs md:text-sm text-gray-600 rounded-lg hover:bg-gray-100 transition-colors ${
                       currentStep === 0 ? "invisible" : ""
                     }`}
                   >
@@ -174,7 +174,7 @@ const QuickStartButton = ({
                 )} */}
                   <button
                     onClick={handleNext}
-                    className="flex items-center gap-2 px-4 py-2 bg-[#B71C1C] text-white rounded-lg hover:bg-[#B71C1C]/90 transition-colors"
+                    className="flex items-center text-xs md:text-sm gap-2 px-4 py-2 bg-[#B71C1C] text-white rounded-lg hover:bg-[#B71C1C]/90 transition-colors"
                   >
                     {currentStep === steps.length - 1
                       ? "Create Business"

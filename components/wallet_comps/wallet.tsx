@@ -57,8 +57,8 @@ export const BalanceCard = ({
   };
 
   return (
-    <div className="w-[342px] h-[272px] p-3 bg-[#FAFAFA] rounded-3xl">
-      <div className="relative w-[310px] h-[188px]">
+    <div className="md:w-[342px] md:h-[272px] p-3 bg-[#FAFAFA] rounded-3xl">
+      <div className="relative w-full h-32 md:w-[310px] md:h-[188px]">
         <Image
           src="/wallet-card.svg"
           fill
@@ -70,20 +70,24 @@ export const BalanceCard = ({
 
         <div className="relative">
           {/* Balance Display */}
-          <div className="absolute right-4 top-12 flex flex-col items-end">
-            <span className="text-lg text-white font-bold tracking-tight">
+          <div className="absolute right-4 top-9 md:top-12 flex flex-col items-end">
+            <span className="text-xs md:text-lg text-white font-bold tracking-tight">
               {`${totalBalance.toFixed(4)} SOL`}
             </span>
-            <span className="text-sm text-white/70">{networkName}</span>
+            <span className="text-xs md:text-sm text-white/70">
+              {networkName}
+            </span>
           </div>
 
           {/* Address Section */}
-          <div className="absolute left-4 top-24 pt-4 w-[280px]">
-            <p className="text-sm text-white/70 font-medium">Wallet Address</p>
+          <div className="absolute left-4 top-12 md:top-24 pt-4 w-full md:w-[280px] pr-8">
+            <p className="text-xs md:text-sm text-white/70 font-medium">
+              Wallet Address
+            </p>
 
-            <div className="flex items-center justify-between rounded-lg py-2">
+            <div className="flex items-center w-full justify-between  py-2">
               <div className="flex items-center">
-                <p className="text-sm font-mono text-white/90 truncate max-w-[130px]">
+                <p className="text-xs md:text-sm font-mono text-white/90 truncate max-w-[130px]">
                   {truncateWallet(address)}
                 </p>
                 <button
@@ -117,6 +121,7 @@ export const BalanceCard = ({
       {/* Action Buttons */}
       <div className="flex  w-full items-center gap-4 mt-6 bg-[#Fafafa] rounded-lg">
         <button
+          disabled
           className="w-[50%] text-[#575757] py-2 px-1 text-xs font-medium hover:bg-gray-200 border border[#575757] 
                transition-colors rounded-lg disabled:opacity-50 
                disabled:cursor-not-allowed flex items-center justify-center gap-2"
@@ -127,6 +132,7 @@ export const BalanceCard = ({
           Withdraw Fund
         </button>
         <button
+          disabled
           className="w-[50%] text-[#575757] py-2 px-1 text-xs font-medium bg-gray-200 
          transition-colors rounded-lg disabled:opacity-50 
          disabled:cursor-not-allowed flex items-center justify-center gap-2"
@@ -297,18 +303,18 @@ export const Inventory = ({
   );
 
   return (
-    <div className="bg-white w-[500px] max-w-2xl h-56 rounded-xl">
+    <div className="bg-white md:w-[500px] max-w-2xl h-56 rounded-xl">
       {/* Tab Navigation */}
       <div className="border-b border-gray-200">
         <div className="px-6 pt-4">
-          <div className="flex space-x-8">
+          <div className=" flex space-x-8">
             {["all", "received", "sent", "tokens"].map((tab) => (
               <button
                 key={tab}
                 onClick={() =>
                   setActiveTab(tab as "all" | "received" | "sent" | "tokens")
                 }
-                className={`px-1 pb-4 text-sm font-medium border-b-2 ${
+                className={`px-1 pb-4 text-xs md:text-sm font-medium border-b-2 ${
                   activeTab === tab
                     ? "text-[#8B1212] border-[#8B1212]"
                     : "text-gray-500 border-transparent hover:text-gray-700 hover:border-gray-300"
