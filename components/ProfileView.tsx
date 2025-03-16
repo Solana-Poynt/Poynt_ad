@@ -106,7 +106,7 @@ const ProfileDropdown: React.FC = () => {
           border border-gray-200 shadow-sm
           hover:shadow-md hover:border-gray-300 
           bg-white
-          transform transition-all duration-300 ease-in-out
+          transform transition-all duration-300 ease-in-out w-[87%]  md:w-full
           ${showDropDown ? "scale-[1.02] border-[#B71C1C]/20" : "scale-100"}
           hover:scale-[1.02]
           focus:outline-none focus:ring-2 focus:ring-[#B71C1C] focus:ring-opacity-50
@@ -124,12 +124,12 @@ const ProfileDropdown: React.FC = () => {
               ${showDropDown ? "scale-110 rotate-3" : "scale-100 rotate-0"}
             `}
           >
-            <span className="text-white font-medium text-sm">
+            <span className="text-white font-medium text-xs md:text-sm">
               {userInitial}
             </span>
           </div>
           <div className="flex flex-col items-start">
-            <span className="text-sm font-medium text-gray-900">
+            <span className="text-xs md:text-sm font-medium text-gray-900">
               {currentBusiness
                 ? currentBusiness.name
                 : accounts && accounts.length > 0

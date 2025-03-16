@@ -30,7 +30,13 @@ export default function Home() {
       const route = role === "admin" ? "/admin" : "/business";
       router.push(route);
     } else {
-      router.push("/auth");
+      router.push("/auth-biz/auth");
+    }
+  };
+
+  const handleWaitlist = () => {
+    if (isAuthenticated) {
+      router.push("/waitlist");
     }
   };
 
@@ -45,13 +51,13 @@ export default function Home() {
       icon: <Users className="w-5 h-5 lg:w-8 lg:h-8 text-[#B71C1C]" />,
       title: "Poynt for Everyone",
       description:
-        "Whether you're a small startup or a growing enterprise, we make advertising simple, effective, and scalable.",
+        "Whether you're a startup or a growing enterprise, we make advertising simple, effective, and scalable.",
     },
     {
       icon: <Rocket className="w-5 h-5 lg:w-8 lg:h-8 text-[#B71C1C]" />,
       title: "Reach your Full Potential",
       description:
-        "Maximize campaign effectiveness with our ROI-focused advertising model",
+        "Pay for actions, not eyeballs. Transform ad spend into measurable results and real business growth.",
     },
   ];
 
@@ -67,25 +73,25 @@ export default function Home() {
       icon: <Plus className="w-5 h-5 lg:w-8 lg:h-8" />,
       title: "Ad Campaign Creation",
       description:
-        "Create and launch ad campaigns in minutes. Customize your ads, target specific audiences, and watch your business grow.",
+        "Build interactive ads in minutes. Include tasks that guarantee engagement and deliver measurable results.",
     },
     {
       icon: <Library className="w-5 h-5 lg:w-8 lg:h-8" />,
       title: "Ad Library Management",
       description:
-        "Our extensive ad library ensures your ads reach the right people at the right time, keeping your message relevant and engaging.",
+        "Smart distribution places your ads when viewers are most likely to engage and complete tasks.",
     },
     {
       icon: <Target className="w-5 h-5 lg:w-8 lg:h-8" />,
       title: "Audience Targeting",
       description:
-        "Advanced targeting algorithms ensure your ads reach users most likely to engage with your content.",
+        "Connect with users who take action, not just scroll past. Target those most likely to complete interactions.",
     },
     {
       icon: <BarChart className="w-7 h-7" />,
       title: "Real-Time Analytics",
       description:
-        "Monitor performance with our intuitive dashboard. Track clicks, impressions, and conversions in real-time.",
+        "Track completions, not just clicks. See exactly how viewers engage with your content in real-time.",
     },
   ];
   // const name = getDataFromLocalStorage("name");
@@ -102,9 +108,9 @@ export default function Home() {
           <div className="absolute lg:top-[30%] right-1/4 w-24 h-24 lg:w-60 lg:h-60 bg-yellow-200/40 rounded-full mix-blend-multiply filter blur-xl  opacity-70 animate-blob animation-delay-2000" />
           <div className="absolute lg:bottom-[60%] left-1/2 w-24 h-24 lg:w-60 lg:h-60 bg-pink-200 rounded-full mix-blend-multiply filter blur-xl  opacity-70 animate-blob animation-delay-4000" />
           {/* Main Heading */}
-          <h1 className="mx-auto max-w-4xl font-display text-2xl md:text-5xl lg:text-7xl font-medium tracking-tight text-slate-900 text-center">
-            The Value{" "}
-            <span className="relative whitespace-nowrap text-[#B71C1C]">
+          <h1 className="mx-auto max-w-6xl md:pt-12 font-display text-xl md:text-5xl lg:text-6xl font-medium tracking-wider  text-slate-900 text-center">
+            We Deliver
+            <span className="relative whitespace-nowrap pl-2 text-[#B71C1C]">
               <svg
                 aria-hidden="true"
                 viewBox="0 0 418 42"
@@ -113,17 +119,16 @@ export default function Home() {
               >
                 <path d="M203.371.916c-26.013-2.078-76.686 1.963-124.73 9.946L67.3 12.749C35.421 18.062 18.2 21.766 6.004 25.934 1.244 27.561.828 27.778.874 28.61c.07 1.214.828 1.121 9.595-1.176 9.072-2.377 17.15-3.92 39.246-7.496C123.565 7.986 157.869 4.492 195.942 5.046c7.461.108 19.25 1.696 19.17 2.582-.107 1.183-7.874 4.31-25.75 10.366-21.992 7.45-35.43 12.534-36.701 13.884-2.173 2.308-.202 4.407 4.442 4.734 2.654.187 3.263.157 15.593-.78 35.401-2.686 57.944-3.488 88.365-3.143 46.327.526 75.721 2.23 130.788 7.584 19.787 1.924 20.814 1.98 24.557 1.332l.066-.011c1.201-.203 1.53-1.825.399-2.335-2.911-1.31-4.893-1.604-22.048-3.261-57.509-5.556-87.871-7.36-132.059-7.842-23.239-.254-33.617-.116-50.627.674-11.629.54-42.371 2.494-46.696 2.967-2.359.259 8.133-3.625 26.504-9.81 23.239-7.825 27.934-10.149 28.304-14.005.417-4.348-3.529-6-16.878-7.066Z" />
               </svg>
-              <span className="relative">Ad Platform</span>
-            </span>{" "}
-            for Modern Business
+              <span className="relative">Action </span>
+            </span>
+            Not Just Attention
           </h1>
 
           {/* Subheading */}
           <p className="mx-auto mt-4 lg:mt-8 w-[97%] lg:max-w-3xl text-xs lg:text-lg text-slate-700 text-center">
-            Engage viewers who are eager to interact with your ads and gain
-            value in return. Reach your audience at the ideal moment, offering
-            them real value and providing you with verified engagement — simple,
-            effective, and transparent.
+            Our platform transforms passive viewers into active participants
+            through task-based engagement. You get verified actions and
+            measurable conversions, not just fleeting impressions
           </p>
 
           {/* CTA Buttons */}
@@ -134,24 +139,24 @@ export default function Home() {
               className="rounded-lg bg-[#B71C1C] p-2  lg:px-8 lg:py-4 text-white hover:bg-[#D32F2F] transition-colors flex items-center gap-2"
             >
               <span className="text-xs lg:text-base font-semibold">
-                Start Free Trial
+                Continue as a business
               </span>
               <ArrowRight className="w-4 h-4" />
             </button>
 
             <button
-              disabled
-              className="rounded-lg border border-slate-200 p-2 lg:px-8 lg:py-4 text-xs lg:text-base font-semibold text-slate-400 bg-slate-50 cursor-not-allowed opacity-60"
+              onClick={() => router.push("/waitlist")}
+              className="rounded-lg border border-slate-200 p-2 lg:px-8 lg:py-4 text-xs lg:text-base font-bold  bg-[#FDF6E6]  opacity-60"
             >
-              Watch Demo
+              Join the Waitlist
             </button>
           </div>
 
           {/* Quick Stats */}
-          <div className=" mt-20 lg:mt-36 grid grid-cols-4 sm:grid-cols-3 lg:grid-cols-4 gap-8 max-w-4xl mx-auto">
+          <div className="hidden  mt-20 lg:mt-36 md:grid grid-cols-4 sm:grid-cols-3 lg:grid-cols-4 gap-8 max-w-4xl mx-auto">
             {statsData.map((stat, index) => (
               <div key={index} className="text-center">
-                <div className="text-xs lg:text-4xl font-bold text-blue-600">
+                <div className="text-xs lg:text-4xl font-bold ">
                   {stat.value}
                 </div>
                 <div className="mt-2 text-xs lg:text-sm text-gray-600">
@@ -164,15 +169,15 @@ export default function Home() {
       </div>
 
       {/* Features Section with 3D Cards */}
-      <div className="relative py-24 w-full bg-[#FDF6E6]">
+      <div className="relative py-8 md:py-24 w-full bg-[#FDF6E6]">
         <div className="container  mx-auto px-4">
           <div className="text-center max-w-3xl mx-auto">
-            <h2 className="text-2xl lg:text-3xl font-bold tracking-tight text-gray-900 sm:text-4xl">
+            <h2 className="text-lg lg:text-3xl font-semibold lg:font-bold tracking-tight text-gray-900">
               Everything you need to build brand visibility
             </h2>
           </div>
 
-          <div className="mt-20 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-8 w-[90%] lg:max-w-7xl mx-auto">
+          <div className="mt-8 md:mt-20 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-8 w-[90%] lg:max-w-7xl mx-auto">
             {features.map((feature, index) => (
               <div
                 key={index}
@@ -180,7 +185,7 @@ export default function Home() {
               >
                 <div className="absolute inset-0 bg-gradient-to-r from-[#e4ddcf] to-[#fefbf5] opacity-0 group-hover:opacity-100 rounded-2xl transition-opacity duration-300" />
                 <div className="relative">
-                  <div className="mb-2 lg:mb-6 transform group-hover:scale-110 transition-transform duration-300">
+                  <div className="mb-2 lg:mb-6 transform md:group-hover:scale-110 transition-transform duration-300">
                     {feature.icon}
                   </div>
                   <h3 className="text-sm lg:text-lg font-semibold text-gray-900 mb-3">
@@ -197,15 +202,15 @@ export default function Home() {
       </div>
 
       {/* Services Grid with Hover Effects */}
-      <div className="py-24 bg-white">
+      <div className="py-8 md:py-20 bg-white">
         <div className="container mx-auto w-full px-4">
-          <div className="max-w-2xl mx-auto text-center mb-16">
-            <h2 className="text-2xl lg:text-3xl font-bold tracking-tight text-gray-900 sm:text-4xl">
+          <div className="max-w-2xl mx-auto text-center mb-8  md:mb-16">
+            <h2 className="text-lg md:text-2xl lg:text-3xl font-semibold md:font-bold tracking-tight text-gray-900">
               We take the burden of Publicity off you
             </h2>
           </div>
 
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-8 w-[93%] lg:max-w-7xl mx-auto">
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-8 w-[93%] lg:max-w-7xl mx-auto ">
             {services.map((service, index) => (
               <div
                 key={index}
@@ -227,23 +232,23 @@ export default function Home() {
       </div>
 
       {/* CTA Section with Gradient */}
-      <div className="bg-gradient-to-r from-[#B71C1C] to-blue-700 py-16">
+      <div className="bg-gradient-to-r from-[#B71C1C] to-blue-700 py-8 md:py-16">
         <div className="container mx-auto px-4">
           <div className="max-w-2xl mx-auto text-center">
-            <h2 className="text-2xl lg:text-3xl font-bold tracking-tight text-white">
+            <h2 className="text-xl md:text-2xl lg:text-3xl font-bold tracking-tight text-white">
               Ready to grow your business?
             </h2>
             <p className="mt-6 text-sm lg:text-lg leading-8 text-blue-100">
               Start your journey with Poynt today and see the difference.
             </p>
-            <div className="mt-5 lg:mt-10">
+            {/* <div className="mt-5 lg:mt-10">
               <a
                 href="/auth"
                 className="inline-block rounded-lg bg-white py-3 px-5  lg:px-8 lg:py-4 text-base font-semibold text-blue-600 shadow-lg hover:bg-blue-50 transition-all duration-300 transform hover:-translate-y-1"
               >
                 Get Started
               </a>
-            </div>
+            </div> */}
           </div>
         </div>
       </div>

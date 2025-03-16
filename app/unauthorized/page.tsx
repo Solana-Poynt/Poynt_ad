@@ -59,7 +59,7 @@ function UnauthorizedPage() {
           className="flex flex-col gap-3 mt-8"
         >
           <button
-            onClick={() => router.push("/auth")}
+            onClick={() => router.push("/auth-biz/auth")}
             className="w-full bg-side text-white py-3 px-4 rounded-lg hover:bg-side/80 transition-all hover:shadow-lg transform hover:-translate-y-0.5"
           >
             Sign In

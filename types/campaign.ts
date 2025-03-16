@@ -92,16 +92,16 @@ export const DEFAULT_PRICING_TIERS: PricingTier[] = [
   {
     id: "tier-1",
     impressions: 1000,
-    price: 4,
-    pricePerThousand: 4,
+    price: 0.5,
+    pricePerThousand: 0.5,
     features: ["Basic analytics", "Gasless Transaction"],
     description: "Perfect for testing campaigns",
   },
   {
     id: "tier-2",
     impressions: 3000,
-    price: 10.5,
-    pricePerThousand: 3.5,
+    price: 2.5,
+    pricePerThousand: 0.83,
     recommended: true,
     features: ["Advanced analytics", "Auto-optimization", "Gasless Transaction", "Priority support"],
     description: "Most popular for small businesses",
@@ -109,8 +109,8 @@ export const DEFAULT_PRICING_TIERS: PricingTier[] = [
   {
     id: "tier-3",
     impressions: 5000,
-    price: 15,
-    pricePerThousand: 3,
+    price: 4.5,
+    pricePerThousand: 0.9,
     features: [
       "Advanced analytics",
       "Auto-optimization",
@@ -124,8 +124,8 @@ export const DEFAULT_PRICING_TIERS: PricingTier[] = [
   {
     id: "tier-4",
     impressions: 10000,
-    price: 28,
-    pricePerThousand: 2.8,
+    price: 10,
+    pricePerThousand: 1,
     features: [
       "Advanced analytics",
       "Auto-optimization",

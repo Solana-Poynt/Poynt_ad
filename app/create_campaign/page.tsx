@@ -45,17 +45,17 @@ export default function CampaignPage() {
   ];
 
   return (
-    <div className="min-h-screen  mt-16 bg-gradient-to-b from-gray-50 to-white">
+    <div className="min-h-screen mt-16 bg-gradient-to-b from-gray-50 to-white">
       <Header />
 
       {/* Hero Section */}
-      <div className="pt-16 pb-8 px-4">
+      <div className="pt-10 md:pt-16 pb-6 md:pb-8 px-4">
         <div className="max-w-6xl mx-auto px-4">
           <div className="text-center">
             <motion.h1
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
-              className="text-5xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-side to-side/80 mb-4"
+              className="text-3xl sm:text-4xl md:text-5xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-side to-side/80 mb-4"
             >
               Transform Your Advertising Game
             </motion.h1>
@@ -63,7 +63,7 @@ export default function CampaignPage() {
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ delay: 0.1 }}
-              className="text-xl text-gray-600 max-w-2xl mx-auto"
+              className="text-base md:text-xl text-gray-600 max-w-2xl mx-auto px-2"
             >
               Unlock the power of targeted advertising with our premium ad
               network. Reach millions of engaged users and scale your business
@@ -74,21 +74,23 @@ export default function CampaignPage() {
       </div>
 
       {/* Stats Section */}
-      <div className="py-12 px-4">
-        <div className="max-w-6xl mx-auto px-4">
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+      <div className="py-8 md:py-12 px-4">
+        <div className="max-w-6xl mx-auto px-2 sm:px-4">
+          <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4 md:gap-6">
             {stats.map((stat, index) => (
               <motion.div
                 key={index}
                 initial={{ opacity: 0, y: 20 }}
                 whileInView={{ opacity: 1, y: 0 }}
                 transition={{ delay: index * 0.1 }}
-                className="bg-white rounded-xl p-8 text-center shadow-lg hover:shadow-xl transition-all duration-300 border border-gray-100"
+                className="bg-white rounded-xl p-6 md:p-8 text-center shadow-lg hover:shadow-xl transition-all duration-300 border border-gray-100"
               >
-                <div className="text-4xl font-bold text-side mb-2">
+                <div className="text-3xl md:text-4xl font-bold text-side mb-2">
                   {stat.number}
                 </div>
-                <div className="text-gray-600 font-medium">{stat.label}</div>
+                <div className="text-sm md:text-base text-gray-600 font-medium">
+                  {stat.label}
+                </div>
               </motion.div>
             ))}
           </div>
@@ -96,23 +98,101 @@ export default function CampaignPage() {
       </div>
 
       {/* Pricing Section */}
-      <div className="py-16 bg-white">
+      <div className="py-10 md:py-16 bg-white">
         <div className="max-w-6xl mx-auto px-4">
-          <div className="text-center mb-12">
-            <h2 className="text-4xl font-bold text-gray-900 mb-4">
+          <div className="text-center mb-8 md:mb-12">
+            <h2 className="text-3xl md:text-4xl font-bold text-gray-900 mb-3 md:mb-4">
               Choose Your Plan
             </h2>
-            <p className="text-gray-600 max-w-2xl mx-auto">
+            <p className="text-sm md:text-base text-gray-600 max-w-2xl mx-auto px-2">
               Select the perfect advertising package for your needs. All plans
               include our complete suite of targeting and analytics features.
             </p>
-            <p className="text-side text-xs italic max-w-2xl py-4  mx-auto">
-              For test purposes, all price plans are in SOL to ensure effective
-              testing
-            </p>
+
+            <div className="bg-blue-50 rounded-lg p-4 md:p-6 max-w-2xl mx-auto mt-6 md:mt-8 border border-blue-200">
+              <h3 className="text-lg md:text-xl font-bold text-blue-800 mb-2">
+                Test Payment Information
+              </h3>
+              <p className="text-sm md:text-base text-gray-700 mb-4">
+                For testing purposes, all plans are priced in Solana Testnet
+                USDC.
+              </p>
+
+              <div className="bg-white rounded-lg p-3 md:p-4 border border-blue-200">
+                <h4 className="font-bold text-sm md:text-base text-gray-800 mb-2">
+                  How to Get Testnet USDC:
+                </h4>
+                <ol className="text-left space-y-2 md:space-y-3 text-xs md:text-sm">
+                  <li className="flex items-start">
+                    <span className="bg-blue-600 text-white rounded-full h-5 w-5 md:h-6 md:w-6 flex items-center justify-center mr-2 flex-shrink-0 text-xs">
+                      1
+                    </span>
+                    <span>
+                      Visit the{" "}
+                      <a
+                        href="https://faucet.circle.com/"
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="text-blue-600 hover:underline font-medium"
+                      >
+                        Circle Faucet website
+                      </a>
+                    </span>
+                  </li>
+                  <li className="flex items-start">
+                    <span className="bg-blue-600 text-white rounded-full h-5 w-5 md:h-6 md:w-6 flex items-center justify-center mr-2 flex-shrink-0 text-xs">
+                      2
+                    </span>
+                    <span>
+                      Select <strong>USDC</strong> as the token
+                    </span>
+                  </li>
+                  <li className="flex items-start">
+                    <span className="bg-blue-600 text-white rounded-full h-5 w-5 md:h-6 md:w-6 flex items-center justify-center mr-2 flex-shrink-0 text-xs">
+                      3
+                    </span>
+                    <span>
+                      Choose <strong>Solana Devnet</strong> as the network
+                    </span>
+                  </li>
+                  <li className="flex items-start">
+                    <span className="bg-blue-600 text-white rounded-full h-5 w-5 md:h-6 md:w-6 flex items-center justify-center mr-2 flex-shrink-0 text-xs">
+                      4
+                    </span>
+                    <span>
+                      Go to your{" "}
+                      <a
+                        href="/business/wallet"
+                        className="text-blue-600 hover:underline font-medium"
+                      >
+                        Wallet page
+                      </a>{" "}
+                      and copy your wallet address
+                    </span>
+                  </li>
+                  <li className="flex items-start">
+                    <span className="bg-blue-600 text-white rounded-full h-5 w-5 md:h-6 md:w-6 flex items-center justify-center mr-2 flex-shrink-0 text-xs">
+                      3
+                    </span>
+                    <span>
+                      Go back to the claim site, Paste your wallet address in
+                      the input field and click <strong>Send</strong>
+                    </span>
+                  </li>
+                  <li className="flex items-start">
+                    <span className="bg-blue-600 text-white rounded-full h-5 w-5 md:h-6 md:w-6 flex items-center justify-center mr-2 flex-shrink-0 text-xs">
+                      6
+                    </span>
+                    <span>
+                      Return to this page after receiving your test USDC
+                    </span>
+                  </li>
+                </ol>
+              </div>
+            </div>
           </div>
 
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 md:gap-6">
             {DEFAULT_PRICING_TIERS.map((tier, index) => (
               <motion.div
                 key={tier.id}
@@ -132,44 +212,46 @@ export default function CampaignPage() {
                 )}
               >
                 {tier.recommended && (
-                  <div className="absolute -top-3 left-1/2 -translate-x-1/2 px-4 py-1 bg-side text-white text-sm font-medium rounded-full shadow-lg">
+                  <div className="absolute -top-3 left-1/2 -translate-x-1/2 px-3 md:px-4 py-1 bg-side text-white text-xs md:text-sm font-medium rounded-full shadow-lg">
                     Recommended
                   </div>
                 )}
 
                 <div
                   className={cn(
-                    "flex flex-col h-full p-6",
-                    tier.recommended && "pt-8"
+                    "flex flex-col h-full p-4 md:p-6",
+                    tier.recommended && "pt-6 md:pt-8"
                   )}
                 >
                   {/* Header Section */}
-                  <div className="text-center mb-6">
-                    <h3 className="text-sm mx-4 font-semibold text-gray-900 mb-2">
+                  <div className="text-center mb-4 md:mb-6">
+                    <h3 className="text-xs md:text-sm mx-2 md:mx-4 font-semibold text-gray-900 mb-2">
                       {tier.description}
                     </h3>
-                    <div className="text-3xl font-bold text-side mb-1">
-                      {tier.price} SOL
+                    <div className="text-2xl md:text-3xl font-bold text-side mb-1">
+                      {tier.price} USDC
                     </div>
                   </div>
 
                   {/* Impressions Badge */}
-                  <div className="bg-gray-50 rounded-lg py-3 px-4 text-center mb-6">
-                    <div className="text-2xl font-bold text-gray-900">
+                  <div className="bg-gray-50 rounded-lg py-2 md:py-3 px-3 md:px-4 text-center mb-4 md:mb-6">
+                    <div className="text-xl md:text-2xl font-bold text-gray-900">
                       {tier.impressions.toLocaleString()}
                     </div>
-                    <div className="text-sm text-gray-600">Impressions</div>
+                    <div className="text-xs md:text-sm text-gray-600">
+                      Impressions
+                    </div>
                   </div>
 
                   {/* Features */}
                   <div className="flex-grow">
-                    <ul className="space-y-3 mb-6">
+                    <ul className="space-y-2 md:space-y-3 mb-4 md:mb-6">
                       {tier.features.map((feature, featureIndex) => (
                         <li
                           key={featureIndex}
-                          className="flex items-start text-sm text-gray-600"
+                          className="flex items-start text-xs md:text-sm text-gray-600"
                         >
-                          <Check className="w-5 h-5 text-green-500 mr-2 shrink-0 mt-0.5" />
+                          <Check className="w-4 h-4 md:w-5 md:h-5 text-green-500 mr-2 shrink-0 mt-0.5" />
                           <span>{feature}</span>
                         </li>
                       ))}
@@ -179,13 +261,13 @@ export default function CampaignPage() {
                   {/* CTA Button */}
                   <button
                     className={cn(
-                      "w-full py-3 px-4 rounded-lg flex items-center justify-center gap-2 font-medium transition-all duration-300 mt-auto",
+                      "w-full py-2 md:py-3 px-3 md:px-4 rounded-lg flex items-center justify-center gap-2 font-medium transition-all duration-300 mt-auto text-sm md:text-base",
                       tier.recommended
                         ? "bg-side text-white hover:bg-side/90 shadow-md hover:shadow-lg"
                         : "bg-gray-50 text-gray-900 hover:bg-gray-100"
                     )}
                   >
-                    Get Started <ArrowRight className="w-4 h-4" />
+                    Get Started <ArrowRight className="w-3 h-3 md:w-4 md:h-4" />
                   </button>
                 </div>
               </motion.div>
@@ -195,19 +277,19 @@ export default function CampaignPage() {
       </div>
 
       {/* Steps Section */}
-      <div className="py-20 bg-gradient-to-br from-gray-50 to-gray-100">
+      <div className="py-12 md:py-20 bg-gradient-to-br from-gray-50 to-gray-100">
         <div className="max-w-6xl mx-auto px-4">
-          <div className="text-center mb-16">
-            <h2 className="text-4xl font-bold text-gray-900 mb-4">
+          <div className="text-center mb-10 md:mb-16">
+            <h2 className="text-3xl md:text-4xl font-bold text-gray-900 mb-3 md:mb-4">
               How It Works
             </h2>
-            <p className="text-gray-600 max-w-2xl mx-auto">
+            <p className="text-sm md:text-base text-gray-600 max-w-2xl mx-auto px-2">
               Get started with your advertising campaign in three simple steps
             </p>
           </div>
 
           <div className="relative">
-            {/* Connecting Line */}
+            {/* Connecting Line - visible only on md and larger screens */}
             <div className="hidden md:block absolute top-1/2 left-0 w-full h-0.5 bg-gradient-to-r from-side/20 via-side/40 to-side/20 -translate-y-1/2" />
 
             <div className="grid grid-cols-1 md:grid-cols-3 gap-8 relative">
@@ -219,22 +301,31 @@ export default function CampaignPage() {
                   transition={{ delay: index * 0.2 }}
                   className="relative"
                 >
-                  <div className="bg-white rounded-2xl p-8 shadow-lg hover:shadow-xl transition-all duration-300 group hover:-translate-y-1">
+                  {/* Mobile step connector - only visible on small screens */}
+                  {index > 0 && (
+                    <div className="md:hidden absolute -top-4 left-1/2 transform -translate-x-1/2 h-8 w-0.5 bg-side/30" />
+                  )}
+
+                  <div className="bg-white rounded-2xl p-6 md:p-8 shadow-lg hover:shadow-xl transition-all duration-300 group hover:-translate-y-1">
                     {/* Step Number Badge */}
-                    <div className="absolute -top-4 left-8 w-8 h-8 bg-side text-white rounded-full flex items-center justify-center font-bold shadow-lg">
+                    <div className="absolute -top-4 left-8 w-7 h-7 md:w-8 md:h-8 bg-side text-white rounded-full flex items-center justify-center font-bold text-xs md:text-sm shadow-lg">
                       {step.step}
                     </div>
 
                     {/* Icon */}
-                    <div className="text-4xl mb-6">{step.icon}</div>
+                    <div className="text-3xl md:text-4xl mb-4 md:mb-6">
+                      {step.icon}
+                    </div>
 
                     {/* Content */}
-                    <h3 className="text-xl font-bold text-gray-900 mb-3 group-hover:text-side transition-colors">
+                    <h3 className="text-lg md:text-xl font-bold text-gray-900 mb-2 md:mb-3 group-hover:text-side transition-colors">
                       {step.title}
                     </h3>
-                    <p className="text-gray-600">{step.description}</p>
+                    <p className="text-sm md:text-base text-gray-600">
+                      {step.description}
+                    </p>
 
-                    {/* Connection Arrow */}
+                    {/* Connection Arrow - only visible on md and larger screens */}
                     {index < 2 && (
                       <div className="hidden md:flex absolute top-1/2 -right-4 transform -translate-y-1/2 z-10">
                         <div className="w-8 h-8 bg-white rounded-full shadow-md flex items-center justify-center">
