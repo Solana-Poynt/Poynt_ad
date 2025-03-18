@@ -9,6 +9,7 @@
     "lint": "next lint"
   },
   "dependencies": {
+    "@crossmint/client-sdk-react-ui": "^1.15.2",
     "@dynamic-labs/sdk-react-core": "^4.9.3",
     "@dynamic-labs/solana": "^4.9.3",
     "@iconify/react": "^5.0.2",
