@@ -257,11 +257,13 @@ const WalletDashboard = () => {
     return <CompactWalletCard />;
   };
 
+  const envId = process.env.NEXT_PUBLIC_DYNAMIC;
+
   return (
     <DynamicContextProvider
       settings={{
         // Using the environment ID
-        environmentId: "820af009-d126-43d5-be5e-4a69536592bf",
+        environmentId: `${envId}`,
         walletConnectors: [SolanaWalletConnectors],
 
         // Optional event handlers

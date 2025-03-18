@@ -45,6 +45,8 @@ const WaitlistPage = () => {
       if (request?.data) {
         const { data, message, status } = request.data;
 
+        console.log("information", data, message, status);
+
         if (status === "success") {
           setIsSubmitted(true);
         } else {
