@@ -6,13 +6,11 @@ import GoogleLoginButton from "@/components/ui/google";
 import { useDispatch, useSelector } from "react-redux";
 import { AppDispatch, RootState } from "@/store/store";
 import { setIsAuth } from "@/store/slices/isAuthSlice";
-// import Notification from "../../components/notification";
 import Notification from "@/components/notification";
 import { baseURL } from "@/utils/config/baseUrl";
 import { NotificationState } from "@/types/general";
 import { motion, AnimatePresence } from "framer-motion";
 import LoadingOverlay from "@/components/ui/loading";
-import { useOkto, type OktoContextType } from "okto-sdk-react";
 
 interface LoginResponse {
   status: number;
@@ -48,32 +46,12 @@ export default function Signup() {
     show: false,
   });
 
-  const { authenticate } = useOkto() as OktoContextType;
-
   const showNotification = useCallback(
     (message: string, status: "success" | "error") => {
       setNotification({ message, status, show: true });
     },
     []
   );
-
-  const handleOktoAuth = async (idToken: string): Promise<boolean> => {
-    return new Promise((resolve, reject) => {
-      authenticate(idToken, (result, error) => {
-        if (error) {
-          // console.error("Okto authentication error:", error);
-          reject(error);
-          return;
-        }
-        if (result) {
-          // console.log("Okto authentication successful");
-          resolve(true);
-          return;
-        }
-        reject(new Error("No authentication result received"));
-      });
-    });
-  };
 
   const handleAuth = async (credential: GoogleCredentialResponse) => {
     if (!credential?.credential) {
@@ -83,14 +61,8 @@ export default function Signup() {
 
     try {
       setIsLoading(true);
-      const idToken = credential.credential;
+      // const idToken = credential.credential;
 
-      // First authenticate with Okto
-      // console.log("Starting Okto authentication...");
-      await handleOktoAuth(idToken);
-      // console.log("Okto authentication successful");
-      // /auth/google
-      // Then authenticate with your backend
       const response = await fetch(`${baseURL}/auth/google`, {
         method: "POST",
         credentials: "include",

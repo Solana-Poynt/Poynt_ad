@@ -2,8 +2,6 @@ import type { Metadata, Viewport } from "next";
 import localFont from "next/font/local";
 import "./globals.css";
 import { StoreProvider } from "../store/provider";
-import OktoProviders from "@/components/OKtoProvider";
-
 import Providers from "@/components/Provider";
 
 const geistSans = localFont({
@@ -34,8 +32,7 @@ export default async function RootLayout({
           <body
             className={`${geistSans.variable} ${geistMono.variable} antialiased`}
           >
-            {/* {children} */}
-            <OktoProviders>{children}</OktoProviders>
+            {children}
           </body>
         </html>
       </Providers>

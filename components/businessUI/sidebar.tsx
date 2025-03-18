@@ -9,7 +9,7 @@ import { clearWallet } from "@/store/slices/isWalletSlice";
 import { useDispatch } from "react-redux";
 import { AppDispatch } from "@/store/store";
 import { googleLogout } from "@react-oauth/google";
-import { useOkto, type OktoContextType } from "okto-sdk-react";
+// import { useOkto, type OktoContextType } from "okto-sdk-react";
 
 interface NavProps {
   role: string;
@@ -39,7 +39,7 @@ export default function SideNavigation({
 
   // Use the prop if provided, otherwise use local state
   const [isSidebarOpen, setIsSidebarOpen] = useState(!isTablet);
-  const { logOut } = useOkto() as OktoContextType;
+  // const { logOut } = useOkto() as OktoContextType;
 
   // Update sidebar state based on props or screen size changes
   useEffect(() => {
@@ -143,7 +143,7 @@ export default function SideNavigation({
       googleLogout();
       dispatch(logout());
       dispatch(clearWallet());
-      logOut();
+      // logOut();
       router.push("/");
     } catch (error) {
       console.error("Logout failed:", error);
