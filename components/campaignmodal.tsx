@@ -14,6 +14,9 @@ import {
   ArrowRight,
   ChevronRight,
   RefreshCw,
+  ListChecks,
+  FileText,
+  Link,
 } from "lucide-react";
 import { PricingTier } from "@/types/campaign";
 import { NotificationState } from "@/types/general";
@@ -22,7 +25,6 @@ import { useWalletManagement } from "@/utils/hooks/useWallet";
 import { cn } from "@/lib/utils";
 import { useSendDataMutation } from "@/store/api/api";
 import { getDataFromLocalStorage } from "@/utils/localStorage";
-import { removeEmptyStrings } from "@/utils/util";
 
 // Types
 interface CampaignModalProps {
@@ -34,11 +36,15 @@ interface CampaignModalProps {
 interface CampaignFormData {
   name: string;
   adType: AdType;
+  description: string;
   engagementGoal: engagementGoal;
   pricingTier: PricingTier;
-  media: File[];
-  headline?: string;
-  content?: string;
+  media: File | any;
+  tasks: {
+    social: string;
+    engagement: string;
+    websiteLink: string;
+  };
   cta: {
     text: string;
     url: string;
@@ -50,8 +56,6 @@ interface CampaignFormData {
   };
   budget: number;
   costPerReach: string;
-  paymentMethod: string;
-  transactionhash: string;
 }
 
 type AdType = "display_ads" | "video_ads";
@@ -85,6 +89,33 @@ const engagementGoals = [
   },
 ];
 
+// Task type definitions
+const taskTypes = [
+  {
+    id: "social",
+    name: "Social Media Task",
+    description: "Engage with your brand on social platforms",
+    icon: <Image className="w-5 h-5" />,
+    placeholder: "Follow us on Twitter, Share our post, etc.",
+  },
+  {
+    id: "engagement",
+    name: "Product Engagement",
+    description: "Drive users to product via specific actions",
+    icon: <Link className="w-5 h-5" />,
+    placeholder: "Comment on post, retweet post, etc",
+  },
+  {
+    id: "custom",
+    name: "Custom Task",
+    description:
+      "Create your own engagement task that will deliver unique interaction",
+    icon: <ListChecks className="w-5 h-5" />,
+    placeholder:
+      "Download our app, Visit our website, Sign up for newsletter, etc.",
+  },
+];
+
 const CampaignModal = ({
   isOpen,
   onClose,
@@ -92,21 +123,25 @@ const CampaignModal = ({
 }: CampaignModalProps) => {
   // Base state management
   const [step, setStep] = useState(0);
-  const [uploadedFiles, setUploadedFiles] = useState<File[]>([]);
+  const [uploadedFile, setUploadedFile] = useState<File | any>();
   const [isSubmitting, setIsSubmitting] = useState<boolean>(false);
   const [error, setError] = useState<string | null>(null);
   const [success, setSuccess] = useState<boolean>(false);
   const [isConfirmed, setIsConfirmed] = useState(false);
 
-  // Form data state
+  // Form data state (now with tasks array and description field)
   const [formData, setFormData] = useState<CampaignFormData>({
     name: "",
     adType: "display_ads",
+    description: "",
     engagementGoal: "brand_awareness",
     pricingTier: pricingTiers,
-    media: [],
-    headline: "",
-    content: "",
+    media: "",
+    tasks: {
+      social: "",
+      engagement: "",
+      websiteLink: "",
+    },
     cta: {
       text: "",
       url: "",
@@ -118,8 +153,6 @@ const CampaignModal = ({
     },
     budget: pricingTiers.price,
     costPerReach: `${pricingTiers.pricePerThousand}/1000`,
-    paymentMethod: "",
-    transactionhash: "",
   });
 
   // Notification state
@@ -163,6 +196,8 @@ const CampaignModal = ({
 
   const serviceFee = 0.4;
 
+  // Task update handler
+
   // Navigation handlers
   const handleNext = useCallback(() => {
     if (step < steps.length - 1) setStep(step + 1);
@@ -173,16 +208,15 @@ const CampaignModal = ({
   }, [step]);
 
   // File handling
-  const MAX_VIDEO_SIZE = 50 * 1024 * 1024;
+  const MAX_VIDEO_SIZE = 20 * 1024 * 1024;
   const MAX_IMAGE_SIZE = 5 * 1024 * 1024;
 
   const handleFileUpload = useCallback(
     (e: React.ChangeEvent<HTMLInputElement>, type: string) => {
-      const files = Array.from(e.target.files || []);
+      const files: any = e.target.files;
       const maxSize = type === "video_ads" ? MAX_VIDEO_SIZE : MAX_IMAGE_SIZE;
-      const invalidFiles = files.filter((file) => file.size > maxSize);
 
-      if (invalidFiles.length > 0) {
+      if (files.size > maxSize) {
         const sizeInMb = maxSize / (1024 * 1024);
         showNotification(
           `File size exceeds ${sizeInMb}MB limit. Please upload smaller files`,
@@ -191,21 +225,25 @@ const CampaignModal = ({
         e.target.value = "";
         return;
       }
-      setUploadedFiles((prev) => [...prev, ...files]);
+
+      setUploadedFile(files);
       setFormData((prev) => ({ ...prev, media: files }));
+
+      const file = uploadedFile[0];
+
+      // Log the file details
+      console.log(file);
+      console.log("UPLOADED", uploadedFile);
     },
-    []
+    [showNotification]
   );
 
-  const removeFile = useCallback((index: number) => {
-    setUploadedFiles((prev) => {
-      const newFiles = [...prev];
-      newFiles.splice(index, 1);
-      return newFiles;
-    });
-    setFormData((prev) => ({
+  const removeFile = useCallback(() => {
+    setUploadedFile(undefined);
+
+    setFormData((prev: any) => ({
       ...prev,
-      media: prev.media.filter((_, i) => i !== index),
+      media: undefined,
     }));
   }, []);
 
@@ -214,83 +252,146 @@ const CampaignModal = ({
 
   //MAKE API CALL TO upload campaign data
   const [createCampaign, { isLoading, reset }] = useSendDataMutation();
+
   // Form submission
   const handleSubmit = async () => {
     setIsSubmitting(true);
     setError(null);
 
-    if (!formData.name || !formData.media.length) {
-      throw new Error("Please fill in all required fields");
+    // Validation
+    if (!formData.name || !formData.description) {
+      setError("Please fill in all required fields");
+      setIsSubmitting(false);
+      return;
     }
 
-    // API call simulation
-    // Remove Empty Data
-    const readyData = removeEmptyStrings(formData);
-    const newFormData = new FormData();
-    if (formData.media && formData.media.length > 0) {
-      newFormData.append("media", formData.media[0]); // Since maxCount: 1
+    // Validate tasks
+    if (
+      !formData.tasks.social ||
+      !formData.tasks.engagement ||
+      !formData.tasks.websiteLink
+    ) {
+      setError("Please fill in all three tasks");
+      setIsSubmitting(false);
+      return;
     }
 
-    // Remove media from readyData since we're handling it separately
-    const { media, ...bodyData } = readyData;
-    // Append all other fields with proper type handling
-    Object.entries(bodyData).forEach(([key, value]) => {
-      if (value !== null && value !== undefined) {
-        if (typeof value === "object") {
-          newFormData.append(key, JSON.stringify(value));
+    try {
+      const newFormData = new FormData();
+
+      const mediaData: any = formData.media[0];
+
+      console.log("Original-image:", mediaData);
+
+      // Add the media file
+      if (formData.media) {
+        newFormData.append("media", mediaData);
+      }
+
+      // Add basic fields
+      newFormData.append("name", formData.name);
+      newFormData.append("description", formData.description);
+      newFormData.append("adType", formData.adType);
+      newFormData.append("engagementGoal", formData.engagementGoal);
+      newFormData.append("budget", String(formData.budget));
+      newFormData.append("costPerReach", formData.costPerReach);
+
+      // Create a properly structured tasks object
+      const tasksObject = {
+        social: formData.tasks.social,
+        interaction: formData.tasks.websiteLink,
+        custom: formData.tasks.engagement,
+      };
+
+      // Convert to JSON string
+      const tasksString = JSON.stringify(tasksObject);
+
+      // Add tasks as JSON string
+      newFormData.append("tasks", tasksString);
+
+      // Similarly for other objects
+      newFormData.append("cta", JSON.stringify(formData.cta));
+      newFormData.append(
+        "targetLocation",
+        JSON.stringify(formData.targetLocation)
+      );
+
+      // Properly log the FormData contents
+      console.log("FormData contents:");
+      for (const pair of newFormData.entries()) {
+        if (typeof pair[1] === "string") {
+          console.log(`${pair[0]}: ${pair[1]}`);
         } else {
-          newFormData.append(key, String(value)); // Convert to string
+          console.log(`${pair[0]}: [File: ${(pair[1] as File).name}]`);
         }
       }
-    });
 
-    const request: any = await createCampaign({
-      url: `campaign/${businessId}`,
-      data: newFormData,
-      type: "POST",
-    });
+      // Also log the specific task data we're sending
+      console.log("Tasks object:", tasksObject);
+      console.log("Tasks as string:", tasksString);
 
-    if (request?.data) {
-      const { data, message, status } = request?.data;
-      // Reset form
-      setFormData({
-        name: "",
-        adType: "display_ads",
-        engagementGoal: "brand_awareness",
-        pricingTier: pricingTiers,
-        media: [],
-        headline: "",
-        content: "",
-        cta: {
-          text: "",
-          url: "",
-        },
-        targetLocation: {
-          enabled: false,
-          country: "",
-          city: "",
-        },
-        budget: pricingTiers.price,
-        costPerReach: `${pricingTiers.pricePerThousand}/1000`,
-        paymentMethod: "",
-        transactionhash: "",
+      // Make the request
+      const request: any = await createCampaign({
+        url: `campaign/${businessId}`,
+        data: newFormData,
+        type: "POST",
       });
-      setSuccess(true);
-      showNotification(message, "success");
+
+      if (request?.data) {
+        const { data, message, status } = request?.data;
+        // Reset form and show success
+        setFormData({
+          name: "",
+          adType: "display_ads",
+          description: "",
+          engagementGoal: "brand_awareness",
+          pricingTier: pricingTiers,
+          media: undefined,
+          tasks: {
+            social: "",
+            websiteLink: "",
+            engagement: "",
+          },
+          cta: {
+            text: "",
+            url: "",
+          },
+          targetLocation: {
+            enabled: false,
+            country: "",
+            city: "",
+          },
+          budget: pricingTiers.price,
+          costPerReach: `${pricingTiers.pricePerThousand}/1000`,
+        });
+        setSuccess(true);
+        showNotification(message, "success");
+        setIsSubmitting(false);
+      } else {
+        // Improved error logging
+        console.error("API Error response:", request?.error);
+        if (request?.error?.data) {
+          console.error("Error details:", request.error.data);
+        }
+
+        setError(
+          request?.error?.data?.message
+            ? request?.error?.data?.message
+            : "Check Internet Connection and try again"
+        );
+        setIsSubmitting(false);
+        showNotification(
+          request?.error?.data?.message
+            ? request?.error?.data?.message
+            : "Check Internet Connection and try again",
+          "error"
+        );
+      }
+    } catch (err) {
+      console.error("Submit error:", err);
+      setError("Failed to submit campaign");
       setIsSubmitting(false);
-    } else {
-      setError(
-        request?.error?.data?.message
-          ? request?.error?.data?.message
-          : "Check Internet Connection and try again"
-      );
-      setIsSubmitting(false);
-      showNotification(
-        request?.error?.data?.message
-          ? request?.error?.data?.message
-          : "Check Internet Connection and try again",
-        "error"
-      );
+      showNotification("Failed to submit campaign", "error");
     }
   };
 
@@ -305,7 +406,7 @@ const CampaignModal = ({
     []
   );
 
-  // Step validation
+  // Step validation - updated to include tasks and description
   const canProceed = useCallback(() => {
     switch (step) {
       case 0: // Pricing confirmation
@@ -313,16 +414,27 @@ const CampaignModal = ({
       case 1: // Ad engagement selection
         return Boolean(formData.engagementGoal);
       case 2: // Ad type selection
-        return formData.media.length > 0;
+        return Boolean(formData.media);
       case 3: // Campaign details
-        return Boolean(formData.name && formData.cta.text && formData.cta.url);
-      case 4: // Payment step
+        return Boolean(
+          formData.name &&
+            formData.description &&
+            formData.cta.text &&
+            formData.cta.url
+        );
+      case 4: // Tasks step
+        return (
+          formData.tasks.websiteLink &&
+          formData.tasks.engagement &&
+          formData.tasks.social
+        );
+      case 5: // Payment step
         return (
           formData.budget > 0 &&
           formData.budget >= formData.pricingTier.price &&
           formData.budget + serviceFee <= Number(balance)
         );
-      case 5: // Final review
+      case 6: // Final review
         return true;
       default:
         return true;
@@ -482,7 +594,7 @@ const CampaignModal = ({
     <div className="space-y-6">
       <div className="flex items-center justify-between">
         <h3 className="text-xl font-bold text-gray-900">Choose Ad Type</h3>
-        <div className="text-sm text-gray-500">Step 2 of {steps.length}</div>
+        <div className="text-sm text-gray-500">Step 2 of 7</div>
       </div>
 
       <div className="space-y-4">
@@ -519,6 +631,7 @@ const CampaignModal = ({
             }`}
           >
             <button
+              type="button"
               onClick={() =>
                 setFormData({ ...formData, adType: type.id as AdType })
               }
@@ -558,8 +671,8 @@ const CampaignModal = ({
                 transition={{ duration: 0.2 }}
                 className="mt-4 pl-14"
               >
-                {/* Show specs and upload section only when no files are uploaded */}
-                {uploadedFiles.length === 0 && (
+                {/* Show specs and upload section when no files are uploaded */}
+                {!uploadedFile ? (
                   <div className="space-y-4">
                     {/* Specifications */}
                     <div className="bg-gray-50 rounded-lg p-4">
@@ -583,7 +696,6 @@ const CampaignModal = ({
                         accept={
                           type.id === "display_ads" ? "image/*" : "video/*"
                         }
-                        multiple={type.id === "display_ads"}
                         onChange={(e) => handleFileUpload(e, type.id)}
                         className="hidden"
                         id={`${type.id}-upload`}
@@ -613,46 +725,81 @@ const CampaignModal = ({
                       </label>
                     </div>
                   </div>
-                )}
-
-                {/* Content Preview */}
-                {uploadedFiles.length > 0 && (
+                ) : (
+                  /* Content Preview */
                   <div className="space-y-4">
-                    {type.id === "display_ads" ? (
-                      <div className="grid grid-cols-2 gap-4">
-                        {uploadedFiles.map((file, index) => (
-                          <div key={index} className="relative group">
-                            <img
-                              src={URL.createObjectURL(file)}
-                              alt={`Preview ${index + 1}`}
-                              className="rounded-lg w-full h-48 object-cover"
-                            />
-                            <div className="absolute inset-0 bg-black/50 opacity-0 group-hover:opacity-100 transition-opacity rounded-lg flex items-center justify-center">
-                              <button
-                                onClick={() => removeFile(index)}
-                                className="p-2 bg-white rounded-full shadow-lg hover:bg-red-50"
-                              >
-                                <X className="w-4 h-4 text-red-500" />
-                              </button>
-                            </div>
+                    {type.id === "display_ads" &&
+                    uploadedFile &&
+                    (uploadedFile instanceof File
+                      ? uploadedFile.type?.startsWith("image/")
+                      : uploadedFile[0] &&
+                        uploadedFile[0].type?.startsWith("image/")) ? (
+                      <div className="grid grid-cols-1 gap-4">
+                        <div className="relative group">
+                          <img
+                            src={URL.createObjectURL(
+                              uploadedFile instanceof File
+                                ? uploadedFile
+                                : uploadedFile[0]
+                            )}
+                            alt="Ad Preview"
+                            className="rounded-lg w-full h-48 object-cover"
+                          />
+                          <div className="absolute inset-0 bg-black/50 opacity-0 group-hover:opacity-100 transition-opacity rounded-lg flex items-center justify-center">
+                            <button
+                              type="button"
+                              onClick={removeFile}
+                              className="p-2 bg-white rounded-full shadow-lg hover:bg-red-50"
+                            >
+                              <X className="w-4 h-4 text-red-500" />
+                            </button>
                           </div>
-                        ))}
+                        </div>
                       </div>
-                    ) : (
+                    ) : type.id === "video_ads" &&
+                      uploadedFile &&
+                      (uploadedFile instanceof File
+                        ? uploadedFile.type?.startsWith("video/")
+                        : uploadedFile[0] &&
+                          uploadedFile[0].type?.startsWith("video/")) ? (
                       <div className="relative group">
                         <video
                           controls
                           className="rounded-lg w-full"
-                          src={URL.createObjectURL(uploadedFiles[0])}
+                          src={URL.createObjectURL(
+                            uploadedFile instanceof File
+                              ? uploadedFile
+                              : uploadedFile[0]
+                          )}
                         />
                         <div className="absolute inset-0 bg-black/50 opacity-0 group-hover:opacity-100 transition-opacity rounded-lg flex items-center justify-center">
                           <button
-                            onClick={() => removeFile(0)}
+                            type="button"
+                            onClick={removeFile}
                             className="p-2 bg-white rounded-full shadow-lg hover:bg-red-50"
                           >
                             <X className="w-4 h-4 text-red-500" />
                           </button>
                         </div>
+                      </div>
+                    ) : (
+                      <div className="p-4 bg-yellow-50 rounded-lg border border-yellow-300">
+                        <div className="flex items-center">
+                          <Info className="w-5 h-5 text-yellow-500 mr-2" />
+                          <p className="text-sm text-yellow-700">
+                            The uploaded file format doesn't match the selected
+                            ad type. Please upload a
+                            {type.id === "display_ads" ? "n image" : " video"}{" "}
+                            file.
+                          </p>
+                        </div>
+                        <button
+                          type="button"
+                          onClick={removeFile}
+                          className="mt-2 px-3 py-1 bg-white text-yellow-600 text-sm rounded border border-yellow-300 hover:bg-yellow-50"
+                        >
+                          Remove file and try again
+                        </button>
                       </div>
                     )}
                   </div>
@@ -669,6 +816,7 @@ const CampaignModal = ({
     // Local state for immediate input updates
     const [localInputs, setLocalInputs] = useState({
       name: formData.name,
+      description: formData.description,
       ctaText: formData.cta.text,
       ctaUrl: formData.cta.url,
     });
@@ -688,19 +836,23 @@ const CampaignModal = ({
       setFormData((prevData) => ({
         ...prevData,
         name: localInputs.name,
+        description: localInputs.description,
         cta: {
           text: localInputs.ctaText,
           url: localInputs.ctaUrl,
         },
       }));
       setIsSaved(true);
+
+      // Auto-hide success message after 3 seconds
+      setTimeout(() => setIsSaved(false), 3000);
     };
 
     return (
       <div className="space-y-6">
         <div className="flex items-center justify-between">
           <h3 className="text-xl font-bold text-gray-900">Campaign Details</h3>
-          <div className="text-sm text-gray-500">Step 3 of {steps.length}</div>
+          <div className="text-sm text-gray-500">Step 3 of 7</div>
         </div>
 
         <div className="space-y-4">
@@ -714,9 +866,28 @@ const CampaignModal = ({
               onChange={(e) => handleInputChange("name", e.target.value)}
               className="w-full px-4 py-2 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-side focus:border-transparent"
               placeholder="Enter campaign name"
+              maxLength={50}
             />
             <div className="mt-1 text-xs text-gray-500">
               {localInputs.name.length}/50 characters
+            </div>
+          </div>
+
+          {/* New Description Field */}
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-1">
+              Ad Description
+            </label>
+            <textarea
+              value={localInputs.description}
+              onChange={(e) => handleInputChange("description", e.target.value)}
+              rows={4}
+              className="w-full px-4 py-2 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-side focus:border-transparent resize-none"
+              placeholder="Describe your ad campaign and what you're promoting"
+              maxLength={200}
+            />
+            <div className="mt-1 text-xs text-gray-500">
+              {localInputs.description.length}/200 characters
             </div>
           </div>
 
@@ -732,6 +903,7 @@ const CampaignModal = ({
                   onChange={(e) => handleInputChange("ctaText", e.target.value)}
                   className="w-full px-4 py-2 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-side focus:border-transparent"
                   placeholder="CTA Text (e.g., Learn More)"
+                  maxLength={20}
                 />
                 <div className="mt-1 text-xs text-gray-500">
                   {localInputs.ctaText.length}/20 characters
@@ -766,26 +938,113 @@ const CampaignModal = ({
               Save Changes
             </button>
           </div>
+        </div>
+      </div>
+    );
+  };
 
-          {/* Preview Section */}
-          <div className="mt-8 p-4 bg-gray-50 rounded-lg border border-gray-200">
-            <h4 className="text-sm font-medium text-gray-700 mb-3">Preview</h4>
-            <div className="bg-white p-4 rounded-lg shadow-sm">
-              <div className="text-lg font-medium text-gray-900 mb-2">
-                {localInputs.name || "Campaign Name"}
-              </div>
-              {localInputs.ctaText && (
-                <button className="px-4 py-2 bg-side text-white rounded-lg hover:bg-side/90 transition-colors">
-                  {localInputs.ctaText}
-                </button>
-              )}
-              {localInputs.ctaUrl && (
-                <div className="mt-2 text-sm text-gray-500 truncate">
-                  Links to: {localInputs.ctaUrl}
-                </div>
-              )}
-            </div>
+  // Tasks Component
+  // Tasks Component with improved input handling
+  const TasksComponent = () => {
+    const [localTasks, setLocalTasks] = useState<{
+      social: string;
+      engagement: string;
+      websiteLink: string;
+    }>(formData.tasks);
+
+    const handleLocalTaskUpdate = (
+      taskType: keyof typeof localTasks,
+      value: string
+    ) => {
+      setLocalTasks({
+        ...localTasks,
+        [taskType]: value,
+      });
+    };
+
+    // Update parent state only when focus is lost
+    const handleTaskBlur = () => {
+      setFormData((prev) => ({
+        ...prev,
+        tasks: localTasks,
+      }));
+    };
+
+    return (
+      <div className="space-y-6">
+        <div className="flex items-center justify-between">
+          <h3 className="text-xl font-bold text-gray-900">
+            Configure User Tasks
+          </h3>
+          <div className="text-sm text-gray-500">Step 4 of 7</div>
+        </div>
+
+        <div className="p-4 bg-yellow-50 border border-yellow-200 rounded-lg mb-4">
+          <div className="flex items-start">
+            <Info className="w-5 h-5 text-yellow-500 mt-0.5 mr-2 shrink-0" />
+            <p className="text-sm text-yellow-700">
+              Create 3 tasks that users will complete to earn Poynts. Each
+              campaign requires all three types of tasks.
+            </p>
           </div>
+        </div>
+
+        <div className="space-y-6">
+          {taskTypes.map((taskType) => (
+            <div
+              key={taskType.id}
+              className="border border-gray-200 rounded-lg p-4"
+            >
+              <div className="flex items-center mb-3">
+                <div className="h-8 w-8 rounded-lg bg-side/10 flex items-center justify-center mr-3">
+                  {taskType.icon}
+                </div>
+                <div>
+                  <h4 className="font-medium text-gray-900">{taskType.name}</h4>
+                  <p className="text-xs text-gray-500">
+                    {taskType.description}
+                  </p>
+                </div>
+              </div>
+
+              <div className="mt-2">
+                <input
+                  type="text"
+                  value={
+                    localTasks[taskType.id as keyof typeof localTasks] || ""
+                  }
+                  onChange={(e) =>
+                    handleLocalTaskUpdate(
+                      taskType.id as keyof typeof localTasks,
+                      e.target.value
+                    )
+                  }
+                  onBlur={handleTaskBlur}
+                  placeholder={taskType.placeholder}
+                  className="w-full px-3 py-2 border border-gray-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-side"
+                />
+                {!localTasks[
+                  taskType.id as keyof typeof localTasks
+                ]?.trim() && (
+                  <p className="mt-1 text-xs text-red-500">
+                    This task is required
+                  </p>
+                )}
+              </div>
+            </div>
+          ))}
+        </div>
+
+        <div className="p-4 bg-gray-50 rounded-lg border border-gray-200 mt-4">
+          <h4 className="text-sm font-medium text-gray-700 mb-2">
+            Tips for effective tasks:
+          </h4>
+          <ul className="space-y-1 text-sm text-gray-600 list-disc pl-5">
+            <li>Keep tasks simple and achievable</li>
+            <li>Make sure tasks align with your campaign objective</li>
+            <li>Create a natural progression between tasks</li>
+            <li>Use clear, action-oriented language</li>
+          </ul>
         </div>
       </div>
     );
@@ -865,7 +1124,6 @@ const CampaignModal = ({
         return;
       }
 
-      // we need to visit here again
       setIsConfirmed(true);
       showNotification("Budget confirmed successfully", "success");
     };
@@ -878,7 +1136,7 @@ const CampaignModal = ({
           <h3 className="text-xl font-bold text-gray-900">
             Begin Payment Process
           </h3>
-          <div className="text-sm text-gray-500">Step 4 of {steps.length}</div>
+          <div className="text-sm text-gray-500">Step 5 of 7</div>
         </div>
 
         <div className="p-4 bg-gray-50 rounded-xl border border-gray-200">
@@ -1036,9 +1294,12 @@ const CampaignModal = ({
   };
 
   const FinalReview = () => {
-    const estimatedImpressions =
+    // Calculate estimated impressions and round to nearest whole number
+    const estimatedImpressions = Math.round(
       (formData.budget / formData.pricingTier.price) *
-      formData.pricingTier.impressions;
+        formData.pricingTier.impressions
+    );
+
     return (
       <div className="space-y-6">
         <div className="flex items-center justify-between">
@@ -1050,17 +1311,20 @@ const CampaignModal = ({
           <div className="space-y-4">
             {[
               { label: "Campaign Name", value: formData.name },
-              { label: "Ad Type", value: formData.adType },
-              { label: "Engagement Type", value: formData.engagementGoal },
+              { label: "Ad Type", value: formData.adType.replace("_", " ") },
+              {
+                label: "Engagement Type",
+                value: formData.engagementGoal.replace("_", " "),
+              },
               {
                 label: "Impressions per package",
                 value: formData.pricingTier.impressions.toLocaleString(),
               },
               {
-                label: "Estimated Impressions ",
+                label: "Estimated Impressions",
                 value: estimatedImpressions.toLocaleString(),
               },
-              { label: "Budget", value: `${formData.budget} SOL` },
+              { label: "Budget", value: `${formData.budget.toFixed(2)} SOL` },
             ].map((item, index) => (
               <div
                 key={index}
@@ -1072,37 +1336,82 @@ const CampaignModal = ({
             ))}
           </div>
 
-          <div className="mt-6">
-            <h4 className="font-medium text-gray-900 mb-4">Uploaded Content</h4>
-            <div className="grid grid-cols-2 gap-4">
-              {uploadedFiles.map((file, index) => (
-                <div key={index} className="relative group">
-                  {file.type.startsWith("image/") ? (
+          {/* Only show the uploaded content section if a file has been uploaded */}
+          {uploadedFile && (
+            <div className="mt-6">
+              <h4 className="font-medium text-gray-900 mb-4">
+                Uploaded Content
+              </h4>
+              <div className="grid grid-cols-1 gap-4">
+                <div className="relative group">
+                  {uploadedFile[0].type.startsWith("image/") ? (
                     <img
-                      src={URL.createObjectURL(file)}
-                      alt={`Content ${index + 1}`}
+                      src={URL.createObjectURL(
+                        uploadedFile instanceof File
+                          ? uploadedFile
+                          : uploadedFile[0]
+                      )}
+                      alt="Campaign content"
                       className="rounded-lg w-full h-32 object-cover"
                     />
                   ) : (
                     <video
-                      src={URL.createObjectURL(file)}
+                      src={URL.createObjectURL(
+                        uploadedFile instanceof File
+                          ? uploadedFile
+                          : uploadedFile[0]
+                      )}
                       className="rounded-lg w-full h-32 object-cover"
+                      controls
                     />
                   )}
                   <div className="absolute inset-0 bg-black/50 opacity-0 group-hover:opacity-100 transition-opacity rounded-lg" />
+                </div>
+              </div>
+            </div>
+          )}
+
+          {/* Ad Description Section */}
+          <div className="mt-6 p-4 bg-white rounded-lg border border-gray-200">
+            <div className="font-medium text-gray-900 mb-2">Ad Description</div>
+            <p className="text-sm text-gray-600">
+              {formData.description || "No description provided"}
+            </p>
+          </div>
+
+          {/* User Tasks Section */}
+          <div className="mt-6">
+            <h4 className="font-medium text-gray-900 mb-4">User Tasks</h4>
+            <div className="space-y-2">
+              {Object.entries(formData.tasks).map(([key, value], index) => (
+                <div
+                  key={key}
+                  className="p-3 bg-white rounded-lg border border-gray-200"
+                >
+                  <div className="flex items-center">
+                    <div className="h-6 w-6 bg-side/10 text-side rounded-full flex items-center justify-center mr-2 text-xs font-medium">
+                      {index + 1}
+                    </div>
+                    <span className="text-sm">
+                      {value || `No ${key} task defined`}
+                    </span>
+                  </div>
                 </div>
               ))}
             </div>
           </div>
 
-          <div className="mt-6 p-4 bg-white rounded-lg border border-gray-200">
+          {/* Call to Action Section */}
+          <div className="mt-4 p-4 bg-white rounded-lg border border-gray-200">
             <div className="font-medium text-gray-900 mb-2">Call to Action</div>
             <div className="flex items-center gap-2 text-sm">
               <span className="px-3 py-1 bg-side text-white rounded-full">
-                {formData.cta.text}
+                {formData.cta.text || "Learn More"}
               </span>
               <ArrowRight className="w-4 h-4 text-gray-400" />
-              <span className="text-blue-600">{formData.cta.url}</span>
+              <span className="text-blue-600">
+                {formData.cta.url || "No URL provided"}
+              </span>
             </div>
           </div>
         </div>
@@ -1110,17 +1419,18 @@ const CampaignModal = ({
     );
   };
 
-  // Steps configuration
+  // Steps configuration with Tasks step
   const steps = [
     { component: <PricingConfirmation /> },
     { component: <EngagementSelector /> },
     { component: <AdTypeSelection /> },
     { component: <CampaignDetails /> },
+    { component: <TasksComponent /> },
     { component: <PaymentStep /> },
     { component: <FinalReview /> },
   ];
 
-  // Success component
+  // Updated Success component
   const SuccessState = () => (
     <div className="text-center py-8">
       <div className="w-16 h-16 bg-green-100 rounded-full flex items-center justify-center mx-auto mb-4">
@@ -1130,14 +1440,14 @@ const CampaignModal = ({
         Campaign Created Successfully!
       </h3>
       <p className="text-gray-600 mb-6">
-        Your campaign has been submitted and is now being reviewed. You'll
-        receive a confirmation email shortly.
+        Your campaign has been submitted and is now being reviewed. Your ad will
+        be shown to users who can complete your specified tasks to earn Poynts.
       </p>
       <button
         onClick={onClose}
         className="px-6 py-2 bg-side text-white rounded-lg hover:bg-side/90 transition-colors"
       >
-        Close
+        View My Campaigns
       </button>
     </div>
   );

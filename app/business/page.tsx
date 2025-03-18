@@ -190,10 +190,6 @@ export default function Page() {
                 />
 
                 <div className="relative">
-                  <span className="text-sm md:text-xl text-white font-bold absolute right-9 top-12 tracking-tight">
-                    {`${balance} SOL`}
-                  </span>
-
                   <div className="absolute left-4 top-12 md:top-24  pt-4 w-[280px]">
                     <p className="text-xs md:text-sm text-white/70 font-medium">
                       Wallet Address
@@ -234,7 +230,9 @@ export default function Page() {
           {/* Recent Campaigns Table */}
           <div className="bg-white rounded-xl border border-gray-200">
             <div className="px-6 py-4 border-b border-gray-200">
-              <h2 className="font-semibold text-gray-900 text-xs md:text-sm">Recent Campaigns</h2>
+              <h2 className="font-semibold text-gray-900 text-xs md:text-sm">
+                Recent Campaigns
+              </h2>
             </div>
             <div className="flex p-8 w-full text-xs md:text-sm justify-center">
               <h1>No Campaigns Yet</h1>

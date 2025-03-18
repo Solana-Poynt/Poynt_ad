@@ -32,7 +32,8 @@ export const useWalletManagement = (
   onNotification: (message: string, status: "success" | "error") => void
 ) => {
   const dispatch = useDispatch();
-  const { getWallets, createWallet, getPortfolio } = useOkto() as OktoContextType;
+  const { getWallets, createWallet, getPortfolio } =
+    useOkto() as OktoContextType;
 
   const [wallet, setWallet] = useState<WalletData | null>(null);
   const [portfolio, setPortfolio] = useState<PortfolioData | null>(null);
@@ -72,7 +73,10 @@ export const useWalletManagement = (
           return formattedPortfolio;
         }
       } catch (error) {
-        const message = error instanceof Error ? error.message : "Failed to fetch portfolio data";
+        const message =
+          error instanceof Error
+            ? error.message
+            : "Failed to fetch portfolio data";
         dispatch(setError(message));
         onNotification(message, "error");
       } finally {
@@ -103,7 +107,8 @@ export const useWalletManagement = (
         return currentWallet;
       }
     } catch (error) {
-      const message = error instanceof Error ? error.message : "Failed to initialize wallet";
+      const message =
+        error instanceof Error ? error.message : "Failed to initialize wallet";
       dispatch(setError(message));
       onNotification(message, "error");
     } finally {
@@ -118,7 +123,8 @@ export const useWalletManagement = (
       await fetchPortfolio(wallet);
       onNotification("Balance updated successfully", "success");
     } catch (error) {
-      const message = error instanceof Error ? error.message : "Failed to refresh balance";
+      const message =
+        error instanceof Error ? error.message : "Failed to refresh balance";
       onNotification(message, "error");
     } finally {
       dispatch(setLoading(false));

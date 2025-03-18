@@ -11,12 +11,16 @@ import {
   CheckIcon,
   Target,
 } from "lucide-react";
+import { useSendDataMutation } from "@/store/api/api";
 
 const WaitlistPage = () => {
   const [email, setEmail] = useState("");
   const [isSubmitted, setIsSubmitted] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [error, setError] = useState("");
+
+  //MAKE API CALL TO upload campaign data
+  const [joinWaitlist, { isLoading, reset }] = useSendDataMutation();
 
   const handleSubmit = async (e: any) => {
     e.preventDefault();
@@ -30,13 +34,33 @@ const WaitlistPage = () => {
     setError("");
     setIsSubmitting(true);
 
-    // Simulate API call
     try {
-      // In a real app, you would make an API call here to save the email
-      await new Promise((resolve) => setTimeout(resolve, 1000));
-      setIsSubmitted(true);
+      // Using your custom mutation hook
+      const request = await joinWaitlist({
+        url: "auth/waitlist",
+        data: { email },
+        type: "POST",
+      });
+
+      if (request?.data) {
+        const { data, message, status } = request.data;
+
+        console.log("information", data, message, status);
+
+        if (status === "success") {
+          setIsSubmitted(true);
+        } else {
+          setError(message || "Failed to join waitlist");
+        }
+      } else {
+        throw new Error("No response from server");
+      }
     } catch (err) {
-      setError("Something went wrong. Please try again.");
+      setError(
+        err instanceof Error
+          ? err.message
+          : "Something went wrong. Please try again."
+      );
     } finally {
       setIsSubmitting(false);
     }
