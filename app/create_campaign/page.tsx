@@ -115,49 +115,17 @@ export default function CampaignPage() {
               </h3>
               <p className="text-sm md:text-base text-gray-700 mb-4">
                 For testing purposes, all plans are priced in Solana Testnet
-                USDC.
+                SOLANA.
               </p>
 
               <div className="bg-white rounded-lg p-3 md:p-4 border border-blue-200">
                 <h4 className="font-bold text-sm md:text-base text-gray-800 mb-2">
-                  How to Get Testnet USDC:
+                  How to Get Testnet SOLANA:
                 </h4>
                 <ol className="text-left space-y-2 md:space-y-3 text-xs md:text-sm">
                   <li className="flex items-start">
                     <span className="bg-blue-600 text-white rounded-full h-5 w-5 md:h-6 md:w-6 flex items-center justify-center mr-2 flex-shrink-0 text-xs">
                       1
-                    </span>
-                    <span>
-                      Visit the{" "}
-                      <a
-                        href="https://faucet.circle.com/"
-                        target="_blank"
-                        rel="noopener noreferrer"
-                        className="text-blue-600 hover:underline font-medium"
-                      >
-                        Circle Faucet website
-                      </a>
-                    </span>
-                  </li>
-                  <li className="flex items-start">
-                    <span className="bg-blue-600 text-white rounded-full h-5 w-5 md:h-6 md:w-6 flex items-center justify-center mr-2 flex-shrink-0 text-xs">
-                      2
-                    </span>
-                    <span>
-                      Select <strong>USDC</strong> as the token
-                    </span>
-                  </li>
-                  <li className="flex items-start">
-                    <span className="bg-blue-600 text-white rounded-full h-5 w-5 md:h-6 md:w-6 flex items-center justify-center mr-2 flex-shrink-0 text-xs">
-                      3
-                    </span>
-                    <span>
-                      Choose <strong>Solana Devnet</strong> as the network
-                    </span>
-                  </li>
-                  <li className="flex items-start">
-                    <span className="bg-blue-600 text-white rounded-full h-5 w-5 md:h-6 md:w-6 flex items-center justify-center mr-2 flex-shrink-0 text-xs">
-                      4
                     </span>
                     <span>
                       Go to your{" "}
@@ -172,11 +140,27 @@ export default function CampaignPage() {
                   </li>
                   <li className="flex items-start">
                     <span className="bg-blue-600 text-white rounded-full h-5 w-5 md:h-6 md:w-6 flex items-center justify-center mr-2 flex-shrink-0 text-xs">
+                      2
+                    </span>
+                    <span>
+                      Visit the 
+                      <a
+                        href="https://faucet.solana.com/"
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="text-blue-600 hover:underline font-medium"
+                      >
+                        Solana Faucet website
+                      </a>
+                    </span>
+                  </li>
+                  <li className="flex items-start">
+                    <span className="bg-blue-600 text-white rounded-full h-5 w-5 md:h-6 md:w-6 flex items-center justify-center mr-2 flex-shrink-0 text-xs">
                       3
                     </span>
                     <span>
-                      Go back to the claim site, Paste your wallet address in
-                      the input field and click <strong>Send</strong>
+                      Paste your wallet address in the input field, select
+                      amount and click <strong>Send</strong>
                     </span>
                   </li>
                   <li className="flex items-start">
@@ -184,7 +168,7 @@ export default function CampaignPage() {
                       6
                     </span>
                     <span>
-                      Return to this page after receiving your test USDC
+                      Return to this page after receiving your test SOLANA
                     </span>
                   </li>
                 </ol>
@@ -229,7 +213,7 @@ export default function CampaignPage() {
                       {tier.description}
                     </h3>
                     <div className="text-2xl md:text-3xl font-bold text-side mb-1">
-                      {tier.price} USDC
+                      {tier.price} SOL
                     </div>
                   </div>
 

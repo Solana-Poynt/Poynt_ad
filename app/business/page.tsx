@@ -9,6 +9,7 @@ import { NotificationState } from "@/types/general";
 import Notification from "@/components/notification";
 import { Trophy, Copy, Plus } from "lucide-react";
 import QuickStartButton from "@/components/quick_modal";
+import useSolanaTokenBalances from "@/utils/hooks/useBalance";
 
 // Move constants outside component
 const adCards = [
@@ -57,7 +58,32 @@ export default function Page() {
   // Get stored data
   const id = getDataFromLocalStorage("id");
   const wallet = getDataFromLocalStorage("wallet");
-  const balance = getDataFromLocalStorage("walletbalance");
+  // const balance = getDataFromLocalStorage("walletbalance");
+
+  // const {
+  //   tokenBalances,
+  //   totalValue,
+  //   // isLoading,
+  //   isError,
+  //   error,
+  //   hasTokens,
+  //   getTokenByAddress,
+  //   getSolBalance,
+  // } = useSolanaTokenBalances({
+  //   includeFiat: true,
+  //   includeZeroBalances: false,
+  //   sortByValue: true,
+  // });
+
+  // const solToken = getSolBalance();
+
+  // const usdcBal = getTokenByAddress(
+  //   "4zMMC9srt5Ri5X14GAgXhaHii3GnPAEERYPJgZJDncDU"
+  // );
+  // // const tokenBal = tokenBalances();
+
+  // console.log("SOL BAL:", solToken?.balance);
+  // console.log("GEN BAL:", usdcBal);
 
   // Fetch user data
   const { data: userRetrievedData, isLoading } = useGetUserQuery({ id });

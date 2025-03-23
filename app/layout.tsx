@@ -1,8 +1,10 @@
-import type { Metadata, Viewport } from "next";
+// app/layout.tsx
+import type { Metadata } from "next";
 import localFont from "next/font/local";
 import "./globals.css";
 import { StoreProvider } from "../store/provider";
 import Providers from "@/components/Provider";
+import RootClientWrapper from "@/components/RootClientWrapper";
 
 const geistSans = localFont({
   src: "./fonts/GeistVF.woff",
@@ -20,22 +22,22 @@ export const metadata: Metadata = {
   description: "POYNT ADVERT MANAGEMENT WEBSITE",
 };
 
-export default async function RootLayout({
+export default function RootLayout({
   children,
 }: Readonly<{
   children: React.ReactNode;
 }>) {
   return (
-    <StoreProvider>
-      <Providers>
-        <html lang="en">
-          <body
-            className={`${geistSans.variable} ${geistMono.variable} antialiased`}
-          >
-            {children}
-          </body>
-        </html>
-      </Providers>
-    </StoreProvider>
+    <html lang="en">
+      <body
+        className={`${geistSans.variable} ${geistMono.variable} antialiased`}
+      >
+        <StoreProvider>
+          <Providers>
+            <RootClientWrapper>{children}</RootClientWrapper>
+          </Providers>
+        </StoreProvider>
+      </body>
+    </html>
   );
 }
