@@ -21,10 +21,20 @@ import {
 import { PricingTier } from "@/types/campaign";
 import { NotificationState } from "@/types/general";
 import Notification from "./notification";
-import { useWalletManagement } from "@/utils/hooks/useWallet";
+import useSolanaTokenBalances from "@/utils/hooks/useBalance";
+// import { useSolanaTokenBalances } from "@/utils/hooks/useSolanaTokenBalances";
+import { useDynamicContext } from "@dynamic-labs/sdk-react-core";
 import { cn } from "@/lib/utils";
 import { useSendDataMutation } from "@/store/api/api";
 import { getDataFromLocalStorage } from "@/utils/localStorage";
+import { isSolanaWallet } from "@dynamic-labs/solana-core";
+import type { ISolana } from "@dynamic-labs/solana-core";
+import { PublicKey, Transaction } from "@solana/web3.js";
+import {
+  createTransferInstruction,
+  getAssociatedTokenAddress,
+} from "@solana/spl-token";
+import * as web3 from "@solana/web3.js";
 
 // Types
 interface CampaignModalProps {
@@ -106,7 +116,7 @@ const taskTypes = [
     placeholder: "Comment on post, retweet post, etc",
   },
   {
-    id: "custom",
+    id: "websiteLink",
     name: "Custom Task",
     description:
       "Create your own engagement task that will deliver unique interaction",
@@ -128,8 +138,20 @@ const CampaignModal = ({
   const [error, setError] = useState<string | null>(null);
   const [success, setSuccess] = useState<boolean>(false);
   const [isConfirmed, setIsConfirmed] = useState(false);
+  const [paymentConfirmed, setPaymentConfirmed] = useState<boolean>(false);
+  const [paymentSignature, setPaymentSignature] = useState<string>("");
 
-  // Form data state (now with tasks array and description field)
+  const [walletNotConnected, setwalletNotConnected] = useState<boolean>(false);
+
+  // Dynamic context and Solana balance hook
+  const { primaryWallet } = useDynamicContext();
+  const { getSolBalance, isLoading: isBalanceLoading } =
+    useSolanaTokenBalances();
+
+  const solToken = getSolBalance();
+  const balance: any = solToken?.balance;
+
+  // Form data state
   const [formData, setFormData] = useState<CampaignFormData>({
     name: "",
     adType: "display_ads",
@@ -169,34 +191,23 @@ const CampaignModal = ({
     []
   );
 
-  // Wallet management hook
-  const { portfolio, initializeWallet, tokensHeld, refreshBalance } =
-    useWalletManagement(showNotification);
-
-  // Balance state management
-  const [balance, setBalance] = useState<string>("");
-
-  useEffect(() => {
-    const initWallet = async () => {
-      try {
-        await initializeWallet();
-      } catch (err) {
-        showNotification("Failed to initialize wallet", "error");
-      }
-    };
-
-    initWallet();
-  }, [initializeWallet, showNotification]);
-
-  useEffect(() => {
-    if (tokensHeld?.length > 0) {
-      setBalance(tokensHeld[0].quantity);
-    }
-  }, [tokensHeld]);
+  // Refresh the balance when needed
+  // const refreshBalance = useCallback(async () => {
+  //   try {
+  //     await refreshBalances();
+  //     showNotification("Balance refreshed", "success");
+  //   } catch (error) {
+  //     console.error("Error refreshing balance:", error);
+  //     showNotification("Failed to refresh balance", "error");
+  //   }
+  // }, [refreshBalances, showNotification]);
 
   const serviceFee = 0.4;
 
-  // Task update handler
+  const updatePaymentStatus = (status: boolean, signature: string) => {
+    setPaymentConfirmed(status);
+    setPaymentSignature(signature);
+  };
 
   // Navigation handlers
   const handleNext = useCallback(() => {
@@ -206,7 +217,6 @@ const CampaignModal = ({
   const handleBack = useCallback(() => {
     if (step > 0) setStep(step - 1);
   }, [step]);
-
   // File handling
   const MAX_VIDEO_SIZE = 20 * 1024 * 1024;
   const MAX_IMAGE_SIZE = 5 * 1024 * 1024;
@@ -214,6 +224,7 @@ const CampaignModal = ({
   const handleFileUpload = useCallback(
     (e: React.ChangeEvent<HTMLInputElement>, type: string) => {
       const files: any = e.target.files;
+      if (!files || files.length === 0) return;
       const maxSize = type === "video_ads" ? MAX_VIDEO_SIZE : MAX_IMAGE_SIZE;
 
       if (files.size > maxSize) {
@@ -228,12 +239,6 @@ const CampaignModal = ({
 
       setUploadedFile(files);
       setFormData((prev) => ({ ...prev, media: files }));
-
-      const file = uploadedFile[0];
-
-      // Log the file details
-      console.log(file);
-      console.log("UPLOADED", uploadedFile);
     },
     [showNotification]
   );
@@ -247,16 +252,22 @@ const CampaignModal = ({
     }));
   }, []);
 
-  //Get users current businessId
+  // Get users current businessId
   const businessId = getDataFromLocalStorage("businessId");
 
-  //MAKE API CALL TO upload campaign data
+  // MAKE API CALL TO upload campaign data
   const [createCampaign, { isLoading, reset }] = useSendDataMutation();
 
   // Form submission
   const handleSubmit = async () => {
     setIsSubmitting(true);
     setError(null);
+
+    if (!paymentConfirmed) {
+      setError("Please complete payment before creating campaign");
+      setIsSubmitting(false);
+      return;
+    }
 
     // Validation
     if (!formData.name || !formData.description) {
@@ -315,20 +326,6 @@ const CampaignModal = ({
         "targetLocation",
         JSON.stringify(formData.targetLocation)
       );
-
-      // Properly log the FormData contents
-      console.log("FormData contents:");
-      for (const pair of newFormData.entries()) {
-        if (typeof pair[1] === "string") {
-          console.log(`${pair[0]}: ${pair[1]}`);
-        } else {
-          console.log(`${pair[0]}: [File: ${(pair[1] as File).name}]`);
-        }
-      }
-
-      // Also log the specific task data we're sending
-      console.log("Tasks object:", tasksObject);
-      console.log("Tasks as string:", tasksString);
 
       // Make the request
       const request: any = await createCampaign({
@@ -406,7 +403,6 @@ const CampaignModal = ({
     []
   );
 
-  // Step validation - updated to include tasks and description
   const canProceed = useCallback(() => {
     switch (step) {
       case 0: // Pricing confirmation
@@ -423,10 +419,10 @@ const CampaignModal = ({
             formData.cta.url
         );
       case 4: // Tasks step
-        return (
+        return Boolean(
           formData.tasks.websiteLink &&
-          formData.tasks.engagement &&
-          formData.tasks.social
+            formData.tasks.engagement &&
+            formData.tasks.social
         );
       case 5: // Payment step
         return (
@@ -434,22 +430,22 @@ const CampaignModal = ({
           formData.budget >= formData.pricingTier.price &&
           formData.budget + serviceFee <= Number(balance)
         );
-      case 6: // Final review
-        return true;
+      case 6:
+        return Boolean(paymentConfirmed);
       default:
         return true;
     }
-  }, [step, formData, balance, serviceFee]);
+  }, [step, formData, balance, serviceFee, paymentConfirmed]);
 
-  // Disable the modal if wallet is not initialized
+  // Disable the modal if wallet is not connected
   useEffect(() => {
-    if (!portfolio && step > 0) {
+    if (!primaryWallet && step > 0) {
       setStep(0);
-      showNotification("Please wait for wallet initialization", "error");
+      setwalletNotConnected(true);
+      showNotification("Please connect your wallet to continue", "error");
     }
-  }, [portfolio, step, showNotification]);
+  }, [primaryWallet, step, showNotification]);
 
-  // Step Components
   const PricingConfirmation = () => (
     <div className="space-y-6">
       <h3 className="text-xl font-bold text-gray-900">Confirm Your Plan</h3>
@@ -482,6 +478,25 @@ const CampaignModal = ({
             {formData.pricingTier.description}
           </div>
         </div>
+        {walletNotConnected && (
+          <div>
+            <h3 className="text-xl font-bold text-gray-900 mb-2">
+              Wallet Connection Required
+            </h3>
+            <p className="text-gray-600 mb-6">
+              To create a campaign, you need to connect or create a wallet
+              first. This is required to pay for your campaign.
+            </p>
+            <div className="flex flex-col space-y-4 items-center">
+              <a
+                href="/business/wallet"
+                className="px-6 py-2 bg-side text-white rounded-lg hover:bg-side/90 transition-colors"
+              >
+                Go to Wallet Page
+              </a>
+            </div>
+          </div>
+        )}
       </div>
     </div>
   );
@@ -824,6 +839,15 @@ const CampaignModal = ({
     // New state to track if form is saved
     const [isSaved, setIsSaved] = useState(false);
 
+    // Check wallet connection status
+    const { primaryWallet } = useDynamicContext();
+    const [walletNotConnected, setWalletNotConnected] = useState(false);
+
+    // Check wallet connection on component mount and when primaryWallet changes
+    useEffect(() => {
+      setWalletNotConnected(!primaryWallet);
+    }, [primaryWallet]);
+
     const handleInputChange = (field: string, value: string) => {
       setLocalInputs((prev) => ({
         ...prev,
@@ -848,102 +872,161 @@ const CampaignModal = ({
       setTimeout(() => setIsSaved(false), 3000);
     };
 
+    // Function to close the wallet modal and redirect
+    const handleGoToWallet = () => {
+      setWalletNotConnected(false);
+      // Navigate to wallet page
+      window.location.href = "/business/wallet";
+    };
+
+    // Function to close the wallet modal
+    const handleCloseModal = () => {
+      setWalletNotConnected(false);
+    };
+
     return (
-      <div className="space-y-6">
-        <div className="flex items-center justify-between">
-          <h3 className="text-xl font-bold text-gray-900">Campaign Details</h3>
-          <div className="text-sm text-gray-500">Step 3 of 7</div>
-        </div>
-
-        <div className="space-y-4">
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">
-              Campaign Name
-            </label>
-            <input
-              type="text"
-              value={localInputs.name}
-              onChange={(e) => handleInputChange("name", e.target.value)}
-              className="w-full px-4 py-2 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-side focus:border-transparent"
-              placeholder="Enter campaign name"
-              maxLength={50}
-            />
-            <div className="mt-1 text-xs text-gray-500">
-              {localInputs.name.length}/50 characters
-            </div>
-          </div>
-
-          {/* New Description Field */}
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">
-              Ad Description
-            </label>
-            <textarea
-              value={localInputs.description}
-              onChange={(e) => handleInputChange("description", e.target.value)}
-              rows={4}
-              className="w-full px-4 py-2 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-side focus:border-transparent resize-none"
-              placeholder="Describe your ad campaign and what you're promoting"
-              maxLength={200}
-            />
-            <div className="mt-1 text-xs text-gray-500">
-              {localInputs.description.length}/200 characters
-            </div>
-          </div>
-
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">
-              Call to Action
-            </label>
-            <div className="grid grid-cols-2 gap-4">
-              <div>
-                <input
-                  type="text"
-                  value={localInputs.ctaText}
-                  onChange={(e) => handleInputChange("ctaText", e.target.value)}
-                  className="w-full px-4 py-2 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-side focus:border-transparent"
-                  placeholder="CTA Text (e.g., Learn More)"
-                  maxLength={20}
-                />
-                <div className="mt-1 text-xs text-gray-500">
-                  {localInputs.ctaText.length}/20 characters
-                </div>
-              </div>
-              <div>
-                <input
-                  type="url"
-                  value={localInputs.ctaUrl}
-                  onChange={(e) => handleInputChange("ctaUrl", e.target.value)}
-                  className="w-full px-4 py-2 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-side focus:border-transparent"
-                  placeholder="https://your-website.com"
-                />
-                <div className="mt-1 text-xs text-gray-500">
-                  Where should users be directed?
-                </div>
-              </div>
-            </div>
-          </div>
-
-          {/* Save Button */}
-          <div className="flex items-center justify-end space-x-2">
-            {isSaved && (
-              <span className="text-sm text-green-600">
-                Changes saved successfully!
-              </span>
-            )}
-            <button
-              onClick={handleSave}
-              className="px-4 py-2 bg-side text-white rounded-lg hover:bg-side/90 transition-colors"
+      <>
+        {/* Wallet Connection Modal */}
+        {walletNotConnected && (
+          <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
+            <motion.div
+              initial={{ opacity: 0, scale: 0.95 }}
+              animate={{ opacity: 1, scale: 1 }}
+              className="bg-white rounded-xl shadow-lg p-6 max-w-md w-full mx-4"
             >
-              Save Changes
-            </button>
+              <div className="text-center">
+                <div className="w-16 h-16 bg-red-100 rounded-full flex items-center justify-center mx-auto mb-4">
+                  <X className="w-8 h-8 text-red-500" />
+                </div>
+                <h3 className="text-xl font-bold text-gray-900 mb-2">
+                  Wallet Connection Required
+                </h3>
+                <p className="text-gray-600 mb-6">
+                  To create a campaign, you need to connect or create a wallet
+                  first. This is required to pay for your campaign.
+                </p>
+                <div className="flex flex-col space-y-3">
+                  <button
+                    onClick={handleGoToWallet}
+                    className="w-full px-6 py-2 bg-side text-white rounded-lg hover:bg-side/90 transition-colors"
+                  >
+                    Go to Wallet Page
+                  </button>
+                  <button
+                    onClick={handleCloseModal}
+                    className="w-full px-6 py-2 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 transition-colors"
+                  >
+                    Cancel
+                  </button>
+                </div>
+              </div>
+            </motion.div>
+          </div>
+        )}
+
+        {/* Regular Campaign Details Content */}
+        <div className="space-y-6">
+          <div className="flex items-center justify-between">
+            <h3 className="text-xl font-bold text-gray-900">
+              Campaign Details
+            </h3>
+            <div className="text-sm text-gray-500">Step 3 of 7</div>
+          </div>
+
+          <div className="space-y-4">
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-1">
+                Campaign Name
+              </label>
+              <input
+                type="text"
+                value={localInputs.name}
+                onChange={(e) => handleInputChange("name", e.target.value)}
+                className="w-full px-4 py-2 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-side focus:border-transparent"
+                placeholder="Enter campaign name"
+                maxLength={50}
+              />
+              <div className="mt-1 text-xs text-gray-500">
+                {localInputs.name.length}/50 characters
+              </div>
+            </div>
+
+            {/* New Description Field */}
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-1">
+                Ad Description
+              </label>
+              <textarea
+                value={localInputs.description}
+                onChange={(e) =>
+                  handleInputChange("description", e.target.value)
+                }
+                rows={4}
+                className="w-full px-4 py-2 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-side focus:border-transparent resize-none"
+                placeholder="Describe your ad campaign and what you're promoting"
+                maxLength={200}
+              />
+              <div className="mt-1 text-xs text-gray-500">
+                {localInputs.description.length}/200 characters
+              </div>
+            </div>
+
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-1">
+                Call to Action
+              </label>
+              <div className="grid grid-cols-2 gap-4">
+                <div>
+                  <input
+                    type="text"
+                    value={localInputs.ctaText}
+                    onChange={(e) =>
+                      handleInputChange("ctaText", e.target.value)
+                    }
+                    className="w-full px-4 py-2 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-side focus:border-transparent"
+                    placeholder="CTA Text (e.g., Learn More)"
+                    maxLength={20}
+                  />
+                  <div className="mt-1 text-xs text-gray-500">
+                    {localInputs.ctaText.length}/20 characters
+                  </div>
+                </div>
+                <div>
+                  <input
+                    type="url"
+                    value={localInputs.ctaUrl}
+                    onChange={(e) =>
+                      handleInputChange("ctaUrl", e.target.value)
+                    }
+                    className="w-full px-4 py-2 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-side focus:border-transparent"
+                    placeholder="https://your-website.com"
+                  />
+                  <div className="mt-1 text-xs text-gray-500">
+                    Where should users be directed?
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            {/* Save Button */}
+            <div className="flex items-center justify-end space-x-2">
+              {isSaved && (
+                <span className="text-sm text-green-600">
+                  Changes saved successfully!
+                </span>
+              )}
+              <button
+                onClick={handleSave}
+                className="px-4 py-2 bg-side text-white rounded-lg hover:bg-side/90 transition-colors"
+              >
+                Save Changes
+              </button>
+            </div>
           </div>
         </div>
-      </div>
+      </>
     );
   };
-
-  // Tasks Component
   // Tasks Component with improved input handling
   const TasksComponent = () => {
     const [localTasks, setLocalTasks] = useState<{
@@ -952,21 +1035,23 @@ const CampaignModal = ({
       websiteLink: string;
     }>(formData.tasks);
 
+    // Update both local state and parent state when tasks change
     const handleLocalTaskUpdate = (
       taskType: keyof typeof localTasks,
       value: string
     ) => {
-      setLocalTasks({
+      const updatedTasks = {
         ...localTasks,
         [taskType]: value,
-      });
-    };
+      };
 
-    // Update parent state only when focus is lost
-    const handleTaskBlur = () => {
+      // Update local state
+      setLocalTasks(updatedTasks);
+
+      // Update parent state immediately
       setFormData((prev) => ({
         ...prev,
-        tasks: localTasks,
+        tasks: updatedTasks,
       }));
     };
 
@@ -1019,7 +1104,6 @@ const CampaignModal = ({
                       e.target.value
                     )
                   }
-                  onBlur={handleTaskBlur}
                   placeholder={taskType.placeholder}
                   className="w-full px-3 py-2 border border-gray-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-side"
                 />
@@ -1074,9 +1158,13 @@ const CampaignModal = ({
           return false;
         }
 
+        // Get SOL balance
+        const solToken = getSolBalance();
+        const solBalance = solToken ? solToken.balance : 0;
+
         const totalCost = numericValue + serviceFee;
-        if (totalCost > Number(balance)) {
-          const difference = (totalCost - Number(balance)).toFixed(2);
+        if (totalCost > Number(solBalance)) {
+          const difference = (totalCost - Number(solBalance)).toFixed(2);
           const errorMessage = `Insufficient balance. You need ${difference} SOL more`;
           setError(errorMessage);
           return false;
@@ -1085,9 +1173,8 @@ const CampaignModal = ({
         setError("");
         return true;
       },
-      [balance, minimumRequired]
+      [getSolBalance, minimumRequired, serviceFee]
     );
-
     const handleBudgetChange = (value: string) => {
       setIsConfirmed(false);
       setFormData((prev) => ({
@@ -1156,15 +1243,20 @@ const CampaignModal = ({
                   Minimum budget: {minimumRequired} SOL
                 </p>
               </div>
-              <button
+              {/* <button
                 type="button"
                 onClick={refreshBalance}
                 className="flex items-center gap-1 text-xs text-side hover:text-side/90 transition-colors"
                 aria-label="Refresh Balance"
+                disabled={isBalanceLoading}
               >
-                <RefreshCw className="w-3 h-3" />
-                Refresh Balance
-              </button>
+                <RefreshCw
+                  className={`w-3 h-3 ${
+                    isBalanceLoading ? "animate-spin" : ""
+                  }`}
+                />
+                {isBalanceLoading ? "Refreshing..." : "Refresh Balance"}
+              </button> */}
             </div>
 
             <div className="relative">
@@ -1186,7 +1278,7 @@ const CampaignModal = ({
             </div>
 
             <div className="mt-1 flex items-center justify-between">
-              <div className="text-sm text-gray-500">
+              <div className="text-sm font-black text-gray-500">
                 Available balance: {balance} SOL
               </div>
               {error && (
@@ -1277,28 +1369,111 @@ const CampaignModal = ({
             </div>
           )}
         </div>
-
-        <AnimatePresence>
-          {notification.show && (
-            <Notification
-              message={notification.message}
-              status={notification.status}
-              switchShowOff={() =>
-                setNotification((prev) => ({ ...prev, show: false }))
-              }
-            />
-          )}
-        </AnimatePresence>
       </div>
     );
   };
-
   const FinalReview = () => {
-    // Calculate estimated impressions and round to nearest whole number
+    const [isProcessingPayment, setIsProcessingPayment] = useState(false);
+    const [paymentComplete, setPaymentComplete] = useState<boolean>(false);
+    const [paymentError, setPaymentError] = useState<string>("");
+    const [localPaymentSignature, setLocalPaymentSignature] =
+      useState<string>("");
+
+    // Dynamic context for wallet access
+    const { primaryWallet } = useDynamicContext();
+
+    // Calculate estimated impressions
     const estimatedImpressions = Math.round(
       (formData.budget / formData.pricingTier.price) *
         formData.pricingTier.impressions
     );
+
+    // Total payment amount including service fee
+    const totalPaymentAmount = formData.budget + serviceFee;
+    // Add this function to your FinalReview component
+
+    const handlePayment = async () => {
+      if (!primaryWallet || !isSolanaWallet(primaryWallet)) {
+        setPaymentError("Solana wallet not connected");
+        showNotification("Solana wallet not connected", "error");
+        return;
+      }
+
+      setIsProcessingPayment(true);
+      setPaymentError("");
+
+      try {
+        // Get connection from wallet
+        const connection = await primaryWallet.getConnection();
+        const cluster = connection.rpcEndpoint.includes("devnet")
+          ? "devnet"
+          : "mainnet";
+
+        // Define addresses
+        const fromKey = new PublicKey(primaryWallet.address);
+        const toKey = new PublicKey(
+          "7LTeiD4Ndao8zaArUdrZmcWYRHa5q2PwMWFodzQx6JfA"
+        ); // Your platform wallet
+
+        // Amount in SOL (9 decimals)
+        const amountInLamports = Math.floor(totalPaymentAmount * 1_000_000_000);
+
+        console.log(
+          `Sending ${totalPaymentAmount} SOL (${amountInLamports} lamports) to ${toKey.toString()}`
+        );
+
+        // Create transaction with transfer instruction
+        const transferTransaction = new Transaction().add(
+          web3.SystemProgram.transfer({
+            fromPubkey: fromKey,
+            toPubkey: toKey,
+            lamports: amountInLamports,
+          })
+        );
+
+        // Get recent blockhash
+        const blockhash = await connection.getLatestBlockhash();
+        transferTransaction.recentBlockhash = blockhash.blockhash;
+        transferTransaction.feePayer = fromKey;
+
+        // Get signer from wallet
+        const signer = await primaryWallet.getSigner();
+
+        console.log("Transaction created, requesting signature...");
+
+        // Sign and send transaction
+        await signer
+          .signAndSendTransaction(transferTransaction)
+          .then((value) => {
+            console.log(
+              `Transaction successful: https://solscan.io/tx/${value.signature}?cluster=${cluster}`
+            );
+
+            // Update local state
+            setLocalPaymentSignature(value.signature);
+            setPaymentComplete(true);
+
+            // CRITICAL FIX: Update parent component state directly
+            setPaymentConfirmed(true);
+            setPaymentSignature(value.signature);
+
+            showNotification("Payment successful!", "success");
+          })
+          .catch((error) => {
+            console.error("Payment error:", error);
+            setPaymentError(error.message || "Payment failed");
+            showNotification(`Payment failed: ${error.message}`, "error");
+          });
+      } catch (error) {
+        console.error("Payment setup error:", error);
+        const errorMessage =
+          error instanceof Error ? error.message : "Unknown payment error";
+        setPaymentError(errorMessage);
+        showNotification(`Payment setup failed: ${errorMessage}`, "error");
+      } finally {
+        setIsProcessingPayment(false);
+      }
+    };
 
     return (
       <div className="space-y-6">
@@ -1308,6 +1483,7 @@ const CampaignModal = ({
         </div>
 
         <div className="bg-gray-50 rounded-xl p-6 border border-gray-200">
+          {/* Campaign details as before */}
           <div className="space-y-4">
             {[
               { label: "Campaign Name", value: formData.name },
@@ -1325,10 +1501,18 @@ const CampaignModal = ({
                 value: estimatedImpressions.toLocaleString(),
               },
               { label: "Budget", value: `${formData.budget.toFixed(2)} SOL` },
+              { label: "Service Fee", value: `${serviceFee.toFixed(2)} SOL` },
+              {
+                label: "Total Cost",
+                value: `${totalPaymentAmount.toFixed(2)} SOL`,
+                isTotal: true,
+              },
             ].map((item, index) => (
               <div
                 key={index}
-                className="flex justify-between items-center pb-4 border-b border-gray-200 last:border-0"
+                className={`flex justify-between items-center pb-4 border-b border-gray-200 last:border-0 ${
+                  item.isTotal ? "font-bold" : ""
+                }`}
               >
                 <span className="text-gray-600 text-sm">{item.label}</span>
                 <span className="font-medium capitalize">{item.value}</span>
@@ -1336,7 +1520,7 @@ const CampaignModal = ({
             ))}
           </div>
 
-          {/* Only show the uploaded content section if a file has been uploaded */}
+          {/* Content sections remain the same */}
           {uploadedFile && (
             <div className="mt-6">
               <h4 className="font-medium text-gray-900 mb-4">
@@ -1414,6 +1598,61 @@ const CampaignModal = ({
               </span>
             </div>
           </div>
+
+          {/* Payment section - New addition */}
+          <div className="mt-6 p-6 bg-blue-50 rounded-xl border border-blue-200">
+            <h4 className="text-lg font-medium text-gray-900 mb-3">Payment</h4>
+
+            {paymentComplete ? (
+              <div className="bg-green-50 p-4 rounded-lg border border-green-200 mb-4">
+                <div className="flex items-center">
+                  <Check className="w-5 h-5 text-green-500 mr-2" />
+                  <p className="text-green-700 font-medium">Payment Complete</p>
+                </div>
+                <p className="text-sm text-green-600 mt-1">
+                  Transaction signature: {paymentSignature?.substring(0, 10)}...
+                </p>
+              </div>
+            ) : (
+              <>
+                <p className="text-gray-700 mb-4">
+                  To create your campaign, you'll need to pay{" "}
+                  {totalPaymentAmount.toFixed(2)} SOL from your connected
+                  wallet.
+                </p>
+
+                {paymentError && (
+                  <div className="bg-red-50 p-3 rounded-lg border border-red-200 mb-4">
+                    <p className="text-red-600 text-sm">{paymentError}</p>
+                  </div>
+                )}
+
+                <button
+                  type="button"
+                  onClick={handlePayment}
+                  disabled={isProcessingPayment}
+                  className={`w-full flex items-center justify-center px-6 py-3 rounded-lg transition-colors ${
+                    isProcessingPayment
+                      ? "bg-gray-400 cursor-not-allowed"
+                      : "bg-side text-white hover:bg-side/90"
+                  }`}
+                >
+                  {isProcessingPayment ? (
+                    <>
+                      <Loader className="w-5 h-5 mr-2 animate-spin" />
+                      Processing Payment...
+                    </>
+                  ) : (
+                    <>Pay {totalPaymentAmount.toFixed(2)} SOL</>
+                  )}
+                </button>
+
+                <p className="text-xs text-gray-500 mt-2 text-center">
+                  Payment will be processed immediately and is non-refundable.
+                </p>
+              </>
+            )}
+          </div>
         </div>
       </div>
     );
@@ -1427,7 +1666,9 @@ const CampaignModal = ({
     { component: <CampaignDetails /> },
     { component: <TasksComponent /> },
     { component: <PaymentStep /> },
-    { component: <FinalReview /> },
+    {
+      component: <FinalReview/>,
+    },
   ];
 
   // Updated Success component
@@ -1471,7 +1712,7 @@ const CampaignModal = ({
             </button>
 
             {/* Progress bar */}
-            <div className="px-6 pt-6 pb-4 border-b border-gray-200">
+            <div className="px-6 pt-6 pb-4 border-b border-gray-200 flex-shrink-0">
               <div className="flex justify-between mb-2">
                 <div className="text-sm font-medium text-gray-600">
                   Step {step + 1} of {steps.length}
@@ -1490,7 +1731,7 @@ const CampaignModal = ({
             </div>
 
             {/* Scrollable content */}
-            <div className="flex-1 overflow-y-auto p-6">
+            <div className="flex-1 overflow-y-auto p-4 sm:p-6s">
               {success ? (
                 <SuccessState />
               ) : (
@@ -1513,7 +1754,7 @@ const CampaignModal = ({
 
             {/* Action buttons */}
             {!success && (
-              <div className="p-6 border-t border-gray-200 flex justify-between">
+              <div className="p-4 sm:p-6 border-t border-gray-200 flex justify-between flex-shrink-0">
                 <button
                   onClick={handleBack}
                   className={`px-6 py-2 text-gray-600 hover:bg-gray-100 rounded-lg transition-colors ${
@@ -1551,6 +1792,18 @@ const CampaignModal = ({
           </motion.div>
         </div>
       )}
+
+      <AnimatePresence>
+        {notification.show && (
+          <Notification
+            message={notification.message}
+            status={notification.status}
+            switchShowOff={() =>
+              setNotification((prev) => ({ ...prev, show: false }))
+            }
+          />
+        )}
+      </AnimatePresence>
     </AnimatePresence>
   );
 };

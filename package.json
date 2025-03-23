@@ -10,6 +10,7 @@
   },
   "dependencies": {
     "@crossmint/client-sdk-react-ui": "^1.15.2",
+    "@dynamic-labs/sdk-api": "^0.0.643",
     "@dynamic-labs/sdk-react-core": "^4.9.3",
     "@dynamic-labs/solana": "^4.9.3",
     "@iconify/react": "^5.0.2",
@@ -17,6 +18,8 @@
     "@radix-ui/react-slot": "^1.1.0",
     "@react-oauth/google": "^0.12.1",
     "@reduxjs/toolkit": "^2.3.0",
+    "@solana/spl-token": "^0.4.13",
+    "@solana/web3.js": "^1.98.0",
     "@types/react-redux": "^7.1.34",
     "class-variance-authority": "^0.7.1",
     "clsx": "^2.1.1",
