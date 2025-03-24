@@ -6,15 +6,16 @@ import { SolanaWalletConnectors } from "@dynamic-labs/solana";
 import { saveDataToLocalStorage } from "@/utils/localStorage";
 
 export default function ClientDynamicWrapper({ children }: any) {
-  const envId = process.env.NEXT_PUBLIC_DYNAMIC;
+  const dynamicId = process.env.NEXT_PUBLIC_DYNAMIC_ID;
 
-  if (!envId) {
-    console.error("NEXT_PUBLIC_DYNAMIC environment variable is not set");
-    return <>{children}</>;
+  if (!dynamicId) {
+    throw new Error(
+      "Missing DYNAMIC ID. Please add it to your .env.local file"
+    );
   }
 
   const settings = {
-    environmentId: envId,
+    environmentId: dynamicId,
     walletConnectors: [SolanaWalletConnectors],
     events: {
       onWalletConnected: (args: any) => {
