@@ -10,7 +10,10 @@ import { NotificationState } from "@/types/general";
 import Notification from "@/components/notification";
 import { AnimatePresence } from "framer-motion";
 
+
 // Main component that determines which card to show
+
+
 const WalletDashboard = () => {
   const [notification, setNotification] = useState<NotificationState>({
     message: "",
@@ -104,3 +107,4 @@ const WalletDashboard = () => {
 };
 
 export default WalletDashboard;
+

@@ -1,5 +1,5 @@
 "use client";
-import React, { useState } from "react";
+import React, { useState, FormEvent } from "react";
 import { motion } from "framer-motion";
 import Header from "@/components/waitlistheader";
 import Footer from "@/components/footer";
@@ -13,16 +13,29 @@ import {
 } from "lucide-react";
 import { useSendDataMutation } from "@/store/api/api";
 
+// Style constants to avoid recalculations
+const fadeInUp = {
+  initial: { opacity: 0, y: 20 },
+  animate: { opacity: 1, y: 0 },
+  transition: { duration: 0.5 },
+};
+
+const fadeInRight = {
+  initial: { opacity: 0, x: 20 },
+  animate: { opacity: 1, x: 0 },
+  transition: { duration: 0.5, delay: 0.2 },
+};
+
 const WaitlistPage = () => {
   const [email, setEmail] = useState("");
   const [isSubmitted, setIsSubmitted] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [error, setError] = useState("");
 
-  //MAKE API CALL TO upload campaign data
-  const [joinWaitlist, { isLoading, reset }] = useSendDataMutation();
+  // Use RTK Query hook
+  const [joinWaitlist] = useSendDataMutation();
 
-  const handleSubmit = async (e: any) => {
+  const handleSubmit = async (e: FormEvent<HTMLFormElement>) => {
     e.preventDefault();
 
     // Basic email validation
@@ -35,7 +48,6 @@ const WaitlistPage = () => {
     setIsSubmitting(true);
 
     try {
-      // Using your custom mutation hook
       const request = await joinWaitlist({
         url: "auth/waitlist",
         data: { email },
@@ -44,8 +56,6 @@ const WaitlistPage = () => {
 
       if (request?.data) {
         const { data, message, status } = request.data;
-
-        console.log("information", data, message, status);
 
         if (status === "success") {
           setIsSubmitted(true);
@@ -74,16 +84,12 @@ const WaitlistPage = () => {
       {/* Hero Section */}
       <main className="flex-grow flex items-center">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 py-12 md:py-24 w-full">
-          <div className="grid md:grid-cols-2 gap-8 pt-12 md:pt-0 lg:gap-28  items-center">
-            <motion.div
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.5 }}
-            >
+          <div className="grid md:grid-cols-2 gap-8 pt-12 md:pt-0 lg:gap-28 items-center">
+            <motion.div {...fadeInUp}>
               <div className="bg-side text-white text-xs md:text-sm font-medium px-4 py-1 rounded-full inline-block mb-6">
                 Coming Soon
               </div>
-              <h1 className="text-xl  lg:text-6xl font-bold text-gray-900 mb-4 sm:mb-6">
+              <h1 className="text-xl lg:text-6xl font-bold text-gray-900 mb-4 sm:mb-6">
                 We Deliver Actions, Not Just Attention
               </h1>
               <p className="text-sm lg:text-xl text-gray-600 mb-6 sm:mb-8 max-w-lg font-normal">
@@ -181,12 +187,7 @@ const WaitlistPage = () => {
               )}
             </motion.div>
 
-            <motion.div
-              initial={{ opacity: 0, x: 20 }}
-              animate={{ opacity: 1, x: 0 }}
-              transition={{ duration: 0.5, delay: 0.2 }}
-              className="hidden md:block"
-            >
+            <motion.div {...fadeInRight} className="hidden md:block">
               <div className="relative">
                 <div className="absolute -top-6 -left-6 w-48 sm:w-64 h-48 sm:h-64 bg-red-100 rounded-full opacity-50 filter blur-3xl"></div>
                 <div className="absolute -bottom-8 -right-8 w-48 sm:w-64 h-48 sm:h-64 bg-blue-100 rounded-full opacity-50 filter blur-3xl"></div>
@@ -272,6 +273,11 @@ const WaitlistPage = () => {
         </div>
       </main>
 
+      {/* Divider */}
+      <div className="w-full max-w-7xl mx-auto px-4 sm:px-6">
+        <div className="h-px bg-gradient-to-r from-transparent via-gray-300 to-transparent"></div>
+      </div>
+
       {/* Features Section */}
       <div id="features" className="py-24 relative">
         <div className="absolute inset-0 bg-gradient-to-br from-white to-gray-50 opacity-70"></div>
@@ -279,7 +285,7 @@ const WaitlistPage = () => {
 
         <div className="max-w-7xl mx-auto px-4 sm:px-6 relative">
           <div className="text-center mb-16">
-            <h2 className="text-xl  lg:text-5xl font-bold text-gray-900 mb-4">
+            <h2 className="text-xl lg:text-5xl font-bold text-gray-900 mb-4">
               A New Era of <span className="text-red-600">Advertising</span>
             </h2>
 
@@ -333,14 +339,19 @@ const WaitlistPage = () => {
         </div>
       </div>
 
+      {/* Divider */}
+      <div className="w-full max-w-7xl mx-auto px-4 sm:px-6">
+        <div className="h-px bg-gradient-to-r from-transparent via-gray-300 to-transparent"></div>
+      </div>
+
       {/* FAQ Section */}
       <div
         id="faq"
-        className="pt-16  md:h-[450px] bg-gradient-to-r from-[#B71C1C] to-blue-700 relative overflow-hidden"
+        className="pt-16 md:h-[450px] bg-gradient-to-r from-[#B71C1C] to-blue-700 relative overflow-hidden"
       >
         <div className="max-w-4xl mx-auto px-4 sm:px-6 mb-16 md:mb-0 text-center relative">
           <div className="bg-white/10 backdrop-blur-sm p-6 md:p-12 rounded-3xl border border-white/20 shadow-2xl">
-            <h2 className="text-base  lg:text-4xl md:text-5xl font-bold mb-6 ">
+            <h2 className="text-base lg:text-4xl md:text-5xl font-bold mb-6 ">
               Be Among the First to Experience Poynt
             </h2>
             <p className="text-sm font-medium sm:text-xl mb-8 text-white/90">

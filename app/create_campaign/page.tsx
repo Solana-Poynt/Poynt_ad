@@ -1,5 +1,5 @@
 "use client";
-import { useState } from "react";
+import { useState, useCallback, memo } from "react";
 import { useRouter } from "next/navigation";
 import { motion, AnimatePresence } from "framer-motion";
 import { Check, ArrowRight, ChevronRight } from "lucide-react";
@@ -9,11 +9,155 @@ import Footer from "../../components/footer";
 import Header from "@/components/campaignheader";
 import { cn } from "@/lib/utils";
 
+// Pre-defined animation variants
+const fadeInUp = {
+  initial: { opacity: 0, y: 20 },
+  animate: { opacity: 1, y: 0 },
+};
+
+// Helper components
+const Stat = memo(({ number, label, index }: any) => (
+  <motion.div
+    initial={{ opacity: 0, y: 20 }}
+    whileInView={{ opacity: 1, y: 0 }}
+    transition={{ delay: index * 0.1 }}
+    viewport={{ once: true }}
+    className="bg-white rounded-xl p-6 md:p-8 text-center shadow-lg hover:shadow-xl transition-all duration-300 border border-gray-100"
+  >
+    <div className="text-3xl md:text-4xl font-bold text-side mb-2">
+      {number}
+    </div>
+    <div className="text-sm md:text-base text-gray-600 font-medium">
+      {label}
+    </div>
+  </motion.div>
+));
+Stat.displayName = "Stat";
+
+const PricingTier = memo(({ tier, index, isSelected, onClick }: any) => (
+  <motion.div
+    initial={{ opacity: 0, y: 20 }}
+    whileInView={{ opacity: 1, y: 0 }}
+    transition={{ delay: index * 0.1 }}
+    viewport={{ once: true }}
+    onClick={onClick}
+    className={cn(
+      "bg-white rounded-xl cursor-pointer transition-all duration-300 flex flex-col h-full",
+      isSelected
+        ? "ring-2 ring-side shadow-xl scale-105"
+        : "border border-gray-200 hover:border-side/50 hover:shadow-lg hover:scale-102",
+      tier.recommended && "relative"
+    )}
+  >
+    {tier.recommended && (
+      <div className="absolute -top-3 left-1/2 -translate-x-1/2 px-3 md:px-4 py-1 bg-side text-white text-xs md:text-sm font-medium rounded-full shadow-lg">
+        Recommended
+      </div>
+    )}
+
+    <div
+      className={cn(
+        "flex flex-col h-full p-4 md:p-6",
+        tier.recommended && "pt-6 md:pt-8"
+      )}
+    >
+      {/* Header Section */}
+      <div className="text-center mb-4 md:mb-6">
+        <h3 className="text-xs md:text-sm mx-2 md:mx-4 font-semibold text-gray-900 mb-2">
+          {tier.description}
+        </h3>
+        <div className="text-2xl md:text-3xl font-bold text-side mb-1">
+          {tier.price} SOL
+        </div>
+      </div>
+
+      {/* Impressions Badge */}
+      <div className="bg-gray-50 rounded-lg py-2 md:py-3 px-3 md:px-4 text-center mb-4 md:mb-6">
+        <div className="text-xl md:text-2xl font-bold text-gray-900">
+          {tier.impressions.toLocaleString()}
+        </div>
+        <div className="text-xs md:text-sm text-gray-600">Impressions</div>
+      </div>
+
+      {/* Features */}
+      <div className="flex-grow">
+        <ul className="space-y-2 md:space-y-3 mb-4 md:mb-6">
+          {tier.features.map((feature: string, featureIndex: string) => (
+            <li
+              key={featureIndex}
+              className="flex items-start text-xs md:text-sm text-gray-600"
+            >
+              <Check className="w-4 h-4 md:w-5 md:h-5 text-green-500 mr-2 shrink-0 mt-0.5" />
+              <span>{feature}</span>
+            </li>
+          ))}
+        </ul>
+      </div>
+
+      {/* CTA Button */}
+      <button
+        className={cn(
+          "w-full py-2 md:py-3 px-3 md:px-4 rounded-lg flex items-center justify-center gap-2 font-medium transition-all duration-300 mt-auto text-sm md:text-base",
+          tier.recommended
+            ? "bg-side text-white hover:bg-side/90 shadow-md hover:shadow-lg"
+            : "bg-gray-50 text-gray-900 hover:bg-gray-100"
+        )}
+      >
+        Get Started <ArrowRight className="w-3 h-3 md:w-4 md:h-4" />
+      </button>
+    </div>
+  </motion.div>
+));
+PricingTier.displayName = "PricingTier";
+
+const Step = memo(({ step, index, totalSteps }: any) => (
+  <motion.div
+    initial={{ opacity: 0, y: 20 }}
+    whileInView={{ opacity: 1, y: 0 }}
+    transition={{ delay: index * 0.2 }}
+    viewport={{ once: true }}
+    className="relative"
+  >
+    {/* Mobile step connector - only visible on small screens */}
+    {index > 0 && (
+      <div className="md:hidden absolute -top-4 left-1/2 transform -translate-x-1/2 h-8 w-0.5 bg-side/30" />
+    )}
+
+    <div className="bg-white rounded-2xl p-6 md:p-8 shadow-lg hover:shadow-xl transition-all duration-300 group hover:-translate-y-1">
+      {/* Step Number Badge */}
+      <div className="absolute -top-4 left-8 w-7 h-7 md:w-8 md:h-8 bg-side text-white rounded-full flex items-center justify-center font-bold text-xs md:text-sm shadow-lg">
+        {step.step}
+      </div>
+
+      {/* Icon */}
+      <div className="text-3xl md:text-4xl mb-4 md:mb-6">{step.icon}</div>
+
+      {/* Content */}
+      <h3 className="text-lg md:text-xl font-bold text-gray-900 mb-2 md:mb-3 group-hover:text-side transition-colors">
+        {step.title}
+      </h3>
+      <p className="text-sm md:text-base text-gray-600">{step.description}</p>
+
+      {/* Connection Arrow - only visible on md and larger screens */}
+      {index < totalSteps - 1 && (
+        <div className="hidden md:flex absolute top-1/2 -right-4 transform -translate-y-1/2 z-10">
+          <div className="w-8 h-8 bg-white rounded-full shadow-md flex items-center justify-center">
+            <ChevronRight className="w-5 h-5 text-side" />
+          </div>
+        </div>
+      )}
+    </div>
+  </motion.div>
+));
+Step.displayName = "Step";
+
+// Main component
 export default function CampaignPage() {
   const router = useRouter();
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [selectedPricing, setSelectedPricing] = useState<number | null>(null);
 
+  // Memoized content data
   const stats = [
     { number: "100%", label: "More Target Audience" },
     { number: "95%", label: "Client Satisfaction" },
@@ -44,6 +188,17 @@ export default function CampaignPage() {
     },
   ];
 
+  // Callbacks
+  const handlePricingSelect = useCallback((index: number) => {
+    setSelectedPricing(index);
+    setIsModalOpen(true);
+  }, []);
+
+  const handleModalClose = useCallback(() => {
+    setIsModalOpen(false);
+    router.push("/create_campaign");
+  }, [router]);
+
   return (
     <div className="min-h-screen mt-16 bg-gradient-to-b from-gray-50 to-white">
       <Header />
@@ -53,15 +208,13 @@ export default function CampaignPage() {
         <div className="max-w-6xl mx-auto px-4">
           <div className="text-center">
             <motion.h1
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
+              {...fadeInUp}
               className="text-3xl sm:text-4xl md:text-5xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-side to-side/80 mb-4"
             >
               Transform Your Advertising Game
             </motion.h1>
             <motion.p
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
+              {...fadeInUp}
               transition={{ delay: 0.1 }}
               className="text-base md:text-xl text-gray-600 max-w-2xl mx-auto px-2"
             >
@@ -78,20 +231,12 @@ export default function CampaignPage() {
         <div className="max-w-6xl mx-auto px-2 sm:px-4">
           <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4 md:gap-6">
             {stats.map((stat, index) => (
-              <motion.div
+              <Stat
                 key={index}
-                initial={{ opacity: 0, y: 20 }}
-                whileInView={{ opacity: 1, y: 0 }}
-                transition={{ delay: index * 0.1 }}
-                className="bg-white rounded-xl p-6 md:p-8 text-center shadow-lg hover:shadow-xl transition-all duration-300 border border-gray-100"
-              >
-                <div className="text-3xl md:text-4xl font-bold text-side mb-2">
-                  {stat.number}
-                </div>
-                <div className="text-sm md:text-base text-gray-600 font-medium">
-                  {stat.label}
-                </div>
-              </motion.div>
+                number={stat.number}
+                label={stat.label}
+                index={index}
+              />
             ))}
           </div>
         </div>
@@ -143,7 +288,7 @@ export default function CampaignPage() {
                       2
                     </span>
                     <span>
-                      Visit the 
+                      Visit the{" "}
                       <a
                         href="https://faucet.solana.com/"
                         target="_blank"
@@ -165,7 +310,7 @@ export default function CampaignPage() {
                   </li>
                   <li className="flex items-start">
                     <span className="bg-blue-600 text-white rounded-full h-5 w-5 md:h-6 md:w-6 flex items-center justify-center mr-2 flex-shrink-0 text-xs">
-                      6
+                      4
                     </span>
                     <span>
                       Return to this page after receiving your test SOLANA
@@ -178,83 +323,13 @@ export default function CampaignPage() {
 
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 md:gap-6">
             {DEFAULT_PRICING_TIERS.map((tier, index) => (
-              <motion.div
+              <PricingTier
                 key={tier.id}
-                initial={{ opacity: 0, y: 20 }}
-                whileInView={{ opacity: 1, y: 0 }}
-                transition={{ delay: index * 0.1 }}
-                onClick={() => {
-                  setSelectedPricing(index);
-                  setIsModalOpen(true);
-                }}
-                className={cn(
-                  "bg-white rounded-xl cursor-pointer transition-all duration-300 flex flex-col h-full",
-                  selectedPricing === index
-                    ? "ring-2 ring-side shadow-xl scale-105"
-                    : "border border-gray-200 hover:border-side/50 hover:shadow-lg hover:scale-102",
-                  tier.recommended && "relative"
-                )}
-              >
-                {tier.recommended && (
-                  <div className="absolute -top-3 left-1/2 -translate-x-1/2 px-3 md:px-4 py-1 bg-side text-white text-xs md:text-sm font-medium rounded-full shadow-lg">
-                    Recommended
-                  </div>
-                )}
-
-                <div
-                  className={cn(
-                    "flex flex-col h-full p-4 md:p-6",
-                    tier.recommended && "pt-6 md:pt-8"
-                  )}
-                >
-                  {/* Header Section */}
-                  <div className="text-center mb-4 md:mb-6">
-                    <h3 className="text-xs md:text-sm mx-2 md:mx-4 font-semibold text-gray-900 mb-2">
-                      {tier.description}
-                    </h3>
-                    <div className="text-2xl md:text-3xl font-bold text-side mb-1">
-                      {tier.price} SOL
-                    </div>
-                  </div>
-
-                  {/* Impressions Badge */}
-                  <div className="bg-gray-50 rounded-lg py-2 md:py-3 px-3 md:px-4 text-center mb-4 md:mb-6">
-                    <div className="text-xl md:text-2xl font-bold text-gray-900">
-                      {tier.impressions.toLocaleString()}
-                    </div>
-                    <div className="text-xs md:text-sm text-gray-600">
-                      Impressions
-                    </div>
-                  </div>
-
-                  {/* Features */}
-                  <div className="flex-grow">
-                    <ul className="space-y-2 md:space-y-3 mb-4 md:mb-6">
-                      {tier.features.map((feature, featureIndex) => (
-                        <li
-                          key={featureIndex}
-                          className="flex items-start text-xs md:text-sm text-gray-600"
-                        >
-                          <Check className="w-4 h-4 md:w-5 md:h-5 text-green-500 mr-2 shrink-0 mt-0.5" />
-                          <span>{feature}</span>
-                        </li>
-                      ))}
-                    </ul>
-                  </div>
-
-                  {/* CTA Button */}
-                  <button
-                    className={cn(
-                      "w-full py-2 md:py-3 px-3 md:px-4 rounded-lg flex items-center justify-center gap-2 font-medium transition-all duration-300 mt-auto text-sm md:text-base",
-                      tier.recommended
-                        ? "bg-side text-white hover:bg-side/90 shadow-md hover:shadow-lg"
-                        : "bg-gray-50 text-gray-900 hover:bg-gray-100"
-                    )}
-                  >
-                    Get Started <ArrowRight className="w-3 h-3 md:w-4 md:h-4" />
-                  </button>
-                </div>
-              </motion.div>
+                tier={tier}
+                index={index}
+                isSelected={selectedPricing === index}
+                onClick={() => handlePricingSelect(index)}
+              />
             ))}
           </div>
         </div>
@@ -278,47 +353,12 @@ export default function CampaignPage() {
 
             <div className="grid grid-cols-1 md:grid-cols-3 gap-8 relative">
               {stepsData.map((step, index) => (
-                <motion.div
+                <Step
                   key={index}
-                  initial={{ opacity: 0, y: 20 }}
-                  whileInView={{ opacity: 1, y: 0 }}
-                  transition={{ delay: index * 0.2 }}
-                  className="relative"
-                >
-                  {/* Mobile step connector - only visible on small screens */}
-                  {index > 0 && (
-                    <div className="md:hidden absolute -top-4 left-1/2 transform -translate-x-1/2 h-8 w-0.5 bg-side/30" />
-                  )}
-
-                  <div className="bg-white rounded-2xl p-6 md:p-8 shadow-lg hover:shadow-xl transition-all duration-300 group hover:-translate-y-1">
-                    {/* Step Number Badge */}
-                    <div className="absolute -top-4 left-8 w-7 h-7 md:w-8 md:h-8 bg-side text-white rounded-full flex items-center justify-center font-bold text-xs md:text-sm shadow-lg">
-                      {step.step}
-                    </div>
-
-                    {/* Icon */}
-                    <div className="text-3xl md:text-4xl mb-4 md:mb-6">
-                      {step.icon}
-                    </div>
-
-                    {/* Content */}
-                    <h3 className="text-lg md:text-xl font-bold text-gray-900 mb-2 md:mb-3 group-hover:text-side transition-colors">
-                      {step.title}
-                    </h3>
-                    <p className="text-sm md:text-base text-gray-600">
-                      {step.description}
-                    </p>
-
-                    {/* Connection Arrow - only visible on md and larger screens */}
-                    {index < 2 && (
-                      <div className="hidden md:flex absolute top-1/2 -right-4 transform -translate-y-1/2 z-10">
-                        <div className="w-8 h-8 bg-white rounded-full shadow-md flex items-center justify-center">
-                          <ChevronRight className="w-5 h-5 text-side" />
-                        </div>
-                      </div>
-                    )}
-                  </div>
-                </motion.div>
+                  step={step}
+                  index={index}
+                  totalSteps={stepsData.length}
+                />
               ))}
             </div>
           </div>
@@ -327,14 +367,11 @@ export default function CampaignPage() {
 
       <Footer />
 
-      <AnimatePresence>
+      <AnimatePresence mode="wait">
         {selectedPricing !== null && isModalOpen && (
           <CampaignModal
             isOpen={isModalOpen}
-            onClose={() => {
-              setIsModalOpen(false);
-              router.push("/create_campaign");
-            }}
+            onClose={handleModalClose}
             pricingTiers={DEFAULT_PRICING_TIERS[selectedPricing]}
           />
         )}
