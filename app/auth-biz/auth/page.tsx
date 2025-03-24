@@ -1,16 +1,41 @@
 "use client";
+
 import Image from "next/image";
-import React, { useState, useEffect, useCallback } from "react";
+import React, { useState, useCallback, memo } from "react";
 import { useRouter } from "next/navigation";
 import GoogleLoginButton from "@/components/ui/google";
-import { useDispatch, useSelector } from "react-redux";
-import { AppDispatch, RootState } from "@/store/store";
+import { useDispatch } from "react-redux";
+import { AppDispatch } from "@/store/store";
 import { setIsAuth } from "@/store/slices/isAuthSlice";
 import Notification from "@/components/notification";
 import { baseURL } from "@/utils/config/baseUrl";
 import { NotificationState } from "@/types/general";
 import { motion, AnimatePresence } from "framer-motion";
 import LoadingOverlay from "@/components/ui/loading";
+
+const fadeIn = {
+  initial: { opacity: 0 },
+  animate: { opacity: 1 },
+  transition: { duration: 0.5 }
+};
+
+const slideInLeft = {
+  initial: { x: -50, opacity: 0 },
+  animate: { x: 0, opacity: 1 },
+  transition: { duration: 0.6, delay: 0.2 }
+};
+
+const slideInRight = {
+  initial: { x: 50, opacity: 0 },
+  animate: { x: 0, opacity: 1 },
+  transition: { duration: 0.6, delay: 0.4 }
+};
+
+const fadeInUp = {
+  initial: { y: 20, opacity: 0 },
+  animate: { y: 0, opacity: 1 },
+};
+
 
 interface LoginResponse {
   status: number;
@@ -36,7 +61,30 @@ interface GoogleCredentialResponse {
   select_by?: string;
 }
 
-export default function Signup() {
+
+const Logo = memo(() => (
+  <motion.a
+    href="/"
+    className="transition-transform hover:scale-105"
+    whileHover={{ scale: 1.05 }}
+    whileTap={{ scale: 0.95 }}
+    aria-label="Go to homepage"
+  >
+    <Image
+      className="w-10 h-10 md:w-16 md:h-16 lg:w-36 lg:h-36 rounded-lg object-contain"
+      src="/trans.png"
+      width={80}
+      height={80}
+      quality={90}
+      priority
+      alt="Poynt Logo"
+    />
+  </motion.a>
+));
+
+Logo.displayName = 'Logo';
+
+function Signup() {
   const router = useRouter();
   const dispatch = useDispatch<AppDispatch>();
   const [isLoading, setIsLoading] = useState<boolean>(false);
@@ -53,7 +101,11 @@ export default function Signup() {
     []
   );
 
-  const handleAuth = async (credential: GoogleCredentialResponse) => {
+  const hideNotification = useCallback(() => {
+    setNotification((prev) => ({ ...prev, show: false }));
+  }, []);
+
+  const handleAuth = useCallback(async (credential: GoogleCredentialResponse) => {
     if (!credential?.credential) {
       showNotification("Invalid credentials provided", "error");
       return;
@@ -61,7 +113,6 @@ export default function Signup() {
 
     try {
       setIsLoading(true);
-      // const idToken = credential.credential;
 
       const response = await fetch(`${baseURL}/auth/google`, {
         method: "POST",
@@ -97,10 +148,8 @@ export default function Signup() {
         })
       );
 
-      // saveDataToLocalStorage("onboard", "false");
       router.push("/business");
     } catch (error) {
-      // console.error("Authentication error:", error);
       showNotification(
         `Authentication failed: ${
           error instanceof Error
@@ -112,51 +161,41 @@ export default function Signup() {
     } finally {
       setIsLoading(false);
     }
-  };
+  }, [dispatch, router, showNotification]);
+
   return (
     <motion.div
       className="flex w-full h-screen"
-      initial={{ opacity: 0 }}
-      animate={{ opacity: 1 }}
-      transition={{ duration: 0.5 }}
+      {...fadeIn}
     >
       <motion.div
-        className="hidden lg:block relative bg-[url('/pexel3.jpg')] bg-no-repeat bg-cover bg-center w-2/5 h-full"
-        initial={{ x: -50, opacity: 0 }}
-        animate={{ x: 0, opacity: 1 }}
-        transition={{ duration: 0.6, delay: 0.2 }}
+        className="hidden lg:block relative w-2/5 h-full"
+        {...slideInLeft}
       >
-        <div className="absolute inset-0 bg-gradient-to-l from-side to-main opacity-60" />
+    
+        <div className="absolute inset-0 overflow-hidden">
+          <Image 
+            src="/pexel3.jpg" 
+            alt="Background" 
+            fill 
+            sizes="40vw"
+            priority
+            quality={85}
+            className="object-cover"
+          />
+          <div className="absolute inset-0 bg-gradient-to-l from-side to-main opacity-60" />
+        </div>
       </motion.div>
 
       <motion.div
         className="w-full lg:w-3/5 h-full bg-white flex flex-col items-center justify-center gap-6 py-10 overflow-y-auto"
-        initial={{ x: 50, opacity: 0 }}
-        animate={{ x: 0, opacity: 1 }}
-        transition={{ duration: 0.6, delay: 0.4 }}
+        {...slideInRight}
       >
-        <motion.a
-          href="/"
-          className="transition-transform hover:scale-105"
-          whileHover={{ scale: 1.05 }}
-          whileTap={{ scale: 0.95 }}
-          aria-label="Go to homepage"
-        >
-          <Image
-            className="w-10 h-10 md:w-16 md:h-16 lg:w-36 lg:h-36 rounded-lg object-contain"
-            src="/trans.png"
-            width={80}
-            height={80}
-            quality={90}
-            priority
-            alt="Poynt Logo"
-          />
-        </motion.a>
+        <Logo />
 
         <motion.h2
           className="w-full font-poppins font-semibold text-center text-xl md:text-2xl text-blacc"
-          initial={{ y: 20, opacity: 0 }}
-          animate={{ y: 0, opacity: 1 }}
+          {...fadeInUp}
           transition={{ duration: 0.6, delay: 0.6 }}
         >
           Get Started
@@ -167,26 +206,25 @@ export default function Signup() {
             <Notification
               message={notification.message}
               status={notification.status}
-              switchShowOff={() =>
-                setNotification((prev) => ({ ...prev, show: false }))
-              }
+              switchShowOff={hideNotification}
             />
           )}
         </AnimatePresence>
 
         <motion.div
           className="flex flex-col gap-6"
-          initial={{ y: 20, opacity: 0 }}
-          animate={{ y: 0, opacity: 1 }}
+          {...fadeInUp}
           transition={{ duration: 0.6, delay: 0.8 }}
         >
           <GoogleLoginButton isLoading={isLoading} onSuccess={handleAuth} />
         </motion.div>
 
-        <AnimatePresence>
+        <AnimatePresence mode="wait">
           {isLoading && <LoadingOverlay loaderText="Signing you in..." />}
         </AnimatePresence>
       </motion.div>
     </motion.div>
   );
 }
+
+export default Signup;

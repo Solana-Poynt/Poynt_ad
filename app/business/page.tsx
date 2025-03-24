@@ -1,6 +1,6 @@
 "use client";
 import { useRouter } from "next/navigation";
-import React, { useEffect, useState, useCallback } from "react";
+import React, { useEffect, useState, useCallback, memo } from "react";
 import { useGetUserQuery } from "../../store/api/api";
 import { getDataFromLocalStorage } from "@/utils/localStorage";
 import Image from "next/image";
@@ -9,9 +9,7 @@ import { NotificationState } from "@/types/general";
 import Notification from "@/components/notification";
 import { Trophy, Copy, Plus } from "lucide-react";
 import QuickStartButton from "@/components/quick_modal";
-import useSolanaTokenBalances from "@/utils/hooks/useBalance";
 
-// Move constants outside component
 const adCards = [
   {
     title: "1st Campaign",
@@ -41,10 +39,86 @@ interface UserData {
   email: string | null;
 }
 
+// Memoized components to prevent unnecessary rerenders
+const AdCard = memo(({ card, index }: any) => (
+  <div
+    key={index}
+    className={`${card.bgColor} rounded-xl p-3 flex flex-col gap-2 transition-all duration-200 hover:shadow-lg`}
+  >
+    <div
+      className={`${card.iconBg} w-8 h-8 md:w-10 md:h-10 rounded-[9.6px] flex items-center justify-center mb-3`}
+    >
+      <Trophy className="w-4 h-4 md:w-5 md:h-5 text-gray-700" />
+    </div>
+    <h4 className="text-xs font-semibold text-gray-700 mb-2">{card.title}</h4>
+    <div className="flex flex-col gap-2">
+      <p className={`text-sm font-bold ${card.rateColor}`}>{card.rate}</p>
+      <p className="text-xs text-gray-600">Click through rate</p>
+    </div>
+  </div>
+));
+
+AdCard.displayName = "AdCard";
+
+const WalletCard = memo(
+  ({ wallet, handleCopyWallet, router, truncateWallet }: any) => (
+    <div className="w-full md:w-[342px] md:h-[272px] p-4 bg-[#FAFAFA] rounded-3xl">
+      <div className="relative w-full h-32 md:w-[310px] md:h-[188px]">
+        <Image
+          src="/wallet-card.svg"
+          fill
+          quality={85}
+          priority
+          alt="Wallet Card"
+          className="object-cover rounded-2xl"
+        />
+
+        <div className="relative">
+          <div className="absolute left-4 top-12 md:top-24 pt-4 w-[280px]">
+            <p className="text-xs md:text-sm text-white/70 font-medium">
+              Wallet Address
+            </p>
+            {wallet ? (
+              <div className="flex items-center rounded-lg p-2.5">
+                <p className="text-xs md:text-sm font-mono text-white/90 truncate max-w-[130px]">
+                  {truncateWallet(wallet)}
+                </p>
+                <button
+                  className="ml-2 p-1.5 rounded-md hover:bg-white/10 transition-colors opacity-60 hover:opacity-100"
+                  onClick={handleCopyWallet}
+                  aria-label="Copy wallet address"
+                >
+                  <Copy className="w-4 h-4 text-white" />
+                </button>
+              </div>
+            ) : (
+              <p className="text-xs md:text-sm font-mono text-white/90">
+                No Wallet Detected
+              </p>
+            )}
+          </div>
+        </div>
+      </div>
+
+      <div className="flex items-center mt-6 bg-[#F0F0F0] rounded-lg">
+        <button
+          className="w-full text-[#575757] p-2 md:p-2.5 text-xs md:text-sm font-medium hover:bg-gray-200 transition-colors rounded-lg"
+          onClick={() => router.push("/business/wallet")}
+        >
+          View Wallet
+        </button>
+      </div>
+    </div>
+  )
+);
+
+WalletCard.displayName = "WalletCard";
+
+// Main Dashboard Component
 export default function Page() {
   const router = useRouter();
-  const [isModalOpen, setIsModalOpen] = useState<boolean>(false);
-  const [mounted, setMounted] = useState<boolean>(false);
+  const [isModalOpen, setIsModalOpen] = useState(false);
+  const [mounted, setMounted] = useState(false);
   const [notification, setNotification] = useState<NotificationState>({
     message: "",
     status: "error",
@@ -55,47 +129,36 @@ export default function Page() {
     email: null,
   });
 
-  // Get stored data
-  const id = getDataFromLocalStorage("id");
-  const wallet = getDataFromLocalStorage("wallet");
-  // const balance = getDataFromLocalStorage("walletbalance");
-
-  // const {
-  //   tokenBalances,
-  //   totalValue,
-  //   // isLoading,
-  //   isError,
-  //   error,
-  //   hasTokens,
-  //   getTokenByAddress,
-  //   getSolBalance,
-  // } = useSolanaTokenBalances({
-  //   includeFiat: true,
-  //   includeZeroBalances: false,
-  //   sortByValue: true,
-  // });
-
-  // const solToken = getSolBalance();
-
-  // const usdcBal = getTokenByAddress(
-  //   "4zMMC9srt5Ri5X14GAgXhaHii3GnPAEERYPJgZJDncDU"
-  // );
-  // // const tokenBal = tokenBalances();
-
-  // console.log("SOL BAL:", solToken?.balance);
-  // console.log("GEN BAL:", usdcBal);
+  // Get stored data - moved inside useEffect to avoid hydration issues
+  const [storedData, setStoredData] = useState({
+    id: "",
+    wallet: "",
+  });
 
   // Fetch user data
-  const { data: userRetrievedData, isLoading } = useGetUserQuery({ id });
+  const { data: userRetrievedData, isLoading } = useGetUserQuery(
+    { id: storedData.id },
+    { skip: !storedData.id }
+  );
 
   const user = userRetrievedData?.data;
 
   useEffect(() => {
     setMounted(true);
+    const id: any = getDataFromLocalStorage("id");
+    const wallet: any = getDataFromLocalStorage("wallet");
     const name = getDataFromLocalStorage("name");
     const email = getDataFromLocalStorage("email");
+
+    setStoredData({ id, wallet });
     setUserData({ name, email });
   }, []);
+
+  useEffect(() => {
+    if (user?.isOnBoarded === false) {
+      setIsModalOpen(true);
+    }
+  }, [user]);
 
   const showNotification = useCallback(
     (message: string, status: "success" | "error") => {
@@ -104,30 +167,28 @@ export default function Page() {
     []
   );
 
-  useEffect(() => {
-    if (user?.isOnBoarded === false) {
-      setIsModalOpen(true);
-    }
-  }, [user]);
+  const hideNotification = useCallback(() => {
+    setNotification((prev) => ({ ...prev, show: false }));
+  }, []);
 
-  const handleCopyWallet = async () => {
-    if (wallet) {
+  const handleCopyWallet = useCallback(async () => {
+    if (storedData.wallet) {
       try {
-        await navigator.clipboard.writeText(wallet);
+        await navigator.clipboard.writeText(storedData.wallet);
         showNotification("Wallet Address Copied", "success");
       } catch (err) {
         console.error("Failed to copy wallet address");
         showNotification("Failed to copy wallet address", "error");
       }
     }
-  };
+  }, [storedData.wallet, showNotification]);
 
-  if (!mounted) return null;
-
-  const truncateWallet = (address: string) => {
+  const truncateWallet = useCallback((address: string) => {
     if (!address) return "";
     return `${address.slice(0, 6)}...${address.slice(-4)}`;
-  };
+  }, []);
+
+  if (!mounted) return null;
 
   return (
     <main className="flex flex-col w-full h-full pl-4">
@@ -156,7 +217,7 @@ export default function Page() {
                   src="/ink-layer.svg"
                   width={200}
                   height={200}
-                  quality={90}
+                  quality={85}
                   priority
                   alt="Campaign Illustration"
                   className="object-contain"
@@ -178,79 +239,18 @@ export default function Page() {
               </h3>
               <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                 {adCards.map((card, index) => (
-                  <div
-                    key={index}
-                    className={`${card.bgColor} rounded-xl p-3 flex flex-col gap-2 transition-all duration-200 hover:shadow-lg`}
-                  >
-                    <div
-                      className={`${card.iconBg} w-8 h-8 md:w-10 md:h-10 rounded-[9.6px] flex items-center justify-center mb-3`}
-                    >
-                      <Trophy className="w-4 h-4 md:w-5 md:h-5 text-gray-700" />
-                    </div>
-                    <h4 className="text-xs font-semibold text-gray-700 mb-2">
-                      {card.title}
-                    </h4>
-                    <div className="flex flex-col gap-2">
-                      <p className={`text-sm font-bold ${card.rateColor}`}>
-                        {card.rate}
-                      </p>
-                      <p className="text-xs text-gray-600">
-                        Click through rate
-                      </p>
-                    </div>
-                  </div>
+                  <AdCard card={card} index={index} key={index} />
                 ))}
               </div>
             </div>
 
             {/* Wallet Card */}
-            <div className="w-full md:w-[342px] md:h-[272px] p-4 bg-[#FAFAFA] rounded-3xl">
-              <div className="relative w-full h-32 md:w-[310px] md:h-[188px]">
-                <Image
-                  src="/wallet-card.svg"
-                  fill
-                  quality={100}
-                  priority
-                  alt="Wallet Card"
-                  className="object-cover rounded-2xl"
-                />
-
-                <div className="relative">
-                  <div className="absolute left-4 top-12 md:top-24  pt-4 w-[280px]">
-                    <p className="text-xs md:text-sm text-white/70 font-medium">
-                      Wallet Address
-                    </p>
-                    {wallet ? (
-                      <div className="flex items-center rounded-lg p-2.5">
-                        <p className="text-xs md:text-sm font-mono text-white/90 truncate max-w-[130px]">
-                          {truncateWallet(wallet)}
-                        </p>
-                        <button
-                          className="ml-2 p-1.5 rounded-md hover:bg-white/10 transition-colors opacity-60 hover:opacity-100"
-                          onClick={handleCopyWallet}
-                          aria-label="Copy wallet address"
-                        >
-                          <Copy className="w-4 h-4 text-white" />
-                        </button>
-                      </div>
-                    ) : (
-                      <p className="text-xs md:text-sm font-mono text-white/90">
-                        No Wallet Detected
-                      </p>
-                    )}
-                  </div>
-                </div>
-              </div>
-
-              <div className="flex items-center mt-6 bg-[#F0F0F0] rounded-lg">
-                <button
-                  className="w-full text-[#575757] p-2 md:p-2.5 text-xs md:text-sm font-medium hover:bg-gray-200 transition-colors rounded-lg"
-                  onClick={() => router.push("/business/wallet")}
-                >
-                  View Wallet
-                </button>
-              </div>
-            </div>
+            <WalletCard
+              wallet={storedData.wallet}
+              handleCopyWallet={handleCopyWallet}
+              router={router}
+              truncateWallet={truncateWallet}
+            />
           </div>
 
           {/* Recent Campaigns Table */}
@@ -273,14 +273,12 @@ export default function Page() {
         />
       </div>
 
-      <AnimatePresence>
+      <AnimatePresence mode="wait">
         {notification.show && (
           <Notification
             message={notification.message}
             status={notification.status}
-            switchShowOff={() =>
-              setNotification((prev) => ({ ...prev, show: false }))
-            }
+            switchShowOff={hideNotification}
           />
         )}
       </AnimatePresence>
