@@ -84,7 +84,7 @@ const WalletDashboard = () => {
       )}`;
 
       return (
-        <div className="flex flex-row w-full absolute -top-2 justify-center p-4 mt-4">
+        <div className="flex flex-row  absolute -top-2 right-60 justify-center p-4 mt-4">
           {/* Wallet address display with copy button */}
           <div className=" p-3 rounded-lg mb-4">
             <div className="text-sm text-gray-500 mb-1">Wallet Address</div>
