@@ -196,7 +196,7 @@ export default function CampaignPage() {
 
   const handleModalClose = useCallback(() => {
     setIsModalOpen(false);
-    router.push("/create_campaign");
+    router.push("/business/campaigns");
   }, [router]);
 
   return (
@@ -259,8 +259,7 @@ export default function CampaignPage() {
                 Test Payment Information
               </h3>
               <p className="text-sm md:text-base text-gray-700 mb-4">
-                For testing purposes, all plans are priced in Solana Testnet
-                SOLANA.
+                For testing purposes, all plans are priced in Devnet Solana
               </p>
 
               <div className="bg-white rounded-lg p-3 md:p-4 border border-blue-200">
@@ -290,7 +289,7 @@ export default function CampaignPage() {
                     <span>
                       Visit the{" "}
                       <a
-                        href="https://faucet.solana.com/"
+                        href="https://solfaucet.com/"
                         target="_blank"
                         rel="noopener noreferrer"
                         className="text-blue-600 hover:underline font-medium"
@@ -304,8 +303,8 @@ export default function CampaignPage() {
                       3
                     </span>
                     <span>
-                      Paste your wallet address in the input field, select
-                      amount and click <strong>Send</strong>
+                      Paste your wallet address in the input field, and click
+                      the <strong>Devnet</strong> button
                     </span>
                   </li>
                   <li className="flex items-start">

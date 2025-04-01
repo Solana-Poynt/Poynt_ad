@@ -1,5 +1,6 @@
 "use client";
-import { useState, useCallback, useEffect } from "react";
+import { useState, useCallback, useEffect, useRef } from "react";
+import { debounce } from "lodash";
 import { motion, AnimatePresence } from "framer-motion";
 import {
   X,
@@ -13,6 +14,9 @@ import {
   Upload,
   ArrowRight,
   ChevronRight,
+  UserPlus,
+  Repeat,
+  MessageSquare,
   RefreshCw,
   ListChecks,
   FileText,
@@ -21,19 +25,15 @@ import {
 import { PricingTier } from "@/types/campaign";
 import { NotificationState } from "@/types/general";
 import Notification from "./notification";
-import useSolanaTokenBalances from "@/utils/hooks/useBalance";
+import useSolanaTokenBalances from "@/utils/hooks/balance";
 // import { useSolanaTokenBalances } from "@/utils/hooks/useSolanaTokenBalances";
 import { useDynamicContext } from "@dynamic-labs/sdk-react-core";
 import { cn } from "@/lib/utils";
 import { useSendDataMutation } from "@/store/api/api";
 import { getDataFromLocalStorage } from "@/utils/localStorage";
 import { isSolanaWallet } from "@dynamic-labs/solana-core";
-import type { ISolana } from "@dynamic-labs/solana-core";
 import { PublicKey, Transaction } from "@solana/web3.js";
-import {
-  createTransferInstruction,
-  getAssociatedTokenAddress,
-} from "@solana/spl-token";
+
 import * as web3 from "@solana/web3.js";
 
 // Types
@@ -103,26 +103,35 @@ const engagementGoals = [
 const taskTypes = [
   {
     id: "social",
-    name: "Social Media Task",
-    description: "Engage with your brand on social platforms",
-    icon: <Image className="w-5 h-5" />,
-    placeholder: "Follow us on Twitter, Share our post, etc.",
+    name: "Twitter Follow & Like",
+    description: "Gain followers and engagement on Twitter",
+    icon: <UserPlus className="w-5 h-5" />,
+    placeholder: "Follow @YourBrand or Like our latest tweet",
+    subtasks: [
+      { id: "follow", label: "Follow Account", verificationMethod: "api" },
+      { id: "like", label: "Like Tweet", verificationMethod: "api" },
+    ],
   },
   {
     id: "engagement",
-    name: "Product Engagement",
-    description: "Drive users to product via specific actions",
-    icon: <Link className="w-5 h-5" />,
-    placeholder: "Comment on post, retweet post, etc",
+    name: "Twitter Amplification",
+    description: "Spread your content through retweets and comments",
+    icon: <Repeat className="w-5 h-5" />,
+    placeholder: "Retweet our announcement or comment on our post",
+    subtasks: [
+      { id: "retweet", label: "Retweet Content", verificationMethod: "api" },
+      { id: "comment", label: "Comment on Tweet", verificationMethod: "api" },
+    ],
   },
   {
     id: "websiteLink",
-    name: "Custom Task",
-    description:
-      "Create your own engagement task that will deliver unique interaction",
-    icon: <ListChecks className="w-5 h-5" />,
-    placeholder:
-      "Download our app, Visit our website, Sign up for newsletter, etc.",
+    name: "Original Twitter Content",
+    description: "Have users create tweets about your brand or product",
+    icon: <MessageSquare className="w-5 h-5" />,
+    placeholder: "Tweet about your experience with #YourBrandHashtag",
+    subtasks: [
+      { id: "tweet", label: "Create a Tweet", verificationMethod: "manual" },
+    ],
   },
 ];
 
@@ -191,19 +200,6 @@ const CampaignModal = ({
     []
   );
 
-  // Refresh the balance when needed
-  // const refreshBalance = useCallback(async () => {
-  //   try {
-  //     await refreshBalances();
-  //     showNotification("Balance refreshed", "success");
-  //   } catch (error) {
-  //     console.error("Error refreshing balance:", error);
-  //     showNotification("Failed to refresh balance", "error");
-  //   }
-  // }, [refreshBalances, showNotification]);
-
-  const serviceFee = 0.4;
-
   const updatePaymentStatus = (status: boolean, signature: string) => {
     setPaymentConfirmed(status);
     setPaymentSignature(signature);
@@ -218,8 +214,8 @@ const CampaignModal = ({
     if (step > 0) setStep(step - 1);
   }, [step]);
   // File handling
-  const MAX_VIDEO_SIZE = 20 * 1024 * 1024;
-  const MAX_IMAGE_SIZE = 5 * 1024 * 1024;
+  const MAX_VIDEO_SIZE = 40 * 1024 * 1024;
+  const MAX_IMAGE_SIZE = 10 * 1024 * 1024;
 
   const handleFileUpload = useCallback(
     (e: React.ChangeEvent<HTMLInputElement>, type: string) => {
@@ -428,14 +424,14 @@ const CampaignModal = ({
         return (
           formData.budget > 0 &&
           formData.budget >= formData.pricingTier.price &&
-          formData.budget + serviceFee <= Number(balance)
+          formData.budget <= Number(balance)
         );
       case 6:
         return Boolean(paymentConfirmed);
       default:
         return true;
     }
-  }, [step, formData, balance, serviceFee, paymentConfirmed]);
+  }, [step, formData, balance, paymentConfirmed]);
 
   // Disable the modal if wallet is not connected
   useEffect(() => {
@@ -453,7 +449,7 @@ const CampaignModal = ({
       <div className="bg-gradient-to-br from-gray-50 to-gray-100 rounded-xl p-6 space-y-4 border border-gray-200">
         <div className="text-center pb-4 border-b border-gray-200">
           <div className="text-4xl font-bold text-side mb-2">
-            ${formData.pricingTier.price}
+            {formData.pricingTier.price} SOL
           </div>
           <div className="text-sm text-gray-600">
             {formData.pricingTier.impressions.toLocaleString()} Impressions
@@ -1027,39 +1023,84 @@ const CampaignModal = ({
       </>
     );
   };
-  // Tasks Component with improved input handling
+  // Tasks Component
+
+  // Fixed Tasks Component with correct ref typing
   const TasksComponent = () => {
-    const [localTasks, setLocalTasks] = useState<{
-      social: string;
-      engagement: string;
-      websiteLink: string;
-    }>(formData.tasks);
+    const [focusedTask, setFocusedTask] = useState<string | null>(null);
+    const [selectedSubtasks, setSelectedSubtasks] = useState<{
+      [key: string]: string;
+    }>({
+      social: "follow",
+      engagement: "retweet",
+      websiteLink: "tweet",
+    });
 
-    // Update both local state and parent state when tasks change
-    const handleLocalTaskUpdate = (
-      taskType: keyof typeof localTasks,
-      value: string
-    ) => {
-      const updatedTasks = {
-        ...localTasks,
-        [taskType]: value,
-      };
+    // Create refs for each textarea - with proper typing
+    const textareaRefs = useRef<{ [key: string]: HTMLTextAreaElement | null }>({
+      social: null,
+      engagement: null,
+      websiteLink: null,
+    });
 
-      // Update local state
-      setLocalTasks(updatedTasks);
+    // Create a state to track if form has been updated
+    const [formUpdated, setFormUpdated] = useState(false);
 
-      // Update parent state immediately
-      setFormData((prev) => ({
-        ...prev,
-        tasks: updatedTasks,
-      }));
+    // Define type for task keys to ensure type safety
+    type TaskKey = "social" | "engagement" | "websiteLink";
+
+    // Function to check if a string is a valid TaskKey
+    const isTaskKey = (key: string): key is TaskKey => {
+      return key === "social" || key === "engagement" || key === "websiteLink";
+    };
+
+    // Update form data with debounce to prevent focus loss
+    const updateFormData = useCallback(
+      debounce((tasks: any) => {
+        setFormData((prev) => ({
+          ...prev,
+          tasks,
+        }));
+        setFormUpdated(true);
+        setTimeout(() => setFormUpdated(false), 5000);
+      }, 3000),
+      []
+    );
+
+    // Handle task input
+    const handleTaskInput = (taskType: string, value: string) => {
+      if (isTaskKey(taskType)) {
+        // Create a new tasks object
+        const updatedTasks = {
+          ...formData.tasks,
+          [taskType]: value,
+        };
+
+        // Update the form data with debounce
+        updateFormData(updatedTasks);
+      }
+    };
+
+    // Handle subtask selection
+    const handleSubtaskSelect = (taskType: string, subtaskId: string) => {
+      setSelectedSubtasks({
+        ...selectedSubtasks,
+        [taskType]: subtaskId,
+      });
+    };
+
+    // Properly typed ref callback
+    const setTextareaRef = (taskId: string, el: HTMLTextAreaElement | null) => {
+      if (isTaskKey(taskId)) {
+        textareaRefs.current[taskId] = el;
+      }
     };
 
     return (
       <div className="space-y-6">
         <div className="flex items-center justify-between">
           <h3 className="text-xl font-bold text-gray-900">
-            Configure User Tasks
+            Configure Twitter Tasks
           </h3>
           <div className="text-sm text-gray-500">Step 4 of 7</div>
         </div>
@@ -1068,66 +1109,122 @@ const CampaignModal = ({
           <div className="flex items-start">
             <Info className="w-5 h-5 text-yellow-500 mt-0.5 mr-2 shrink-0" />
             <p className="text-sm text-yellow-700">
-              Create 3 tasks that users will complete to earn Poynts. Each
-              campaign requires all three types of tasks.
+              Create 3 Twitter tasks that users will complete to earn Poynts.
+              Each campaign requires all three types of tasks.
             </p>
           </div>
         </div>
 
-        <div className="space-y-6">
-          {taskTypes.map((taskType) => (
-            <div
-              key={taskType.id}
-              className="border border-gray-200 rounded-lg p-4"
-            >
-              <div className="flex items-center mb-3">
-                <div className="h-8 w-8 rounded-lg bg-side/10 flex items-center justify-center mr-3">
-                  {taskType.icon}
-                </div>
-                <div>
-                  <h4 className="font-medium text-gray-900">{taskType.name}</h4>
-                  <p className="text-xs text-gray-500">
-                    {taskType.description}
-                  </p>
-                </div>
-              </div>
+        {formUpdated && (
+          <div className="p-2 bg-green-50 text-green-600 text-sm rounded-md">
+            Tasks updated successfully
+          </div>
+        )}
 
-              <div className="mt-2">
-                <input
-                  type="text"
-                  value={
-                    localTasks[taskType.id as keyof typeof localTasks] || ""
-                  }
-                  onChange={(e) =>
-                    handleLocalTaskUpdate(
-                      taskType.id as keyof typeof localTasks,
-                      e.target.value
-                    )
-                  }
-                  placeholder={taskType.placeholder}
-                  className="w-full px-3 py-2 border border-gray-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-side"
-                />
-                {!localTasks[
-                  taskType.id as keyof typeof localTasks
-                ]?.trim() && (
-                  <p className="mt-1 text-xs text-red-500">
-                    This task is required
-                  </p>
+        <div className="space-y-6">
+          {taskTypes.map((taskType) => {
+            // Skip if not a valid task key
+            if (!isTaskKey(taskType.id)) return null;
+
+            return (
+              <div
+                key={taskType.id}
+                className="border border-gray-200 rounded-lg p-4"
+              >
+                <div className="flex items-center mb-3">
+                  <div className="h-8 w-8 rounded-lg bg-side/10 flex items-center justify-center mr-3">
+                    {taskType.icon}
+                  </div>
+                  <div>
+                    <h4 className="font-medium text-gray-900">
+                      {taskType.name}
+                    </h4>
+                    <p className="text-xs text-gray-500">
+                      {taskType.description}
+                    </p>
+                  </div>
+                </div>
+
+                {/* Subtask selector */}
+                {taskType.subtasks && taskType.subtasks.length > 1 && (
+                  <div className="mb-3 flex space-x-2">
+                    {taskType.subtasks.map((subtask) => (
+                      <button
+                        key={subtask.id}
+                        type="button"
+                        onClick={() =>
+                          handleSubtaskSelect(taskType.id, subtask.id)
+                        }
+                        className={`px-3 py-1 text-xs rounded-full ${
+                          selectedSubtasks[taskType.id] === subtask.id
+                            ? "bg-side text-white"
+                            : "bg-gray-100 text-gray-700 hover:bg-gray-200"
+                        }`}
+                      >
+                        {subtask.label}
+                      </button>
+                    ))}
+                  </div>
                 )}
+
+                <div className="mt-2">
+                  <textarea
+                    defaultValue={formData.tasks[taskType.id] || ""}
+                    onInput={(e) =>
+                      handleTaskInput(
+                        taskType.id,
+                        (e.target as HTMLTextAreaElement).value
+                      )
+                    }
+                    onFocus={() => setFocusedTask(taskType.id)}
+                    onBlur={() => setFocusedTask(null)}
+                    placeholder={taskType.placeholder}
+                    className="w-full px-3 py-2 border border-gray-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-side resize-none"
+                    rows={2}
+                    ref={(el) => setTextareaRef(taskType.id, el)}
+                  />
+                  {focusedTask === taskType.id && (
+                    <p className="mt-1 text-xs text-gray-500">
+                      {selectedSubtasks[taskType.id] === "follow" &&
+                        "Example: Follow @PoyntRewards to earn 20 Poynts"}
+                      {selectedSubtasks[taskType.id] === "like" &&
+                        "Example: Like our latest announcement tweet to earn 10 Poynts"}
+                      {selectedSubtasks[taskType.id] === "retweet" &&
+                        "Example: Retweet our latest post to earn 25 Poynts"}
+                      {selectedSubtasks[taskType.id] === "comment" &&
+                        "Example: Comment on our pinned tweet to earn 15 Poynts"}
+                      {selectedSubtasks[taskType.id] === "tweet" &&
+                        "Example: Tweet your experience with our product using #PoyntRewards to earn 40 Poynts"}
+                    </p>
+                  )}
+                  {!formData.tasks[taskType.id]?.trim() && !focusedTask && (
+                    <p className="mt-1 text-xs text-red-500">
+                      This task is required
+                    </p>
+                  )}
+                </div>
               </div>
-            </div>
-          ))}
+            );
+          })}
         </div>
 
         <div className="p-4 bg-gray-50 rounded-lg border border-gray-200 mt-4">
           <h4 className="text-sm font-medium text-gray-700 mb-2">
-            Tips for effective tasks:
+            Tips for effective Twitter tasks:
           </h4>
           <ul className="space-y-1 text-sm text-gray-600 list-disc pl-5">
-            <li>Keep tasks simple and achievable</li>
-            <li>Make sure tasks align with your campaign objective</li>
-            <li>Create a natural progression between tasks</li>
-            <li>Use clear, action-oriented language</li>
+            <li>
+              Keep instructions clear and specific (e.g., "Follow
+              @PoyntRewards")
+            </li>
+            <li>
+              For tweet tasks, specify any hashtags you want users to include
+            </li>
+            <li>
+              Make sure to include the exact tweet URL for like/retweet/comment
+              tasks
+            </li>
+            <li>Set reasonable Poynt rewards based on task complexity</li>
           </ul>
         </div>
       </div>
@@ -1162,7 +1259,7 @@ const CampaignModal = ({
         const solToken = getSolBalance();
         const solBalance = solToken ? solToken.balance : 0;
 
-        const totalCost = numericValue + serviceFee;
+        const totalCost = numericValue;
         if (totalCost > Number(solBalance)) {
           const difference = (totalCost - Number(solBalance)).toFixed(2);
           const errorMessage = `Insufficient balance. You need ${difference} SOL more`;
@@ -1173,7 +1270,7 @@ const CampaignModal = ({
         setError("");
         return true;
       },
-      [getSolBalance, minimumRequired, serviceFee]
+      [getSolBalance, minimumRequired]
     );
     const handleBudgetChange = (value: string) => {
       setIsConfirmed(false);
@@ -1201,7 +1298,7 @@ const CampaignModal = ({
         return;
       }
 
-      const totalCost = formData.budget + serviceFee;
+      const totalCost = formData.budget;
       if (totalCost > Number(balance)) {
         const difference = (totalCost - Number(balance)).toFixed(2);
         showNotification(
@@ -1215,7 +1312,7 @@ const CampaignModal = ({
       showNotification("Budget confirmed successfully", "success");
     };
 
-    const totalCost = formData.budget + serviceFee;
+    const totalCost = formData.budget;
 
     return (
       <div className="space-y-6">
@@ -1306,11 +1403,6 @@ const CampaignModal = ({
               <span>{minimumRequired} SOL</span>
             </div>
 
-            <div className="flex justify-between items-center text-sm text-gray-500">
-              <span>Service Fee</span>
-              <span>{serviceFee.toFixed(2)} SOL</span>
-            </div>
-
             <div className="flex justify-between items-center pt-2 border-t border-gray-200">
               <span className="font-medium text-gray-900">Total Cost</span>
               <span className="font-bold text-gray-900">
@@ -1389,7 +1481,7 @@ const CampaignModal = ({
     );
 
     // Total payment amount including service fee
-    const totalPaymentAmount = formData.budget + serviceFee;
+    const totalPaymentAmount = formData.budget;
     // Add this function to your FinalReview component
 
     const handlePayment = async () => {
@@ -1501,7 +1593,6 @@ const CampaignModal = ({
                 value: estimatedImpressions.toLocaleString(),
               },
               { label: "Budget", value: `${formData.budget.toFixed(2)} SOL` },
-              { label: "Service Fee", value: `${serviceFee.toFixed(2)} SOL` },
               {
                 label: "Total Cost",
                 value: `${totalPaymentAmount.toFixed(2)} SOL`,
@@ -1667,7 +1758,7 @@ const CampaignModal = ({
     { component: <TasksComponent /> },
     { component: <PaymentStep /> },
     {
-      component: <FinalReview/>,
+      component: <FinalReview />,
     },
   ];
 

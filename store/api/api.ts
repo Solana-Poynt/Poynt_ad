@@ -101,7 +101,7 @@ const baseQueryWithReauth = async (
 export const api = createApi({
   reducerPath: "request",
   baseQuery: baseQueryWithReauth,
-  tagTypes: ["Users", "Business", "Campaigns"], // You can define tagTypes here if you need them for cache invalidation
+  tagTypes: ["Users", "Business", "Campaigns"], 
   refetchOnFocus: true,
   refetchOnMountOrArgChange: true,
   refetchOnReconnect: true,

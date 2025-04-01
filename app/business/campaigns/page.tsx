@@ -113,10 +113,10 @@ const CampaignTableRow = memo(
         </span>
       </td>
       <td className="px-4 py-3 font-medium text-gray-900">{campaign.name}</td>
-      <td className="px-4 py-3">${campaign.budget}</td>
-      <td className="px-4 py-3">${campaign.amountSpent}</td>
+      <td className="px-4 py-3">{campaign.budget} SOL</td>
+      <td className="px-4 py-3">{campaign.amountSpent} SOL</td>
       <td className="px-4 py-3">{campaign.reached}</td>
-      <td className="px-4 py-3">${campaign.costPerReach}</td>
+      <td className="px-4 py-3">{campaign.costPerReach}</td>
       <td className="px-4 py-3">{campaign.linkClick}</td>
       <td className="px-4 py-3">
         {campaign.linkClick !== 0
@@ -318,7 +318,7 @@ export default function Page() {
   const [currentPage, setCurrentPage] = useState(1);
   const itemsPerPage = 5;
 
-  // Get users current businessId - moved into useMemo to avoid recalculations
+
   const businessId = useMemo(() => getDataFromLocalStorage("businessId"), []);
 
   // Fetch businessData
@@ -338,7 +338,7 @@ export default function Page() {
     show: false,
   });
 
-  // Memoize filtered campaigns to avoid recalculations on re-render
+
   const campaigns = useMemo(() => {
     if (activeTab === "Active") {
       return businessCampaigns.filter(
