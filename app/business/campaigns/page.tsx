@@ -318,7 +318,7 @@ export default function Page() {
   const [currentPage, setCurrentPage] = useState(1);
   const itemsPerPage = 5;
 
-  // Get users current businessId - moved into useMemo to avoid recalculations
+
   const businessId = useMemo(() => getDataFromLocalStorage("businessId"), []);
 
   // Fetch businessData
@@ -338,7 +338,7 @@ export default function Page() {
     show: false,
   });
 
-  // Memoize filtered campaigns to avoid recalculations on re-render
+
   const campaigns = useMemo(() => {
     if (activeTab === "Active") {
       return businessCampaigns.filter(
