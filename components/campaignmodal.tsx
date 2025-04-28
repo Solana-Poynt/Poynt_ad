@@ -17,16 +17,14 @@ import {
   UserPlus,
   Repeat,
   MessageSquare,
-  RefreshCw,
-  ListChecks,
-  FileText,
-  Link,
+  ExternalLink,
+  HeartIcon,
 } from "lucide-react";
 import { PricingTier } from "@/types/campaign";
 import { NotificationState } from "@/types/general";
 import Notification from "./notification";
 import useSolanaTokenBalances from "@/utils/hooks/balance";
-// import { useSolanaTokenBalances } from "@/utils/hooks/useSolanaTokenBalances";
+import { validateAllTaskUrls, validateTwitterUrl } from "@/utils/util";
 import { useDynamicContext } from "@dynamic-labs/sdk-react-core";
 import { cn } from "@/lib/utils";
 import { useSendDataMutation } from "@/store/api/api";
@@ -52,8 +50,8 @@ interface CampaignFormData {
   media: File | any;
   tasks: {
     social: string;
-    engagement: string;
-    websiteLink: string;
+    interaction: string;
+    custom: string;
   };
   cta: {
     text: string;
@@ -99,38 +97,43 @@ const engagementGoals = [
   },
 ];
 
-// Task type definitions
 const taskTypes = [
   {
     id: "social",
-    name: "Twitter Follow & Like",
-    description: "Gain followers and engagement on Twitter",
+    name: "X Follow",
+    description:
+      "Gain followers and engagement on X. Please paste only the link to your X profile",
     icon: <UserPlus className="w-5 h-5" />,
-    placeholder: "Follow @YourBrand or Like our latest tweet",
+    placeholder: "for example: https://x.com/yourprofile",
     subtasks: [
       { id: "follow", label: "Follow Account", verificationMethod: "api" },
-      { id: "like", label: "Like Tweet", verificationMethod: "api" },
     ],
   },
   {
-    id: "engagement",
-    name: "Twitter Amplification",
-    description: "Spread your content through retweets and comments",
-    icon: <Repeat className="w-5 h-5" />,
-    placeholder: "Retweet our announcement or comment on our post",
+    id: "interaction",
+    name: "Content Like",
+    description:
+      "Users will engage with your content via a like. Please paste only the link to the content you want them to like",
+    icon: <HeartIcon className="w-5 h-5" />,
+    placeholder: "for example: https://x.com/username/status/123456789",
+    subtasks: [
+      { id: "like", label: "Like Content", verificationMethod: "api" },
+    ],
+  },
+  {
+    id: "custom",
+    name: "Content Retweet and Comment",
+    description:
+      "Have users make retweets and comments about your brand or product. Please paste only the link to your original content",
+    icon: <MessageSquare className="w-5 h-5" />,
+    placeholder: "for example: https://x.com/username/status/123456789",
     subtasks: [
       { id: "retweet", label: "Retweet Content", verificationMethod: "api" },
-      { id: "comment", label: "Comment on Tweet", verificationMethod: "api" },
-    ],
-  },
-  {
-    id: "websiteLink",
-    name: "Original Twitter Content",
-    description: "Have users create tweets about your brand or product",
-    icon: <MessageSquare className="w-5 h-5" />,
-    placeholder: "Tweet about your experience with #YourBrandHashtag",
-    subtasks: [
-      { id: "tweet", label: "Create a Tweet", verificationMethod: "manual" },
+      {
+        id: "comment",
+        label: "Comment on Content",
+        verificationMethod: "manual",
+      },
     ],
   },
 ];
@@ -170,8 +173,8 @@ const CampaignModal = ({
     media: "",
     tasks: {
       social: "",
-      engagement: "",
-      websiteLink: "",
+      interaction: "",
+      custom: "",
     },
     cta: {
       text: "",
@@ -275,8 +278,8 @@ const CampaignModal = ({
     // Validate tasks
     if (
       !formData.tasks.social ||
-      !formData.tasks.engagement ||
-      !formData.tasks.websiteLink
+      !formData.tasks.interaction ||
+      !formData.tasks.custom
     ) {
       setError("Please fill in all three tasks");
       setIsSubmitting(false);
@@ -306,8 +309,8 @@ const CampaignModal = ({
       // Create a properly structured tasks object
       const tasksObject = {
         social: formData.tasks.social,
-        interaction: formData.tasks.websiteLink,
-        custom: formData.tasks.engagement,
+        interaction: formData.tasks.interaction,
+        custom: formData.tasks.custom,
       };
 
       // Convert to JSON string
@@ -342,8 +345,8 @@ const CampaignModal = ({
           media: undefined,
           tasks: {
             social: "",
-            websiteLink: "",
-            engagement: "",
+            interaction: "",
+            custom: "",
           },
           cta: {
             text: "",
@@ -416,8 +419,8 @@ const CampaignModal = ({
         );
       case 4: // Tasks step
         return Boolean(
-          formData.tasks.websiteLink &&
-            formData.tasks.engagement &&
+          formData.tasks.interaction &&
+            formData.tasks.custom &&
             formData.tasks.social
         );
       case 5: // Payment step
@@ -1025,36 +1028,45 @@ const CampaignModal = ({
   };
   // Tasks Component
 
-  // Fixed Tasks Component with correct ref typing
   const TasksComponent = () => {
     const [focusedTask, setFocusedTask] = useState<string | null>(null);
     const [selectedSubtasks, setSelectedSubtasks] = useState<{
       [key: string]: string;
     }>({
       social: "follow",
-      engagement: "retweet",
-      websiteLink: "tweet",
+      interaction: "like",
+      custom: "retweet",
     });
 
-    // Create refs for each textarea - with proper typing
-    const textareaRefs = useRef<{ [key: string]: HTMLTextAreaElement | null }>({
-      social: null,
-      engagement: null,
-      websiteLink: null,
-    });
+    // Track validation errors
+    const [validationErrors, setValidationErrors] = useState<{
+      [key: string]: string | null;
+    }>({});
 
-    // Create a state to track if form has been updated
+    // Track validation success
+    const [validatedTasks, setValidatedTasks] = useState<{
+      [key: string]: boolean;
+    }>({});
+
+    // Track when form is updated for feedback
     const [formUpdated, setFormUpdated] = useState(false);
 
+    // Create refs for each textarea
+    const textareaRefs = useRef<{ [key: string]: HTMLTextAreaElement | null }>({
+      social: null,
+      interaction: null,
+      custom: null,
+    });
+
     // Define type for task keys to ensure type safety
-    type TaskKey = "social" | "engagement" | "websiteLink";
+    type TaskKey = "social" | "interaction" | "custom";
 
     // Function to check if a string is a valid TaskKey
     const isTaskKey = (key: string): key is TaskKey => {
-      return key === "social" || key === "engagement" || key === "websiteLink";
+      return ["social", "interaction", "custom"].includes(key);
     };
 
-    // Update form data with debounce to prevent focus loss
+    // Update form data with shorter debounce to feel more responsive
     const updateFormData = useCallback(
       debounce((tasks: any) => {
         setFormData((prev) => ({
@@ -1062,8 +1074,8 @@ const CampaignModal = ({
           tasks,
         }));
         setFormUpdated(true);
-        setTimeout(() => setFormUpdated(false), 5000);
-      }, 3000),
+        setTimeout(() => setFormUpdated(false), 3000);
+      }, 500), // Reduced from 3000ms to 500ms for faster feedback
       []
     );
 
@@ -1076,41 +1088,227 @@ const CampaignModal = ({
           [taskType]: value,
         };
 
+        // Clear validation states when typing
+        setValidationErrors({
+          ...validationErrors,
+          [taskType]: null,
+        });
+
+        // Also clear validation success when editing
+        setValidatedTasks({
+          ...validatedTasks,
+          [taskType]: false,
+        });
+
         // Update the form data with debounce
         updateFormData(updatedTasks);
+
+        // Auto-validate after a short delay to provide real-time feedback
+        if (value.trim().length > 0) {
+          setTimeout(() => {
+            validateUrl(taskType, value);
+          }, 800);
+        }
       }
     };
 
     // Handle subtask selection
     const handleSubtaskSelect = (taskType: string, subtaskId: string) => {
-      setSelectedSubtasks({
-        ...selectedSubtasks,
-        [taskType]: subtaskId,
-      });
+      if (isTaskKey(taskType)) {
+        setSelectedSubtasks({
+          ...selectedSubtasks,
+          [taskType]: subtaskId,
+        });
+
+        // Revalidate URL when changing subtask type
+        const currentUrl = formData.tasks[taskType];
+        if (currentUrl && currentUrl.trim()) {
+          setTimeout(() => {
+            validateUrl(taskType, currentUrl);
+          }, 300);
+        }
+      }
     };
 
-    // Properly typed ref callback
+    // Handle paste event
+    const handlePaste = (taskType: string, e: React.ClipboardEvent) => {
+      // Get pasted content
+      const pastedText = e.clipboardData.getData("text");
+
+      // Check if it's a URL
+      if (pastedText.startsWith("http")) {
+        // Auto-trim whitespace from pasted URLs
+        const trimmedUrl = pastedText.trim();
+
+        // Update the field value immediately for better UX
+        if (isTaskKey(taskType)) {
+          const updatedTasks = {
+            ...formData.tasks,
+            [taskType]: trimmedUrl,
+          };
+
+          // Update form data immediately without debounce for paste operations
+          setFormData((prev) => ({
+            ...prev,
+            tasks: updatedTasks,
+          }));
+
+          // Validate URL right after paste
+          setTimeout(() => {
+            validateUrl(taskType, trimmedUrl);
+          }, 300);
+        }
+      }
+    };
+
+    // Clear a single field
+    const clearField = (taskType: string) => {
+      if (isTaskKey(taskType)) {
+        const updatedTasks = {
+          ...formData.tasks,
+          [taskType]: "",
+        };
+
+        setFormData((prev) => ({
+          ...prev,
+          tasks: updatedTasks,
+        }));
+
+        // Clear validation states
+        setValidationErrors({
+          ...validationErrors,
+          [taskType]: null,
+        });
+
+        setValidatedTasks({
+          ...validatedTasks,
+          [taskType]: false,
+        });
+
+        // Focus the field after clearing
+        if (textareaRefs.current[taskType]) {
+          textareaRefs.current[taskType]?.focus();
+        }
+      }
+    };
+
+    // Ref callback
     const setTextareaRef = (taskId: string, el: HTMLTextAreaElement | null) => {
       if (isTaskKey(taskId)) {
         textareaRefs.current[taskId] = el;
       }
     };
 
+    // Validate a single URL
+    const validateUrl = (taskType: string, url: string) => {
+      if (!url || url.trim() === "" || !isTaskKey(taskType)) return;
+
+      const subtaskType = selectedSubtasks[taskType];
+      const validation = validateTwitterUrl(url, subtaskType);
+
+      if (!validation.isValid) {
+        setValidationErrors({
+          ...validationErrors,
+          [taskType]: validation.error || "",
+        });
+        setValidatedTasks({
+          ...validatedTasks,
+          [taskType]: false,
+        });
+      } else {
+        // Clear error and mark as validated if valid
+        const newErrors = { ...validationErrors };
+        delete newErrors[taskType];
+        setValidationErrors(newErrors);
+
+        setValidatedTasks({
+          ...validatedTasks,
+          [taskType]: true,
+        });
+      }
+    };
+
+    // Auto-focus first empty field on component mount
+    useEffect(() => {
+      const firstEmptyField = Object.keys(formData.tasks).find(
+        (key) =>
+          isTaskKey(key) &&
+          (!formData.tasks[key as keyof typeof formData.tasks] ||
+            formData.tasks[key as keyof typeof formData.tasks].trim() === "")
+      );
+
+      if (
+        firstEmptyField &&
+        isTaskKey(firstEmptyField) &&
+        textareaRefs.current[firstEmptyField]
+      ) {
+        setTimeout(() => {
+          textareaRefs.current[firstEmptyField]?.focus();
+        }, 500);
+      }
+
+      // Validate any existing URLs on mount
+      Object.entries(formData.tasks).forEach(([key, value]) => {
+        if (isTaskKey(key) && value && value.trim() !== "") {
+          validateUrl(key, value);
+        }
+      });
+    }, []);
+
+    // Handle next button click with validation
+    const handleNextWithValidation = () => {
+      // Validate all URLs
+      const validation = validateAllTaskUrls(formData.tasks, selectedSubtasks);
+
+      if (validation.isValid) {
+        // Show success notification
+        showNotification("All tasks validated successfully!", "success");
+
+        // Small delay to show success before proceeding
+        setTimeout(() => {
+          // Proceed to next step
+          handleNext();
+        }, 500);
+      } else {
+        // Set validation errors
+        setValidationErrors(validation.errors);
+
+        // Show notification with first error
+        const firstError = Object.values(validation.errors)[0];
+        if (firstError) {
+          showNotification(firstError, "error");
+        }
+
+        // Focus the first field with an error
+        const firstErrorKey = Object.keys(validation.errors)[0];
+        if (
+          firstErrorKey &&
+          isTaskKey(firstErrorKey) &&
+          textareaRefs.current[firstErrorKey]
+        ) {
+          textareaRefs.current[firstErrorKey]?.focus();
+        }
+      }
+    };
+
+    // Check if all tasks are valid
+    const allTasksValid = Object.keys(formData.tasks).every(
+      (key) => isTaskKey(key) && validatedTasks[key]
+    );
+
     return (
       <div className="space-y-6">
         <div className="flex items-center justify-between">
-          <h3 className="text-xl font-bold text-gray-900">
-            Configure Twitter Tasks
-          </h3>
+          <h3 className="text-xl font-bold text-gray-900">Configure X Tasks</h3>
           <div className="text-sm text-gray-500">Step 4 of 7</div>
         </div>
 
-        <div className="p-4 bg-yellow-50 border border-yellow-200 rounded-lg mb-4">
+        <div className="p-4 bg-blue-50 border border-blue-200 rounded-lg mb-4">
           <div className="flex items-start">
-            <Info className="w-5 h-5 text-yellow-500 mt-0.5 mr-2 shrink-0" />
-            <p className="text-sm text-yellow-700">
-              Create 3 Twitter tasks that users will complete to earn Poynts.
-              Each campaign requires all three types of tasks.
+            <Info className="w-5 h-5 text-blue-500 mt-0.5 mr-2 shrink-0" />
+            <p className="text-sm text-blue-700">
+              Create 3 X (formerly Twitter) tasks that users will complete to
+              earn Poynts. Simply paste the URLs from X in the fields below.
             </p>
           </div>
         </div>
@@ -1121,21 +1319,41 @@ const CampaignModal = ({
           </div>
         )}
 
-        <div className="space-y-6">
+        <div className="space-y-4">
           {taskTypes.map((taskType) => {
             // Skip if not a valid task key
             if (!isTaskKey(taskType.id)) return null;
 
+            const isValid = validatedTasks[taskType.id];
+            const hasError = Boolean(validationErrors[taskType.id]);
+            const isEmpty =
+              !formData.tasks[taskType.id as keyof typeof formData.tasks] ||
+              formData.tasks[
+                taskType.id as keyof typeof formData.tasks
+              ].trim() === "";
+
             return (
               <div
                 key={taskType.id}
-                className="border border-gray-200 rounded-lg p-4"
+                className={`border rounded-lg p-4 transition-colors duration-200 ${
+                  isValid
+                    ? "border-green-300 bg-green-50"
+                    : hasError
+                    ? "border-red-300 bg-red-50"
+                    : "border-gray-200 hover:border-blue-200"
+                }`}
               >
                 <div className="flex items-center mb-3">
-                  <div className="h-8 w-8 rounded-lg bg-side/10 flex items-center justify-center mr-3">
-                    {taskType.icon}
+                  <div
+                    className={`h-8 w-8 rounded-lg flex items-center justify-center mr-3 ${
+                      isValid
+                        ? "bg-green-100 text-green-600"
+                        : "bg-side/10 text-side"
+                    }`}
+                  >
+                    {isValid ? <Check className="w-5 h-5" /> : taskType.icon}
                   </div>
-                  <div>
+                  <div className="flex-1">
                     <h4 className="font-medium text-gray-900">
                       {taskType.name}
                     </h4>
@@ -1143,65 +1361,122 @@ const CampaignModal = ({
                       {taskType.description}
                     </p>
                   </div>
+                  {!isEmpty && (
+                    <button
+                      type="button"
+                      onClick={() => clearField(taskType.id)}
+                      className="p-1 text-gray-400 hover:text-gray-600 rounded-full hover:bg-gray-100"
+                      aria-label="Clear field"
+                    >
+                      <X className="w-4 h-4" />
+                    </button>
+                  )}
                 </div>
 
-                {/* Subtask selector */}
-                {taskType.subtasks && taskType.subtasks.length > 1 && (
-                  <div className="mb-3 flex space-x-2">
-                    {taskType.subtasks.map((subtask) => (
-                      <button
-                        key={subtask.id}
-                        type="button"
-                        onClick={() =>
-                          handleSubtaskSelect(taskType.id, subtask.id)
-                        }
-                        className={`px-3 py-1 text-xs rounded-full ${
-                          selectedSubtasks[taskType.id] === subtask.id
-                            ? "bg-side text-white"
-                            : "bg-gray-100 text-gray-700 hover:bg-gray-200"
-                        }`}
-                      >
-                        {subtask.label}
-                      </button>
-                    ))}
-                  </div>
-                )}
+                {/* Subtask selector - only for custom task */}
+                {taskType.id === "custom" &&
+                  taskType.subtasks &&
+                  taskType.subtasks.length > 1 && (
+                    <div className="mb-3 flex space-x-2">
+                      {taskType.subtasks.map((subtask: any) => (
+                        <button
+                          key={subtask.id}
+                          type="button"
+                          onClick={() =>
+                            handleSubtaskSelect(taskType.id, subtask.id)
+                          }
+                          className={`px-3 py-1 text-xs rounded-full transition-colors ${
+                            selectedSubtasks[taskType.id] === subtask.id
+                              ? "bg-side text-white"
+                              : "bg-gray-100 text-gray-700 hover:bg-gray-200"
+                          }`}
+                        >
+                          {subtask.label}
+                        </button>
+                      ))}
+                    </div>
+                  )}
 
-                <div className="mt-2">
-                  <textarea
-                    defaultValue={formData.tasks[taskType.id] || ""}
-                    onInput={(e) =>
-                      handleTaskInput(
-                        taskType.id,
-                        (e.target as HTMLTextAreaElement).value
-                      )
-                    }
-                    onFocus={() => setFocusedTask(taskType.id)}
-                    onBlur={() => setFocusedTask(null)}
-                    placeholder={taskType.placeholder}
-                    className="w-full px-3 py-2 border border-gray-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-side resize-none"
-                    rows={2}
-                    ref={(el) => setTextareaRef(taskType.id, el)}
-                  />
-                  {focusedTask === taskType.id && (
-                    <p className="mt-1 text-xs text-gray-500">
+                <div className="relative">
+                  <div
+                    className={`relative rounded-lg transition-all ${
+                      hasError ? "shake-animation" : ""
+                    }`}
+                  >
+                    <textarea
+                      value={
+                        formData.tasks[
+                          taskType.id as keyof typeof formData.tasks
+                        ] || ""
+                      }
+                      onChange={(e) =>
+                        handleTaskInput(taskType.id, e.target.value)
+                      }
+                      onPaste={(e) => handlePaste(taskType.id, e)}
+                      onFocus={() => setFocusedTask(taskType.id)}
+                      onBlur={(e) => {
+                        // Small delay to keep help text visible a moment longer
+                        setTimeout(() => setFocusedTask(null), 200);
+                        validateUrl(taskType.id, e.target.value);
+                      }}
+                      placeholder={taskType.placeholder}
+                      className={`w-full px-3 py-2 border rounded-lg text-sm focus:outline-none focus:ring-2 resize-none transition ${
+                        isValid
+                          ? "border-green-300 focus:ring-green-500 focus:border-transparent"
+                          : hasError
+                          ? "border-red-300 focus:ring-red-500 focus:border-transparent"
+                          : "border-gray-200 focus:ring-side focus:border-transparent"
+                      }`}
+                      rows={1}
+                      ref={(el) => setTextareaRef(taskType.id, el)}
+                    />
+
+                    {isValid && (
+                      <div className="absolute right-3 top-2.5 text-green-500">
+                        <Check className="w-4 h-4" />
+                      </div>
+                    )}
+                  </div>
+
+                  {/* Context-sensitive help text */}
+                  {(focusedTask === taskType.id || isEmpty) && (
+                    <p className="mt-1 text-xs text-gray-500 flex items-center">
+                      <ExternalLink className="w-3 h-3 mr-1" />
                       {selectedSubtasks[taskType.id] === "follow" &&
-                        "Example: Follow @PoyntRewards to earn 20 Poynts"}
+                        "Example: https://x.com/yourprofile"}
                       {selectedSubtasks[taskType.id] === "like" &&
-                        "Example: Like our latest announcement tweet to earn 10 Poynts"}
+                        "Example: https://x.com/username/status/123456789"}
                       {selectedSubtasks[taskType.id] === "retweet" &&
-                        "Example: Retweet our latest post to earn 25 Poynts"}
+                        "Example: https://x.com/username/status/123456789"}
                       {selectedSubtasks[taskType.id] === "comment" &&
-                        "Example: Comment on our pinned tweet to earn 15 Poynts"}
-                      {selectedSubtasks[taskType.id] === "tweet" &&
-                        "Example: Tweet your experience with our product using #PoyntRewards to earn 40 Poynts"}
+                        "Example: https://x.com/username/status/123456789"}
                     </p>
                   )}
-                  {!formData.tasks[taskType.id]?.trim() && !focusedTask && (
-                    <p className="mt-1 text-xs text-red-500">
-                      This task is required
+
+                  {/* Validation error message */}
+                  {validationErrors[taskType.id] && (
+                    <p className="mt-1 text-xs text-red-500 flex items-center">
+                      <X className="w-3 h-3 mr-1" />
+                      {validationErrors[taskType.id]}
                     </p>
                   )}
+
+                  {/* Success message */}
+                  {isValid && (
+                    <p className="mt-1 text-xs text-green-500 flex items-center">
+                      <Check className="w-3 h-3 mr-1" />
+                      URL validated successfully
+                    </p>
+                  )}
+
+                  {/* Empty field warning */}
+                  {isEmpty &&
+                    !focusedTask &&
+                    !validationErrors[taskType.id] && (
+                      <p className="mt-1 text-xs text-amber-500">
+                        This task is required
+                      </p>
+                    )}
                 </div>
               </div>
             );
@@ -1210,23 +1485,55 @@ const CampaignModal = ({
 
         <div className="p-4 bg-gray-50 rounded-lg border border-gray-200 mt-4">
           <h4 className="text-sm font-medium text-gray-700 mb-2">
-            Tips for effective Twitter tasks:
+            Tips for effective X tasks:
           </h4>
           <ul className="space-y-1 text-sm text-gray-600 list-disc pl-5">
-            <li>
-              Keep instructions clear and specific (e.g., "Follow
-              @PoyntRewards")
-            </li>
-            <li>
-              For tweet tasks, specify any hashtags you want users to include
-            </li>
-            <li>
-              Make sure to include the exact tweet URL for like/retweet/comment
-              tasks
-            </li>
-            <li>Set reasonable Poynt rewards based on task complexity</li>
+            <li>Simply copy and paste the X URL - no additional text needed</li>
+            <li>Make sure to copy the full URL including "https://x.com/"</li>
+            <li>For profile follows: paste your X profile URL</li>
+            <li>For likes/retweets: paste the specific post URL</li>
           </ul>
         </div>
+
+        {/* Actions */}
+        <div className="flex justify-end pt-4">
+          <button
+            onClick={handleNextWithValidation}
+            className={`px-6 py-2 rounded-lg transition-colors ${
+              allTasksValid
+                ? "bg-green-600 text-white hover:bg-green-700"
+                : "bg-side text-white hover:bg-side/90"
+            }`}
+          >
+            {allTasksValid ? "All URLs Validated - Continue" : "Continue"}
+          </button>
+        </div>
+
+        {/* Add this CSS to your stylesheet */}
+        <style jsx>{`
+          @keyframes shake {
+            0%,
+            100% {
+              transform: translateX(0);
+            }
+            10%,
+            30%,
+            50%,
+            70%,
+            90% {
+              transform: translateX(-2px);
+            }
+            20%,
+            40%,
+            60%,
+            80% {
+              transform: translateX(2px);
+            }
+          }
+          .shake-animation {
+            animation: shake 0.6s cubic-bezier(0.36, 0.07, 0.19, 0.97) both;
+          }
+        `}</style>
       </div>
     );
   };
