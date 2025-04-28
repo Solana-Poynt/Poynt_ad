@@ -1787,7 +1787,7 @@ const CampaignModal = ({
         formData.pricingTier.impressions
     );
 
-    // Total payment amount including service fee
+    // Total payment amo``unt including service fee
     const totalPaymentAmount = formData.budget;
     // Add this function to your FinalReview component
 
@@ -1822,7 +1822,7 @@ const CampaignModal = ({
         );
 
         // Create transaction with transfer instruction
-        const transferTransaction = new Transaction().add(
+        const transferTransaction: any = new Transaction().add(
           web3.SystemProgram.transfer({
             fromPubkey: fromKey,
             toPubkey: toKey,
