@@ -1,5 +1,5 @@
 "use client";
-
+import Link from "next/link";
 import Image from "next/image";
 import React, { useState, useCallback, memo } from "react";
 import { useRouter } from "next/navigation";
@@ -16,26 +16,25 @@ import LoadingOverlay from "@/components/ui/loading";
 const fadeIn = {
   initial: { opacity: 0 },
   animate: { opacity: 1 },
-  transition: { duration: 0.5 }
+  transition: { duration: 0.5 },
 };
 
 const slideInLeft = {
   initial: { x: -50, opacity: 0 },
   animate: { x: 0, opacity: 1 },
-  transition: { duration: 0.6, delay: 0.2 }
+  transition: { duration: 0.6, delay: 0.2 },
 };
 
 const slideInRight = {
   initial: { x: 50, opacity: 0 },
   animate: { x: 0, opacity: 1 },
-  transition: { duration: 0.6, delay: 0.4 }
+  transition: { duration: 0.6, delay: 0.4 },
 };
 
 const fadeInUp = {
   initial: { y: 20, opacity: 0 },
   animate: { y: 0, opacity: 1 },
 };
-
 
 interface LoginResponse {
   status: number;
@@ -61,7 +60,6 @@ interface GoogleCredentialResponse {
   select_by?: string;
 }
 
-
 const Logo = memo(() => (
   <motion.a
     href="/"
@@ -82,7 +80,7 @@ const Logo = memo(() => (
   </motion.a>
 ));
 
-Logo.displayName = 'Logo';
+Logo.displayName = "Logo";
 
 function Signup() {
   const router = useRouter();
@@ -105,79 +103,78 @@ function Signup() {
     setNotification((prev) => ({ ...prev, show: false }));
   }, []);
 
-  const handleAuth = useCallback(async (credential: GoogleCredentialResponse) => {
-    if (!credential?.credential) {
-      showNotification("Invalid credentials provided", "error");
-      return;
-    }
-
-    try {
-      setIsLoading(true);
-
-      const response = await fetch(`${baseURL}/auth/google`, {
-        method: "POST",
-        credentials: "include",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({ idToken: credential.credential }),
-      });
-
-      if (!response.ok) {
-        const errorData = await response.json();
-        throw new Error(errorData.message);
+  const handleAuth = useCallback(
+    async (credential: GoogleCredentialResponse) => {
+      if (!credential?.credential) {
+        showNotification("Invalid credentials provided", "error");
+        return;
       }
 
-      const data: LoginResponse = await response.json();
-      showNotification("Successfully signed in!", "success");
+      try {
+        setIsLoading(true);
 
-      dispatch(
-        setIsAuth({
-          isAuth: true,
-          accessToken: data.data.accessToken,
-          user: {
-            id: data.data.user.id,
-            email: data.data.user.email,
-            name: data.data.user.name,
-            role: data.data.user.role,
-            businessId:
-              data.data.user.businesses.length > 0
-                ? data.data.user.businesses[0].id
-                : "",
+        const response = await fetch(`${baseURL}/auth/google`, {
+          method: "POST",
+          credentials: "include",
+          headers: {
+            "Content-Type": "application/json",
           },
-        })
-      );
+          body: JSON.stringify({ idToken: credential.credential }),
+        });
 
-      router.push("/business");
-    } catch (error) {
-      showNotification(
-        `Authentication failed: ${
-          error instanceof Error
-            ? error.message
-            : "An unexpected error occurred"
-        }`,
-        "error"
-      );
-    } finally {
-      setIsLoading(false);
-    }
-  }, [dispatch, router, showNotification]);
+        if (!response.ok) {
+          const errorData = await response.json();
+          throw new Error(errorData.message);
+        }
+
+        const data: LoginResponse = await response.json();
+        showNotification("Successfully signed in!", "success");
+
+        dispatch(
+          setIsAuth({
+            isAuth: true,
+            accessToken: data.data.accessToken,
+            user: {
+              id: data.data.user.id,
+              email: data.data.user.email,
+              name: data.data.user.name,
+              role: data.data.user.role,
+              businessId:
+                data.data.user.businesses.length > 0
+                  ? data.data.user.businesses[0].id
+                  : "",
+            },
+          })
+        );
+
+        router.push("/business");
+      } catch (error) {
+        showNotification(
+          `Authentication failed: ${
+            error instanceof Error
+              ? error.message
+              : "An unexpected error occurred"
+          }`,
+          "error"
+        );
+      } finally {
+        setIsLoading(false);
+      }
+    },
+    [dispatch, router, showNotification]
+  );
 
   return (
-    <motion.div
-      className="flex w-full h-screen"
-      {...fadeIn}
-    >
+    <motion.div className="flex w-full h-screen" {...fadeIn}>
       <motion.div
         className="hidden lg:block relative w-2/5 h-full"
         {...slideInLeft}
       >
-    
         <div className="absolute inset-0 overflow-hidden">
-          <Image 
-            src="/pexel3.jpg" 
-            alt="Background" 
-            fill 
+          <Image
+            src="/pexel3.jpg"
+            alt="Background"
+            fill
             sizes="40vw"
             priority
             quality={85}
@@ -212,11 +209,20 @@ function Signup() {
         </AnimatePresence>
 
         <motion.div
-          className="flex flex-col gap-6"
+          className="flex flex-col items-center gap-6"
           {...fadeInUp}
           transition={{ duration: 0.6, delay: 0.8 }}
         >
           <GoogleLoginButton isLoading={isLoading} onSuccess={handleAuth} />
+          <p className="text-sm text-gray-600">
+            Before signing in, please read our{" "}
+            <Link
+              href="/privacy"
+              className="text-blue-600 hover:text-blue-800 underline"
+            >
+              terms and privacy policy
+            </Link>
+          </p>
         </motion.div>
 
         <AnimatePresence mode="wait">
