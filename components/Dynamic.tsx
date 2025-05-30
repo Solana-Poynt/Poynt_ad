@@ -19,13 +19,13 @@ export default function ClientDynamicWrapper({ children }: any) {
     walletConnectors: [SolanaWalletConnectors],
     events: {
       onWalletConnected: (args: any) => {
-        console.log("Wallet connected:", args);
+        // console.log("Wallet connected:", args);
         if (args?.address) {
           saveDataToLocalStorage("wallet", args.address);
         }
       },
       onEmbeddedWalletCreated: (args: any) => {
-        console.log("Embedded wallet created:", args);
+        // console.log("Embedded wallet created:", args);
         if (args?.address) {
           saveDataToLocalStorage("wallet", args.address);
         }

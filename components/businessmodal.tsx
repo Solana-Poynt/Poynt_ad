@@ -4,7 +4,7 @@ import { useRouter } from "next/navigation";
 import { motion, AnimatePresence } from "framer-motion";
 import { X, Building2, Briefcase, Loader2 } from "lucide-react";
 import { NotificationState } from "@/types/general";
-import Notification from "./notification";
+import Notification from "./Notification";
 import { useSendDataMutation } from "@/store/api/api";
 import { saveDataToLocalStorage } from "@/utils/localStorage";
 

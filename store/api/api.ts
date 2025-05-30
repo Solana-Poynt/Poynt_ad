@@ -124,6 +124,7 @@ export const api = createApi({
       },
       providesTags: ["Business"],
     }),
+
     getAllBusiness: builder.query<IResponse, null>({
       query: () => {
         return `business`;

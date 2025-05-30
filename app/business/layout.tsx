@@ -1,6 +1,6 @@
 "use client";
-import SideNavigation from "../../components/businessUI/sidebar";
-import BusinessHeader from "@/components/businessUI/header";
+import SideNavigation from "../../components/businessUI/Sidebar";
+import BusinessHeader from "@/components/businessUI/Header";
 import React, { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { getDataFromLocalStorage } from "@/utils/localStorage";
