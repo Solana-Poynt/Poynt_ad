@@ -12,6 +12,7 @@ import { saveDataToLocalStorage } from "@/utils/localStorage";
 import { NotificationState } from "@/types/general";
 import Notification from "@/components/Notification";
 import { AnimatePresence, motion } from "framer-motion";
+
 import {
   Copy,
   ExternalLink,
