@@ -11,7 +11,7 @@ import {
   CheckIcon,
   Target,
 } from "lucide-react";
-import { useSendDataMutation } from "@/store/api/api";
+// import { useSendDataMutation } from "@/store/api/api";
 
 // Style constants to avoid recalculations
 const fadeInUp = {
@@ -27,54 +27,56 @@ const fadeInRight = {
 };
 
 const WaitlistPage = () => {
-  const [email, setEmail] = useState("");
-  const [isSubmitted, setIsSubmitted] = useState(false);
-  const [isSubmitting, setIsSubmitting] = useState(false);
-  const [error, setError] = useState("");
+  // Commented out waitlist-related state
+  // const [email, setEmail] = useState("");
+  // const [isSubmitted, setIsSubmitted] = useState(false);
+  // const [isSubmitting, setIsSubmitting] = useState(false);
+  // const [error, setError] = useState("");
 
-  // Use RTK Query hook
-  const [joinWaitlist] = useSendDataMutation();
+  // Commented out RTK Query hook
+  // const [joinWaitlist] = useSendDataMutation();
 
-  const handleSubmit = async (e: FormEvent<HTMLFormElement>) => {
-    e.preventDefault();
+  // Commented out form submission function
+  // const handleSubmit = async (e: FormEvent<HTMLFormElement>) => {
+  //   e.preventDefault();
 
-    // Basic email validation
-    if (!email || !/^\S+@\S+\.\S+$/.test(email)) {
-      setError("Please enter a valid email address");
-      return;
-    }
+  //   // Basic email validation
+  //   if (!email || !/^\S+@\S+\.\S+$/.test(email)) {
+  //     setError("Please enter a valid email address");
+  //     return;
+  //   }
 
-    setError("");
-    setIsSubmitting(true);
+  //   setError("");
+  //   setIsSubmitting(true);
 
-    try {
-      const request = await joinWaitlist({
-        url: "auth/waitlist",
-        data: { email },
-        type: "POST",
-      });
+  //   try {
+  //     const request = await joinWaitlist({
+  //       url: "auth/waitlist",
+  //       data: { email },
+  //       type: "POST",
+  //     });
 
-      if (request?.data) {
-        const { data, message, status } = request.data;
+  //     if (request?.data) {
+  //       const { data, message, status } = request.data;
 
-        if (status === "success") {
-          setIsSubmitted(true);
-        } else {
-          setError(message || "Failed to join waitlist");
-        }
-      } else {
-        throw new Error("No response from server");
-      }
-    } catch (err) {
-      setError(
-        err instanceof Error
-          ? err.message
-          : "Something went wrong. Please try again."
-      );
-    } finally {
-      setIsSubmitting(false);
-    }
-  };
+  //       if (status === "success") {
+  //         setIsSubmitted(true);
+  //       } else {
+  //         setError(message || "Failed to join waitlist");
+  //       }
+  //     } else {
+  //       throw new Error("No response from server");
+  //     }
+  //   } catch (err) {
+  //     setError(
+  //       err instanceof Error
+  //         ? err.message
+  //         : "Something went wrong. Please try again."
+  //     );
+  //   } finally {
+  //     setIsSubmitting(false);
+  //   }
+  // };
 
   return (
     <div className="h-full md:min-h-screen px-3 md:px-0 w-full bg-gradient-to-b from-gray-50 to-white flex flex-col">
@@ -98,6 +100,7 @@ const WaitlistPage = () => {
                 experience it.
               </p>
 
+              {/* Waitlist form completely commented out 
               {!isSubmitted ? (
                 <form onSubmit={handleSubmit} className="space-y-4 max-w-md">
                   <div>
@@ -163,28 +166,28 @@ const WaitlistPage = () => {
                     )}
                   </button>
                 </form>
-              ) : (
-                <motion.div
-                  initial={{ opacity: 0, scale: 0.9 }}
-                  animate={{ opacity: 1, scale: 1 }}
-                  className="bg-green-50 border border-green-100 rounded-lg p-6 max-w-md"
-                >
-                  <div className="flex items-center">
-                    <div className="bg-green-100 rounded-full p-2 mr-4">
-                      <Check className="h-6 w-6 text-green-600" />
-                    </div>
-                    <div>
-                      <h3 className="text-sm md:text-lg font-semibold text-gray-900">
-                        You're in!
-                      </h3>
-                      <p className="text-gray-600">
+              ) : ( */}
+              <motion.div
+                initial={{ opacity: 0, scale: 0.9 }}
+                animate={{ opacity: 1, scale: 1 }}
+                className="bg-green-50 border border-green-100 rounded-lg p-6 max-w-md"
+              >
+                <div className="flex items-center">
+                  <div className="bg-green-100 rounded-full p-2 mr-4">
+                    <Check className="h-6 w-6 text-green-600" />
+                  </div>
+                  <div>
+                    <h3 className="text-sm md:text-lg font-semibold text-gray-900">
+                      Waitlist is closed. Thank you for joining us!
+                    </h3>
+                    {/* <p className="text-gray-600">
                         Check your inbox for your exclusive download link to try
                         the Poynt beta.
-                      </p>
-                    </div>
+                      </p> */}
                   </div>
-                </motion.div>
-              )}
+                </div>
+              </motion.div>
+              {/* )} */}
             </motion.div>
 
             <motion.div {...fadeInRight} className="hidden md:block">

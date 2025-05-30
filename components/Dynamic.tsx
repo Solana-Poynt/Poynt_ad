@@ -1,7 +1,9 @@
 "use client";
-
 import React from "react";
-import { DynamicContextProvider } from "@dynamic-labs/sdk-react-core";
+import {
+  DynamicContextProvider,
+  DynamicWidget,
+} from "@dynamic-labs/sdk-react-core";
 import { SolanaWalletConnectors } from "@dynamic-labs/solana";
 import { saveDataToLocalStorage } from "@/utils/localStorage";
 
@@ -14,7 +16,7 @@ export default function ClientDynamicWrapper({ children }: any) {
     );
   }
 
-  const settings = {
+  const settings: any = {
     environmentId: dynamicId,
     walletConnectors: [SolanaWalletConnectors],
     events: {
@@ -29,9 +31,6 @@ export default function ClientDynamicWrapper({ children }: any) {
         if (args?.address) {
           saveDataToLocalStorage("wallet", args.address);
         }
-      },
-      onLogout: () => {
-        console.log("User logged out from wallet");
       },
     },
   };

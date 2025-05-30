@@ -1,5 +1,6 @@
 "use client";
-import { useState, useCallback, useEffect } from "react";
+import { useState, useCallback, useEffect, useRef } from "react";
+import { debounce } from "lodash";
 import { motion, AnimatePresence } from "framer-motion";
 import { X, Info, Loader, Check, ArrowRight, ArrowLeft } from "lucide-react";
 import { PricingTier } from "@/types/campaign";
@@ -59,8 +60,8 @@ interface CampaignFormData {
   media: File | any;
   tasks: {
     social: string;
-    engagement: string;
-    websiteLink: string;
+    interaction: string;
+    custom: string;
   };
   cta: {
     text: string;
@@ -120,8 +121,8 @@ const CampaignModal = ({
     media: "",
     tasks: {
       social: "",
-      engagement: "",
-      websiteLink: "",
+      interaction: "",
+      custom: "",
     },
     cta: {
       text: "",
@@ -246,8 +247,8 @@ const CampaignModal = ({
 
     if (
       !formData.tasks.social ||
-      !formData.tasks.engagement ||
-      !formData.tasks.websiteLink
+      !formData.tasks.interaction ||
+      !formData.tasks.custom
     ) {
       setError("Please fill in all three tasks");
       setIsSubmitting(false);
@@ -379,8 +380,8 @@ const CampaignModal = ({
         );
       case 5:
         return Boolean(
-          formData.tasks.websiteLink &&
-            formData.tasks.engagement &&
+          formData.tasks.interaction &&
+            formData.tasks.custom &&
             formData.tasks.social
         );
       case 6:
