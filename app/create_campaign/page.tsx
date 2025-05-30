@@ -3,10 +3,11 @@ import { useState, useCallback, memo } from "react";
 import { useRouter } from "next/navigation";
 import { motion, AnimatePresence } from "framer-motion";
 import { Check, ArrowRight, ChevronRight } from "lucide-react";
-import CampaignModal from "@/components/Campaignmodal";
+import CampaignModal from "@/components/CampaignModal";
+
 import { DEFAULT_PRICING_TIERS } from "@/types/campaign";
 import Footer from "../../components/Footer";
-import Header from "@/components/Campaignheader";
+import Header from "@/components/CampaignHeader";
 import { cn } from "@/lib/utils";
 
 // Pre-defined animation variants
