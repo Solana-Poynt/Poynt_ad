@@ -1,12 +1,11 @@
 "use client";
-import { useState, useCallback, useEffect, useRef } from "react";
-import { debounce } from "lodash";
+import { useState, useCallback, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { X, Info, Loader, Check, ArrowRight, ArrowLeft } from "lucide-react";
 import { PricingTier } from "@/types/campaign";
 import { NotificationState } from "@/types/general";
 import Notification from "./Notification";
-import useSolanaTokenBalances from "@/utils/hooks/useBalance";
+import useSolanaTokenBalances from "@/utils/hooks/balance";
 import { useDynamicContext } from "@dynamic-labs/sdk-react-core";
 import { cn } from "@/lib/utils";
 import { useSendDataMutation } from "@/store/api/api";
@@ -60,8 +59,8 @@ interface CampaignFormData {
   media: File | any;
   tasks: {
     social: string;
-    interaction: string;
-    custom: string;
+    engagement: string;
+    websiteLink: string;
   };
   cta: {
     text: string;
@@ -121,8 +120,8 @@ const CampaignModal = ({
     media: "",
     tasks: {
       social: "",
-      interaction: "",
-      custom: "",
+      engagement: "",
+      websiteLink: "",
     },
     cta: {
       text: "",
@@ -247,8 +246,8 @@ const CampaignModal = ({
 
     if (
       !formData.tasks.social ||
-      !formData.tasks.interaction ||
-      !formData.tasks.custom
+      !formData.tasks.engagement ||
+      !formData.tasks.websiteLink
     ) {
       setError("Please fill in all three tasks");
       setIsSubmitting(false);
@@ -380,8 +379,8 @@ const CampaignModal = ({
         );
       case 5:
         return Boolean(
-          formData.tasks.interaction &&
-            formData.tasks.custom &&
+          formData.tasks.websiteLink &&
+            formData.tasks.engagement &&
             formData.tasks.social
         );
       case 6:

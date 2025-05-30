@@ -15,7 +15,7 @@ import {
   Copy,
   Info,
 } from "lucide-react";
-import useSolanaTokenBalances from "@/utils/hooks/useBalance";
+import useSolanaTokenBalances from "@/utils/hooks/balance";
 
 interface TokenBalance {
   address: string;

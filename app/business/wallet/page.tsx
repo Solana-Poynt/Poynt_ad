@@ -1,6 +1,6 @@
 "use client";
 import { useState, useEffect } from "react";
-import useSolanaTokenBalances from "@/utils/hooks/useBalance";
+import useSolanaTokenBalances from "@/utils/hooks/balance";
 import { useCampaignTransactionHistory } from "@/utils/hooks/useTransactions";
 import ActionButtons from "@/components/WalletActions";
 import {

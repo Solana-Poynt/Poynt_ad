@@ -9,7 +9,7 @@ import {
   VerxioContext,
 } from "@verxioprotocol/core";
 import { createUmi } from "@metaplex-foundation/umi-bundle-defaults";
-import { publicKey, Umi } from "@metaplex-foundation/umi";
+import { publicKey } from "@metaplex-foundation/umi";
 import { Transaction } from "@solana/web3.js";
 import bs58 from "bs58";
 import {
