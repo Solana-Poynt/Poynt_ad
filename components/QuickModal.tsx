@@ -10,7 +10,7 @@ import {
   Rocket,
   Building2,
 } from "lucide-react";
-import BusinessModal from "./businessmodal";
+import BusinessModal from "./Businessmodal";
 
 interface Step {
   title: string;

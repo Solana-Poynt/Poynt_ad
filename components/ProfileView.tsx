@@ -1,7 +1,7 @@
 "use client";
 import React, { useRef, useState, useEffect } from "react";
 import { ChevronDown, Building2, Briefcase } from "lucide-react";
-import BusinessModal from "./businessmodal";
+import BusinessModal from "./Businessmodal";
 import {
   getDataFromLocalStorage,
   saveDataToLocalStorage,
@@ -9,7 +9,7 @@ import {
 import { useGetUserQuery } from "@/store/api/api";
 import { motion, AnimatePresence } from "framer-motion";
 // import LoadingOverlay from "./ui/loading";
-import LoadingOverlay from "./ui/loading";
+import LoadingOverlay from "./ui/Loading";
 import { useRouter } from "next/navigation";
 // import { BusinessFormData } from "@/types/general";
 
@@ -50,6 +50,8 @@ const ProfileDropdown: React.FC = () => {
     error: userError,
   } = useGetUserQuery({ id: userId });
   const accounts: Account[] = usersServerData?.data?.businesses;
+
+  // console.log("Accounts:", accounts);
   const currentSelectedAccount =
     accounts &&
     accounts.filter((item) => {

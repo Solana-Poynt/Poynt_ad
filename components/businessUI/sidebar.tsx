@@ -3,13 +3,13 @@ import React, { useState, useEffect } from "react";
 import { useRouter, usePathname } from "next/navigation";
 import { Icon } from "@iconify/react";
 import { useMediaQuery } from "react-responsive";
-import { LogOut, Menu, X } from "lucide-react";
+import { LogOut, X } from "lucide-react";
 import { logout } from "@/store/slices/isAuthSlice";
 import { clearWallet } from "@/store/slices/isWalletSlice";
 import { useDispatch } from "react-redux";
 import { AppDispatch } from "@/store/store";
 import { googleLogout } from "@react-oauth/google";
-// import { useOkto, type OktoContextType } from "okto-sdk-react";
+import { useDynamicContext } from "@dynamic-labs/sdk-react-core";
 
 interface NavProps {
   role: string;
@@ -39,7 +39,7 @@ export default function SideNavigation({
 
   // Use the prop if provided, otherwise use local state
   const [isSidebarOpen, setIsSidebarOpen] = useState(!isTablet);
-  // const { logOut } = useOkto() as OktoContextType;
+  const { handleLogOut } = useDynamicContext();
 
   // Update sidebar state based on props or screen size changes
   useEffect(() => {
@@ -143,7 +143,7 @@ export default function SideNavigation({
       googleLogout();
       dispatch(logout());
       dispatch(clearWallet());
-      // logOut();
+      handleLogOut();
       router.push("/");
     } catch (error) {
       console.error("Logout failed:", error);

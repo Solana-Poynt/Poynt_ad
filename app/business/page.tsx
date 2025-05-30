@@ -6,28 +6,28 @@ import { getDataFromLocalStorage } from "@/utils/localStorage";
 import Image from "next/image";
 import { AnimatePresence } from "framer-motion";
 import { NotificationState } from "@/types/general";
-import Notification from "@/components/notification";
+import Notification from "@/components/Notification";
 import { Trophy, Copy, Plus } from "lucide-react";
-import QuickStartButton from "@/components/quick_modal";
+import QuickStartButton from "@/components/QuickModal";
 
 const adCards = [
   {
     title: "1st Campaign",
-    rate: "0%",
+    rate: "~%",
     bgColor: "bg-[#FEF3C7]",
     iconBg: "bg-[#D9770680]",
     rateColor: "text-[#575757]",
   },
   {
     title: "2nd Campaign",
-    rate: "0%",
+    rate: "~%",
     bgColor: "bg-[#DCFCE7]",
     iconBg: "bg-[#16A34A80]",
     rateColor: "text-[#575757]",
   },
   {
     title: "3rd Campaign",
-    rate: "0%",
+    rate: "~%",
     bgColor: "bg-[#F0F0F0]",
     iconBg: "bg-[#9747FF80]",
     rateColor: "text-[#575757]",
@@ -257,11 +257,11 @@ export default function Page() {
           <div className="bg-white rounded-xl border border-gray-200">
             <div className="px-6 py-4 border-b border-gray-200">
               <h2 className="font-semibold text-gray-900 text-xs md:text-sm">
-                Recent Campaigns
+                Campaign Analytics
               </h2>
             </div>
             <div className="flex p-8 w-full text-xs md:text-sm justify-center">
-              <h1>No Campaigns Yet</h1>
+              <h1>Coming Soon</h1>
             </div>
           </div>
         </div>

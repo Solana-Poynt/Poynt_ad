@@ -3,10 +3,10 @@ import { useState, useCallback, memo } from "react";
 import { useRouter } from "next/navigation";
 import { motion, AnimatePresence } from "framer-motion";
 import { Check, ArrowRight, ChevronRight } from "lucide-react";
-import CampaignModal from "@/components/campaignmodal";
+import CampaignModal from "@/components/Campaignmodal";
 import { DEFAULT_PRICING_TIERS } from "@/types/campaign";
-import Footer from "../../components/footer";
-import Header from "@/components/campaignheader";
+import Footer from "../../components/Footer";
+import Header from "@/components/Campaignheader";
 import { cn } from "@/lib/utils";
 
 // Pre-defined animation variants
@@ -67,7 +67,10 @@ const PricingTier = memo(({ tier, index, isSelected, onClick }: any) => (
           {tier.description}
         </h3>
         <div className="text-2xl md:text-3xl font-bold text-side mb-1">
-          {tier.price} SOL
+          ${tier.price} USDC
+        </div>
+        <div className="text-xs text-gray-500">
+          {/* ${tier.pricePerThousand}/1k impressions */}
         </div>
       </div>
 
@@ -154,8 +157,8 @@ Step.displayName = "Step";
 // Main component
 export default function CampaignPage() {
   const router = useRouter();
-  const [isModalOpen, setIsModalOpen] = useState(false);
-  const [selectedPricing, setSelectedPricing] = useState<number | null>(null);
+  const [isModalOpen, setIsModalOpen] = useState(true);
+  const [selectedPricing, setSelectedPricing] = useState<number>(0);
 
   // Memoized content data
   const stats = [
@@ -196,7 +199,6 @@ export default function CampaignPage() {
 
   const handleModalClose = useCallback(() => {
     setIsModalOpen(false);
-    router.push("/business/campaigns");
   }, [router]);
 
   return (
@@ -216,12 +218,25 @@ export default function CampaignPage() {
             <motion.p
               {...fadeInUp}
               transition={{ delay: 0.1 }}
-              className="text-base md:text-xl text-gray-600 max-w-2xl mx-auto px-2"
+              className="text-base md:text-xl text-gray-600 max-w-2xl mx-auto px-2 mb-6"
             >
               Unlock the power of targeted advertising with our premium ad
               network. Reach millions of engaged users and scale your business
               effectively.
             </motion.p>
+
+            <motion.div
+              {...fadeInUp}
+              transition={{ delay: 0.2 }}
+              className="mb-8"
+            >
+              <button
+                onClick={() => setIsModalOpen(true)}
+                className="bg-side hover:bg-side/90 text-white font-semibold py-3 px-8 rounded-lg shadow-lg hover:shadow-xl transition-all duration-300 transform hover:scale-105"
+              >
+                Create Campaign Now
+              </button>
+            </motion.div>
           </div>
         </div>
       </div>
@@ -256,15 +271,16 @@ export default function CampaignPage() {
 
             <div className="bg-blue-50 rounded-lg p-4 md:p-6 max-w-2xl mx-auto mt-6 md:mt-8 border border-blue-200">
               <h3 className="text-lg md:text-xl font-bold text-blue-800 mb-2">
-                Test Payment Information
+                Payment Information
               </h3>
               <p className="text-sm md:text-base text-gray-700 mb-4">
-                For testing purposes, all plans are priced in Devnet Solana
+                All campaigns are paid in USDC (USD Coin) for stable pricing and
+                fast transactions.
               </p>
 
               <div className="bg-white rounded-lg p-3 md:p-4 border border-blue-200">
                 <h4 className="font-bold text-sm md:text-base text-gray-800 mb-2">
-                  How to Get Testnet SOLANA:
+                  How to Get USDC:
                 </h4>
                 <ol className="text-left space-y-2 md:space-y-3 text-xs md:text-sm">
                   <li className="flex items-start">
@@ -279,7 +295,7 @@ export default function CampaignPage() {
                       >
                         Wallet page
                       </a>{" "}
-                      and copy your wallet address
+                      and ensure you have sufficient USDC balance
                     </span>
                   </li>
                   <li className="flex items-start">
@@ -287,15 +303,17 @@ export default function CampaignPage() {
                       2
                     </span>
                     <span>
-                      Visit the{" "}
+                      For testnet: Use the
                       <a
-                        href="https://solfaucet.com/"
+                        href="https://faucet.circle.com/"
                         target="_blank"
                         rel="noopener noreferrer"
-                        className="text-blue-600 hover:underline font-medium"
+                        className="text-blue-600 hover:underline mx-2 font-medium"
                       >
-                        Solana Faucet website
+                        USDC Faucet,
                       </a>
+                      select Solana from the network dropdown, paste your poynt
+                      wallet address, to get test USDC
                     </span>
                   </li>
                   <li className="flex items-start">
@@ -303,8 +321,8 @@ export default function CampaignPage() {
                       3
                     </span>
                     <span>
-                      Paste your wallet address in the input field, and click
-                      the <strong>Devnet</strong> button
+                      For mainnet: Purchase USDC from any exchange and transfer
+                      to your wallet
                     </span>
                   </li>
                   <li className="flex items-start">
@@ -312,7 +330,8 @@ export default function CampaignPage() {
                       4
                     </span>
                     <span>
-                      Return to this page after receiving your test SOLANA
+                      Transaction fees are covered by our gasless system - you
+                      only pay the campaign cost
                     </span>
                   </li>
                 </ol>
@@ -367,7 +386,7 @@ export default function CampaignPage() {
       <Footer />
 
       <AnimatePresence mode="wait">
-        {selectedPricing !== null && isModalOpen && (
+        {isModalOpen && (
           <CampaignModal
             isOpen={isModalOpen}
             onClose={handleModalClose}

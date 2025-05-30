@@ -12,7 +12,7 @@ export interface PricingTier {
   price: number;
   recommended?: boolean;
   features: string[];
-  pricePerThousand: number; // Cost per 1000 impressions (CPM)
+  pricePerThousand: number; 
   description?: string;
 }
 
@@ -88,50 +88,57 @@ export interface CampaignModalProps {
 }
 
 // Constants
+
 export const DEFAULT_PRICING_TIERS: PricingTier[] = [
+  // change to 10 later
   {
     id: "tier-1",
     impressions: 1000,
-    price: 0.1,
-    pricePerThousand: 0.1,
+    price: 10,
+    pricePerThousand: 10,
     features: ["Basic analytics", "Gasless Transaction"],
     description: "Perfect for testing campaigns",
   },
   {
     id: "tier-2",
     impressions: 3000,
-    price: 0.24,
-    pricePerThousand: 0.08,
+    price: 33,
+    pricePerThousand: 11,
     recommended: true,
-    features: ["Advanced analytics", "Auto-optimization", "Gasless Transaction", "Priority support"],
+    features: [
+      "Advanced analytics",
+      "Auto-optimization",
+      "Gasless Transaction",
+      "Priority support",
+    ],
     description: "Most popular for small businesses",
   },
   {
     id: "tier-3",
     impressions: 5000,
-    price: 0.35,
-    pricePerThousand: 0.07,
+    price: 62,
+    pricePerThousand: 12.4,
     features: [
       "Advanced analytics",
       "Auto-optimization",
       "Gasless Transaction",
       "Priority support",
-      "Transaction Reciept",
+      "Transaction Receipt",
       "Custom reporting",
     ],
-    description: "Ideal for growing businesses",
+    description: "Ideal for growing breakout businesses",
   },
   {
     id: "tier-4",
     impressions: 10000,
-    price: 0.55,
-    pricePerThousand: 0.055,
+    price: 136,
+    pricePerThousand: 13.6,
     features: [
       "Advanced analytics",
       "Auto-optimization",
       "Priority support",
       "Gasless Transaction",
-      "Transaction Reciept",
+      "Transaction Receipt",
       "Custom reporting",
       "Dedicated account manager",
     ],

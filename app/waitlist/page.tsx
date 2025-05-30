@@ -1,8 +1,8 @@
 "use client";
 import React, { useState, FormEvent } from "react";
 import { motion } from "framer-motion";
-import Header from "@/components/waitlistheader";
-import Footer from "@/components/footer";
+import Header from "@/components/WaitlistHeader";
+import Footer from "@/components/Footer";
 import {
   ArrowRight,
   Check,
