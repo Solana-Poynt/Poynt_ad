@@ -1,5 +1,5 @@
 "use client";
-import SideNavigation from "../../components/businessUI/Sidebar";
+import SideNavigation from "@/components/businessUI/Sidebar";
 import BusinessHeader from "@/components/businessUI/Header";
 import React, { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";

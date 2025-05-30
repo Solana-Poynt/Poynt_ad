@@ -17,7 +17,7 @@ import {
 } from "../../../store/api/api";
 import { getDataFromLocalStorage } from "@/utils/localStorage";
 import { NotificationState } from "@/types/general";
-import Notification from "../../../components/Notification";
+import Notification from "@/components/Notification";
 import { AnimatePresence } from "framer-motion";
 
 interface Campaign {
@@ -318,7 +318,6 @@ export default function Page() {
   const [currentPage, setCurrentPage] = useState(1);
   const itemsPerPage = 5;
 
-
   const businessId = useMemo(() => getDataFromLocalStorage("businessId"), []);
 
   // Fetch businessData
@@ -337,7 +336,6 @@ export default function Page() {
     status: "error",
     show: false,
   });
-
 
   const campaigns = useMemo(() => {
     if (activeTab === "Active") {
