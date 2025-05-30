@@ -2,7 +2,7 @@ import React, { useState } from "react";
 import ProfileDropdown from "@/components/ProfileView";
 import Image from "next/image";
 import { Bell, Menu } from "lucide-react";
-import ReModal from "./Reusablemodal";
+import ReModal from "./ReusableModal";
 
 const BusinessHeader = ({ onMenuToggle }: any) => {
   const [isOpen, setIsOpen] = useState(false);

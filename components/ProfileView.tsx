@@ -1,7 +1,7 @@
 "use client";
 import React, { useRef, useState, useEffect } from "react";
 import { ChevronDown, Building2, Briefcase } from "lucide-react";
-import BusinessModal from "./Businessmodal";
+import BusinessModal from "./BusinessModal";
 import {
   getDataFromLocalStorage,
   saveDataToLocalStorage,
