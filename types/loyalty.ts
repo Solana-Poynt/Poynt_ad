@@ -136,6 +136,20 @@ interface LoyaltyProgramData {
   pointsPerAction?: Record<string, number>;
 }
 
+export interface VerxioProgramReturn {
+  name: string;
+  uri: string;
+  collectionAddress: string;
+  creator: string;
+  updateAuthority?: string;
+  metadata: {
+    organizationName: string;
+  };
+  pointsPerAction: Record<string, number>;
+  tiers: ProtocolLoyaltyTier[];
+  numMinted: number;
+}
+
 interface LoyaltyRequest {
   type: string;
   programData?: LoyaltyProgramData;

@@ -129,7 +129,7 @@ const LoyaltyProgramStep = ({
         await createBusinessProgram(programData);
 
       if (result) {
-        console.log("Loyalty program created:", result);
+        // console.log("Loyalty program created:", result);
         const tierRequirements = loyaltyFormData.useCustomTiers
           ? loyaltyFormData.customTierRequirements
           : getDefaultBusinessTierRequirements();

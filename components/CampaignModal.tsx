@@ -50,6 +50,8 @@ interface LoyaltyProgram {
   isActive: boolean;
 }
 
+
+
 interface CampaignFormData {
   name: string;
   adType: AdType;
@@ -323,8 +325,10 @@ const CampaignModal = ({
       );
 
       // Debug: Log what we're sending
-      console.log("Sending transaction hash:", updatedFormData.transactionhash);
-      console.log("Payment signature:", paymentSignature);
+
+      
+      // console.log("Sending transaction hash:", updatedFormData.transactionhash);
+      // console.log("Payment signature:", paymentSignature);
 
       // Make the request
       const request: any = await createCampaign({

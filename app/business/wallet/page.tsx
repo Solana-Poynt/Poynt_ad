@@ -3,6 +3,7 @@ import { useState, useEffect } from "react";
 import useSolanaTokenBalances from "@/utils/hooks/balance";
 import { useCampaignTransactionHistory } from "@/utils/hooks/useTransactions";
 import ActionButtons from "@/components/WalletActions";
+import LoyaltySystemTab from "@/components/LoyaltyDash";
 import {
   useEmbeddedWallet,
   useDynamicContext,
@@ -53,7 +54,7 @@ const WalletDashboard = () => {
     error: transactionError,
   } = useCampaignTransactionHistory();
 
-  console.log("Campaign Transactions:", campaignTransactions);
+  // console.log("Campaign Transactions:", campaignTransactions);
 
   const [showFullAddress, setShowFullAddress] = useState(false);
   const [copiedAddress, setCopiedAddress] = useState(false);
@@ -234,7 +235,7 @@ const WalletDashboard = () => {
           className="mb-6 bg-white rounded-xl shadow-sm overflow-hidden"
         >
           <div className="flex p-3 sm:p-5 border-b border-gray-100">
-            {["overview", "transactions"].map((tab) => (
+            {["overview", "transactions", "loyalty"].map((tab) => (
               <button
                 key={tab}
                 onClick={() => setActiveTab(tab)}
@@ -244,7 +245,11 @@ const WalletDashboard = () => {
                     : "text-gray-500 hover:text-gray-700"
                 }`}
               >
-                {tab === "transactions" ? "Campaign Payments" : tab}
+                {tab === "transactions"
+                  ? "Campaign Payments"
+                  : tab === "loyalty"
+                  ? "Loyalty System"
+                  : tab}
               </button>
             ))}
           </div>
@@ -750,6 +755,24 @@ const WalletDashboard = () => {
                     </div>
                   )}
               </div>
+            </motion.div>
+          )}
+
+          {activeTab === "loyalty" && (
+            <motion.div
+              key="loyalty"
+              variants={tabVariants}
+              initial="hidden"
+              animate="visible"
+              exit="exit"
+            >
+              <LoyaltySystemTab
+                isRefreshing={isRefreshing}
+                onRefresh={handleRefresh}
+                onNotification={setNotification}
+                formatAddress={formatAddress}
+                copyToClipboard={copyToClipboard}
+              />
             </motion.div>
           )}
         </AnimatePresence>

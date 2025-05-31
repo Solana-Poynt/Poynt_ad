@@ -158,12 +158,12 @@ export async function POST(request: NextRequest) {
 
         result = await createLoyaltyProgram(verxioContext, businessProgramData);
 
-        console.log(`✅ Loyalty program creation result:`, {
-          success: !!result,
-          collectionAddress: result?.collectionAddress?.toString(),
-          signature: result?.signature,
-          metadataUri: businessProgramData.metadataUri,
-        });
+        // console.log(`✅ Loyalty program creation result:`, {
+        //   success: !!result,
+        //   collectionAddress: result?.collectionAddress?.toString(),
+        //   signature: result?.signature,
+        //   metadataUri: businessProgramData.metadataUri,
+        // });
 
         break;
       }
