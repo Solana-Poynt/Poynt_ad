@@ -3,7 +3,6 @@ import {
   Check,
   X,
   Info,
-  DollarSign,
   ArrowRight,
   Loader,
   Trophy,
@@ -271,7 +270,6 @@ const FinalReview = ({
           <div className="flex items-center justify-between mb-4">
             <h4 className="text-xl font-semibold text-gray-900">Payment</h4>
             <div className="flex items-center gap-2 text-sm text-gray-600">
-              <DollarSign className="w-4 h-4" />
               Balance: {usdcBalance.toFixed(2)} USDC
             </div>
           </div>
@@ -372,7 +370,6 @@ const FinalReview = ({
                     href="/business/wallet"
                     className="inline-flex items-center gap-2 px-3 py-2 bg-red-600 hover:bg-red-700 text-white text-sm rounded-lg transition-colors"
                   >
-                    <DollarSign className="w-4 h-4" />
                     Add USDC to Wallet
                   </a>
                 </div>
@@ -414,10 +411,7 @@ const FinalReview = ({
                     Insufficient Balance
                   </>
                 ) : (
-                  <>
-                    <DollarSign className="w-6 h-6" />
-                    Pay {campaignCost.toFixed(2)} USDC
-                  </>
+                  <>Pay {campaignCost.toFixed(2)} USDC</>
                 )}
               </button>
 

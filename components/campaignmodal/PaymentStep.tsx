@@ -156,7 +156,7 @@ const PaymentStep = ({
                 Campaign Budget (USDC)
               </label>
               <p className="text-xs text-gray-500 mt-1">
-                Minimum: ${basePackagePrice} USDC
+                Minimum: {basePackagePrice} USDC
               </p>
             </div>
             <button
