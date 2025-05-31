@@ -80,9 +80,6 @@ export async function POST(request: NextRequest) {
     }
 
     const connection = new Connection(RPC_URL, "confirmed");
-    const metadataUri = `${process.env.NEXT_PUBLIC_BASE_URL}/api/loyalty/metadata/business`;
-
-    console.log("metadata", metadataUri);
 
     // Set up the fee payer wallet
     const privateKeyBuffer = bs58.decode(PRIVATE_KEY);
@@ -110,7 +107,8 @@ export async function POST(request: NextRequest) {
             { status: 400 }
           );
         }
-
+        const businessMetadataUri =
+          "https://gateway.pinata.cloud/ipfs/bafkreiae5qfjbhznlfixwbnlx5gou7c2jnpteg2zeswvy4k6uv4m6odofe";
         // Generate tiers based on business requirements
         let businessTiers;
         if (
@@ -146,12 +144,9 @@ export async function POST(request: NextRequest) {
           }));
         }
 
-        const metadataUri =
-          "https://gateway.pinata.cloud/ipfs/bafkreiae5qfjbhznlfixwbnlx5gou7c2jnpteg2zeswvy4k6uv4m6odofe";
-
         const businessProgramData = {
           loyaltyProgramName: programData.loyaltyProgramName,
-          metadataUri,
+          metadataUri: businessMetadataUri,
           programAuthority: verxioContext.programAuthority,
           updateAuthority: updateAuth,
           metadata: {
@@ -201,12 +196,12 @@ export async function POST(request: NextRequest) {
           );
         }
 
-        const metadataUri =
+        const protocolMetadataUri =
           "https://gateway.pinata.cloud/ipfs/bafkreihegdqouba7xvqkijrsundwzxzcdosfrq5catpveoqa3l2upjyfy4";
 
         const protocolProgramData = {
           loyaltyProgramName: programData.loyaltyProgramName,
-          metadataUri,
+          metadataUri: protocolMetadataUri,
           programAuthority: verxioContext.programAuthority,
           updateAuthority: updateAuth,
           metadata: {
